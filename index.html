@@ -9,17 +9,17 @@
     
     <script type="text/javascript">
 		$(document).ready(function() {
-			var log = $('#log ul');
-			var socket = new io.Socket('localhost', {port: 8080});
-			var block_x = 50, 
-				block_y = 50;
-			var ctx,
+			var socket = new io.Socket('localhost', {port: 8080}),
+				log = $('#log ul'),
+				canvas, ctx, width, height,
 				rightKey = false,
 				leftKey = false,
 				upKey = false,
 				downKey = false,
 				speed = 5,
 				obj;
+				block_w = 10, 
+				block_h = 10;
 			
 			canvas = $('#canvas');
 			ctx = canvas[0].getContext('2d');    		
@@ -38,76 +38,69 @@
 			
 			socket.on('message', function(data) {
 				obj = JSON.parse(data);
-				
-    			block_x += obj.x;
-    			block_y += obj.y;
     			
     			clearCanvas();
     			drawPlayer();
     			drawGUI();
-    			
-    			//$('#entry ul').append('<li>x: '+ obj.x +' y: '+ obj.y +'</li>');
 			});
 		
+			function clearCanvas() {
+				ctx.clearRect(0, 0, width, height);
+			}		
 		
-		function clearCanvas() {
-			ctx.clearRect(0, 0, width, height);
-		}		
-		
-		function drawGUI() {
-			ctx.fillStyle = 'rgb(0, 0, 0)';
-    		ctx.font = "15px monospace";
-    		ctx.fillText('x: '+ obj.x +' y: '+ obj.y, 20, 30);
-		}
+			function drawGUI() {
+				ctx.fillStyle = 'rgb(0, 0, 0)';
+				ctx.font = "15px monospace";
+				ctx.fillText('x: '+ obj.x +' y: '+ obj.y, 20, 30);
+			}
 				
-		function drawPlayer() {
-			if (rightKey)
-				obj.x += speed;
-			else if (leftKey)
-				    obj.x -= speed;    
-			if (upKey)
-				obj.y -= speed;
-			else if (downKey)
-				    obj.y += speed;
+			function drawPlayer() {
+				if (rightKey)
+					obj.x += speed;
+				else if (leftKey)
+						obj.x -= speed;    
+				if (upKey)
+					obj.y -= speed;
+				else if (downKey)
+						obj.y += speed;
 		
-			if (obj.x < 0)
-				obj.x = width - 10; //0
-			if ((obj.x + 10) > width)
-				obj.x = 0; //width - 10;
-			if (obj.y < 0)
-				obj.y = height - 10; //0
-			if ((obj.y + 10) > height)
-				obj.y = 0; //height - block_h;
+				if (obj.x < 0)
+					obj.x = width - block_w; //0
+				if ((obj.x + block_w) > width)
+					obj.x = 0; //width - 10;
+				if (obj.y < 0)
+					obj.y = height - block_h; //0
+				if ((obj.y + block_h) > height)
+					obj.y = 0; //height - block_h;
 				
-			ctx.fillRect(obj.x, obj.y, 10, 10);
-			socket.send(JSON.stringify({ x: obj.x, y: obj.y}));
-			//ctx.drawImage(player, block_x, block_y);
-		}
+				ctx.fillRect(obj.x, obj.y, block_w, block_h);
+				socket.send(JSON.stringify({ x: obj.x, y: obj.y}));
+			}
 		
-		function onKeyDown(e) {
-			if (e.keyCode == 39)
-				rightKey = true;
-			else if (e.keyCode == 37)
-				    leftKey = true;
-			if (e.keyCode == 38)
-				upKey = true;
-			else if (e.keyCode == 40)
-				    downKey = true;
-		}
+			function onKeyDown(e) {
+				if (e.keyCode == 39)
+					rightKey = true;
+				else if (e.keyCode == 37)
+						leftKey = true;
+				if (e.keyCode == 38)
+					upKey = true;
+				else if (e.keyCode == 40)
+						downKey = true;
+			}
 
-		function onKeyUp(e) {
-			if (e.keyCode == 39)
-				rightKey = false;
-			else if (e.keyCode == 37)
-				    leftKey = false;
-			if (e.keyCode == 38)
-				upKey = false;
-			else if (e.keyCode == 40)
-				    downKey = false;
-		}
+			function onKeyUp(e) {
+				if (e.keyCode == 39)
+					rightKey = false;
+				else if (e.keyCode == 37)
+						leftKey = false;
+				if (e.keyCode == 38)
+					upKey = false;
+				else if (e.keyCode == 40)
+						downKey = false;
+			}
 
-		$(document).keydown(onKeyDown);
-		$(document).keyup(onKeyUp); 
+			$(document).keydown(onKeyDown);
+			$(document).keyup(onKeyUp); 
 		
 		});
     </script>
@@ -130,7 +123,7 @@
 </head>
 <body>
 	<h1>Wander</h1>
-	<p><strong>Instructions:</strong><br/> wander around.</p>
+	<p><strong>Instructions:</strong> wander around with arrow keys.</p>
   	<canvas id="canvas" width="500" height="500"></canvas>
 	<div id="log"><ul></ul></div>
 </body>
