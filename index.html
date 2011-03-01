@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+    <title>Wander game</title>
+    
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"></script>
+    <script src="./socket.io/socket.io.js"></script>
+    
+    <script type="text/javascript">
+		$(document).ready(function() {
+			var log = $('#log ul');
+			var socket = new io.Socket('localhost', {port: 8080});
+			var block_x = 50, 
+				block_y = 50;
+			var ctx,
+				rightKey = false,
+				leftKey = false,
+				upKey = false,
+				downKey = false,
+				speed = 5,
+				obj;
+			
+			canvas = $('#canvas');
+			ctx = canvas[0].getContext('2d');    		
+			width = canvas.width();
+			height = canvas.height();
+			
+			socket.connect();
+			
+			socket.on('connect', function() {
+			  log.append('<li>Connected!</li>');
+			});
+			
+			socket.on('disconnect', function() {
+			  log.append('<li>Disconnected!</li>');
+			});
+			
+			socket.on('message', function(data) {
+				obj = JSON.parse(data);
+				
+    			block_x += obj.x;
+    			block_y += obj.y;
+    			
+    			clearCanvas();
+    			drawPlayer();
+    			drawGUI();
+    			
+    			//$('#entry ul').append('<li>x: '+ obj.x +' y: '+ obj.y +'</li>');
+			});
+		
+		
+		function clearCanvas() {
+			ctx.clearRect(0, 0, width, height);
+		}		
+		
+		function drawGUI() {
+			ctx.fillStyle = 'rgb(0, 0, 0)';
+    		ctx.font = "15px monospace";
+    		ctx.fillText('x: '+ obj.x +' y: '+ obj.y, 20, 30);
+		}
+				
+		function drawPlayer() {
+			if (rightKey)
+				obj.x += speed;
+			else if (leftKey)
+				    obj.x -= speed;    
+			if (upKey)
+				obj.y -= speed;
+			else if (downKey)
+				    obj.y += speed;
+		
+			if (obj.x < 0)
+				obj.x = width - 10; //0
+			if ((obj.x + 10) > width)
+				obj.x = 0; //width - 10;
+			if (obj.y < 0)
+				obj.y = height - 10; //0
+			if ((obj.y + 10) > height)
+				obj.y = 0; //height - block_h;
+				
+			ctx.fillRect(obj.x, obj.y, 10, 10);
+			socket.send(JSON.stringify({ x: obj.x, y: obj.y}));
+			//ctx.drawImage(player, block_x, block_y);
+		}
+		
+		function onKeyDown(e) {
+			if (e.keyCode == 39)
+				rightKey = true;
+			else if (e.keyCode == 37)
+				    leftKey = true;
+			if (e.keyCode == 38)
+				upKey = true;
+			else if (e.keyCode == 40)
+				    downKey = true;
+		}
+
+		function onKeyUp(e) {
+			if (e.keyCode == 39)
+				rightKey = false;
+			else if (e.keyCode == 37)
+				    leftKey = false;
+			if (e.keyCode == 38)
+				upKey = false;
+			else if (e.keyCode == 40)
+				    downKey = false;
+		}
+
+		$(document).keydown(onKeyDown);
+		$(document).keyup(onKeyUp); 
+		
+		});
+    </script>
+    <style>
+    	body {
+    		background-color: #F5F5F5 ;
+    	}
+    
+    	#canvas {
+    		display: block;
+    		margin: 20px auto;
+    		border: 3px solid rgb(200, 0, 0);   
+    		background-color: #FEFEFE; 	
+    	}
+    	
+    	#log {
+    		font-family: "Lucida Sans", sans-serif;
+    	}
+    </style>
+</head>
+<body>
+	<h1>Wander</h1>
+	<p><strong>Instructions:</strong><br/> wander around.</p>
+  	<canvas id="canvas" width="500" height="500"></canvas>
+	<div id="log"><ul></ul></div>
+</body>
+</html>
