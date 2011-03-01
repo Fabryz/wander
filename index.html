@@ -17,28 +17,32 @@
 				upKey = false,
 				downKey = false,
 				speed = 5,
-				obj;
+				obj,
 				block_w = 10, 
-				block_h = 10;
+				block_h = 10,
+				dir;
 			
 			canvas = $('#canvas');
-			ctx = canvas[0].getContext('2d');    		
+			ctx = canvas[0].getContext('2d');
 			width = canvas.width();
 			height = canvas.height();
+			
+			ctx.fillText("Canvas ok", 20, 50);
 			
 			socket.connect();
 			
 			socket.on('connect', function() {
-			  log.append('<li>Connected!</li>');
+			  	log.append('<li>Connected!</li>');
 			});
 			
 			socket.on('disconnect', function() {
-			  log.append('<li>Disconnected!</li>');
+				log.append('<li>Disconnected!</li>');
 			});
 			
 			socket.on('message', function(data) {
+				ctx.fillText("x", 50, 50);
 				obj = JSON.parse(data);
-    			
+
     			clearCanvas();
     			drawPlayer();
     			drawGUI();
@@ -55,14 +59,6 @@
 			}
 				
 			function drawPlayer() {
-				if (rightKey)
-					obj.x += speed;
-				else if (leftKey)
-						obj.x -= speed;    
-				if (upKey)
-					obj.y -= speed;
-				else if (downKey)
-						obj.y += speed;
 		
 				if (obj.x < 0)
 					obj.x = width - block_w; //0
@@ -74,29 +70,36 @@
 					obj.y = 0; //height - block_h;
 				
 				ctx.fillRect(obj.x, obj.y, block_w, block_h);
-				socket.send(JSON.stringify({ x: obj.x, y: obj.y}));
+				//socket.send(JSON.stringify({ x: obj.x, y: obj.y}));
+				
+				//if (changed)	//h4x
+					socket.send(JSON.stringify({ x: obj.x, y: obj.y, dir: dir, changed: changed }));
 			}
 		
 			function onKeyDown(e) {
 				if (e.keyCode == 39)
-					rightKey = true;
+					dir = 'r';
 				else if (e.keyCode == 37)
-						leftKey = true;
+						dir = 'l';
 				if (e.keyCode == 38)
-					upKey = true;
+					dir = 'u';
 				else if (e.keyCode == 40)
-						downKey = true;
+						dir = 'd';
+				
+				changed = true;
 			}
 
 			function onKeyUp(e) {
-				if (e.keyCode == 39)
+				if (e.keyCode == 39) 
 					rightKey = false;
-				else if (e.keyCode == 37)
-						leftKey = false;
-				if (e.keyCode == 38)
+				else if (e.keyCode == 37) 
+							leftKey = false;
+				if (e.keyCode == 38) 
 					upKey = false;
-				else if (e.keyCode == 40)
-						downKey = false;
+				else if (e.keyCode == 40) 
+							downKey = false;
+				
+				changed = false;
 			}
 
 			$(document).keydown(onKeyDown);

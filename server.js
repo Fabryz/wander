@@ -47,32 +47,58 @@ var server = http.createServer(function(req, res) {
 
 server.listen(8080);
 
-var socket = io.listen(server);
+var socket = io.listen(server),
+	timer,
+	x = 0,
+	y = 0,
+	changed = false,
+	dir = 'd',
+	obj = { x: x, y: y, dir: dir, changed: changed}, //testing
+	speed = 5,
+	dirs = ['u', 'd', 'l', 'r'];
 
 socket.on('connection', function(client) {
-	var timer,
-		obj,
-		x = 0,
-		y = 0,
-		speed = 5;
 		
 	timer = setInterval(function () {
 		/*if (x < 500) x += speed;
 		else x = 1;
 		if (y < 500) y += speed;
 		else y = 1;*/
-		
+
+		console.log('x: '+ obj.x +' y: '+ obj.y +' dir: '+ obj.dir +' changed: '+ obj.changed);
 		client.send(JSON.stringify({ x: x, y: y}));
-		//console.log('x: '+ x +' y: '+ y);
 	}, 500);
 
-	client.on('message', function(data) {
-		console.log('Received: '+ data);
+	client.on('message', function(data) {		
 		obj = JSON.parse(data);
-		x = obj.x;
-		y = obj.x;
 		
-		socket.broadcast(data);
+		/*if (obj.changed)
+			changed = true;
+		else
+			changed = false;*/
+			
+		//changed = (obj.changed? true : false);
+		
+		if (obj.changed) {
+		
+			var pos = dirs.indexOf(obj.dir);
+			if (pos >= 0) {
+				console.log('Received: '+ data);
+			
+				if (obj.dir == 'r')
+					obj.x += speed;
+				else if (obj.dir == 'l')
+						obj.x -= speed;    
+				if (obj.dir == 'u')
+					obj.y -= speed;
+				else if (obj.dir == 'd')
+						obj.y += speed;
+		
+				socket.broadcast(JSON.stringify({ x: obj.x, y: obj.y, dir: obj.dir, changed: changed }));
+			
+			}
+		
+		}
 	});
 
 	client.on('disconnect', function() {
