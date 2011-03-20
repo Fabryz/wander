@@ -28,7 +28,7 @@ What to do
 Features
 --------
 
-* Use arrows to wander around the canvas, some [frontend testing here](http://jsfiddle.net/Fabryz/MyMbr/10/).
+* Use arrows to wander around the canvas, some [frontend testing here](http://jsfiddle.net/Fabryz/MyMbr/10/) and [over here](http://jsfiddle.net/Fabryz/BTsRb/) on JSFiddle.
 * Lag like hell
 * Suggest me how to improve it
 
