@@ -4,130 +4,20 @@
     <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
     <title>Wander game</title>
     
-    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"></script>
+    <link rel="stylesheet" type="text/css" media="screen" href="./css/style.css">
+    
+    <script src="http://code.jquery.com/jquery-latest.min.js"></script>
     <script src="./socket.io/socket.io.js"></script>
+    <script src="./js/wander.js"></script>
     
-    <script type="text/javascript">
-		$(document).ready(function() {
-			var socket = new io.Socket('localhost', {port: 8080}),
-				log = $('#log ul'),
-				canvas, ctx, width, height,
-				rightKey = false,
-				leftKey = false,
-				upKey = false,
-				downKey = false,
-				speed = 5,
-				obj,
-				block_w = 10, 
-				block_h = 10,
-				dir;
-			
-			canvas = $('#canvas');
-			ctx = canvas[0].getContext('2d');
-			width = canvas.width();
-			height = canvas.height();
-			
-			ctx.fillText("Canvas ok", 20, 50);
-			
-			socket.connect();
-			
-			socket.on('connect', function() {
-			  	log.append('<li>Connected!</li>');
-			});
-			
-			socket.on('disconnect', function() {
-				log.append('<li>Disconnected!</li>');
-			});
-			
-			socket.on('message', function(data) {
-				ctx.fillText("x", 50, 50);
-				obj = JSON.parse(data);
-
-    			clearCanvas();
-    			drawPlayer();
-    			drawGUI();
-			});
-		
-			function clearCanvas() {
-				ctx.clearRect(0, 0, width, height);
-			}		
-		
-			function drawGUI() {
-				ctx.fillStyle = 'rgb(0, 0, 0)';
-				ctx.font = "15px monospace";
-				ctx.fillText('x: '+ obj.x +' y: '+ obj.y, 20, 30);
-			}
-				
-			function drawPlayer() {
-		
-				if (obj.x < 0)
-					obj.x = width - block_w; //0
-				if ((obj.x + block_w) > width)
-					obj.x = 0; //width - 10;
-				if (obj.y < 0)
-					obj.y = height - block_h; //0
-				if ((obj.y + block_h) > height)
-					obj.y = 0; //height - block_h;
-				
-				ctx.fillRect(obj.x, obj.y, block_w, block_h);
-				//socket.send(JSON.stringify({ x: obj.x, y: obj.y}));
-				
-				//if (changed)	//h4x
-					socket.send(JSON.stringify({ x: obj.x, y: obj.y, dir: dir, changed: changed }));
-			}
-		
-			function onKeyDown(e) {
-				if (e.keyCode == 39)
-					dir = 'r';
-				else if (e.keyCode == 37)
-						dir = 'l';
-				if (e.keyCode == 38)
-					dir = 'u';
-				else if (e.keyCode == 40)
-						dir = 'd';
-				
-				changed = true;
-			}
-
-			function onKeyUp(e) {
-				if (e.keyCode == 39) 
-					rightKey = false;
-				else if (e.keyCode == 37) 
-							leftKey = false;
-				if (e.keyCode == 38) 
-					upKey = false;
-				else if (e.keyCode == 40) 
-							downKey = false;
-				
-				changed = false;
-			}
-
-			$(document).keydown(onKeyDown);
-			$(document).keyup(onKeyUp); 
-		
-		});
-    </script>
-    <style>
-    	body {
-    		background-color: #F5F5F5 ;
-    	}
-    
-    	#canvas {
-    		display: block;
-    		margin: 20px auto;
-    		border: 3px solid rgb(200, 0, 0);   
-    		background-color: #FEFEFE; 	
-    	}
-    	
-    	#log {
-    		font-family: "Lucida Sans", sans-serif;
-    	}
-    </style>
 </head>
 <body>
 	<h1>Wander</h1>
-	<p><strong>Instructions:</strong> wander around with arrow keys.</p>
-  	<canvas id="canvas" width="500" height="500"></canvas>
-	<div id="log"><ul></ul></div>
+	<div id="viewport">
+		<canvas id="canvas" width="480" height="480"></canvas>
+	</div>
+	<canvas id="gui" width="500" height="70"></canvas>
+	<h2>Debug</h2>
+	<div id="debug"></div>
 </body>
 </html>

@@ -1,3 +1,12 @@
+/*
+* TODO:
+*		add sockets to frontend + backend
+*		player spawning
+*		collisions
+*		tune up server messages/latency
+*		
+*/
+
 var http = require('http'),
     sys  = require('sys'),
     fs   = require('fs'),
@@ -5,44 +14,54 @@ var http = require('http'),
     url  = require('url');
 
 var server = http.createServer(function(req, res) {
-  var path = url.parse(req.url).pathname, content_type;  
-  
-  console.log('* Server Started');
-  
-  switch (path) {
-    case '/':
-        res.writeHead(200, { 'Content-Type': 'text/html' });
-        var rs = fs.createReadStream(__dirname + '/index.html');
-        sys.pump(rs, res);
-    break;
-    case '/style.css':
-    case '/favicon.ico':
-        if (path.match(/\.js$/) != null) {
-          content_type = 'text/javascript';
-        } else if (path.match(/\.css$/) != null) {
-          content_type = 'text/css';
-        } else if (path.match(/\.png$/) != null) {
-          content_type = 'image/png';
-        } else {
-          content_type = 'text/html';
-        }
-        
-        fs.readFile(__dirname + path, function(err, data){
-          if (err) {
-            res.writeHead(404);
-            res.end('404');
-            return;
-          }
-          res.writeHead(200, { 'Content-Type': content_type })
-          res.write(data, 'utf8');
-          res.end();
-        });
-    break;
-    default:
-        console.log('default');
-    break;
-  }
-  
+	var path = url.parse(req.url).pathname;  
+
+	console.log("* HTTP request: "+ path);
+
+	switch (path) {
+		case '/favicon.ico':
+		
+			break;
+		/*case '/css/reset.css':
+				res.writeHead(200, { 'Content-Type': 'text/css' });
+				var rs = fs.createReadStream(__dirname + '/css/reset.css');
+				sys.pump(rs, res);
+			break;*/
+		case '/css/style.css':
+				res.writeHead(200, { 'Content-Type': 'text/css' });
+				var rs = fs.createReadStream(__dirname + '/css/style.css');
+				sys.pump(rs, res);
+			break;
+		case '/js/wander.js':
+				res.writeHead(200, { 'Content-Type': 'text/css' });
+				var rs = fs.createReadStream(__dirname + '/js/wander.js');
+				sys.pump(rs, res);
+			break;
+		case '/status':
+				res.writeHead(200, { 'Content-Type' : 'text/plain' });
+				res.end('Total players: '+ total_players);
+			break;
+		case '/':
+		case '/index.html':
+				res.writeHead(200, { 'Content-Type': 'text/html' });
+				var rs = fs.createReadStream(__dirname + '/index.html');
+				sys.pump(rs, res);
+			break;
+		case '/img/player.png':
+				res.writeHead(200, { 'Content-Type': 'image/png' });
+				var rs = fs.createReadStream(__dirname + '/img/player.png');
+				sys.pump(rs, res);
+			break;
+		
+
+		default:
+			res.writeHead(404, { 'Content-Type': 'text/html' });
+			res.end('THIS CAN\'T BE HAPPENING, YOU CAN\'T BE HERE!');
+			//var rs = fs.createReadStream(__dirname + '/404.html');
+			//sys.pump(rs, res);
+		break;
+	}
+
 });
 
 server.listen(8080);
@@ -55,54 +74,22 @@ var socket = io.listen(server),
 	dir = 'd',
 	obj = { x: x, y: y, dir: dir, changed: changed}, //testing
 	speed = 5,
-	dirs = ['u', 'd', 'l', 'r'];
+	dirs = ['u', 'd', 'l', 'r'],
+	total_players = 0;
 
 socket.on('connection', function(client) {
-		
-	timer = setInterval(function () {
-		/*if (x < 500) x += speed;
-		else x = 1;
-		if (y < 500) y += speed;
-		else y = 1;*/
-
-		console.log('x: '+ obj.x +' y: '+ obj.y +' dir: '+ obj.dir +' changed: '+ obj.changed);
-		client.send(JSON.stringify({ x: x, y: y}));
-	}, 500);
+	total_players++;
+	console.log('* Someone connected, total players: '+ total_players);
+	
 
 	client.on('message', function(data) {		
-		obj = JSON.parse(data);
+		data = JSON.parse(data);
 		
-		/*if (obj.changed)
-			changed = true;
-		else
-			changed = false;*/
-			
-		//changed = (obj.changed? true : false);
-		
-		if (obj.changed) {
-		
-			var pos = dirs.indexOf(obj.dir);
-			if (pos >= 0) {
-				console.log('Received: '+ data);
-			
-				if (obj.dir == 'r')
-					obj.x += speed;
-				else if (obj.dir == 'l')
-						obj.x -= speed;    
-				if (obj.dir == 'u')
-					obj.y -= speed;
-				else if (obj.dir == 'd')
-						obj.y += speed;
-		
-				socket.broadcast(JSON.stringify({ x: obj.x, y: obj.y, dir: obj.dir, changed: changed }));
-			
-			}
-		
-		}
+		console.log(data);		
 	});
 
 	client.on('disconnect', function() {
-		clearTimeout(timer);
-		console.log('Disconnected!');
+		total_players--;
+		console.log('Someone disconnected, total players: '+ total_players);
 	});
 });

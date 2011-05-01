@@ -1,0 +1,42 @@
+body {
+    background-color: #CCC;
+    margin: 10px;
+    padding: 0;
+}
+
+h1 {
+    font-size: 32px;
+    font-weight: bold;
+    font-family: Georgia, serif;
+    margin-bottom: 10px;
+}
+
+#viewport {
+    background-color: yellow;
+    outline: 2px solid red;
+    margin: 10px;
+    position: relative;
+    overflow: hidden;
+}
+    
+#canvas {
+    position: absolute; 
+    top: 0px; 
+    left: 0px;         
+    background-color: rgb(150, 150, 150);
+}
+
+#gui {
+    margin-left: 10px;
+    background-color: rgba(0, 0, 200, 0.5);
+}
+
+h2 {
+	margin-bottom: 5px;
+}
+
+#debug {
+	background-color: white;
+    height: 200px;
+    overflow: auto;
+}
