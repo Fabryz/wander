@@ -1,42 +1,69 @@
+* {
+	margin: 0;
+	padding: 0;
+}
+
 body {
-    background-color: #CCC;
+    background-color: #001022;
+    color: #FFF;
+    font-family: Georgia, "Lucida Sans", monospace, serif;
+    font-size: 62.5%;
     margin: 10px;
     padding: 0;
 }
 
 h1 {
-    font-size: 32px;
+    font-size: 3.2em;
     font-weight: bold;
-    font-family: Georgia, serif;
-    margin-bottom: 10px;
-}
-
-#viewport {
-    background-color: yellow;
-    outline: 2px solid red;
-    margin: 10px;
-    position: relative;
-    overflow: hidden;
-}
-    
-#canvas {
-    position: absolute; 
-    top: 0px; 
-    left: 0px;         
-    background-color: rgb(150, 150, 150);
-}
-
-#gui {
-    margin-left: 10px;
-    background-color: rgba(0, 0, 200, 0.5);
+    margin-bottom: 1em;
 }
 
 h2 {
-	margin-bottom: 5px;
+	margin-bottom: .5em;
 }
 
-#debug {
-	background-color: white;
+p {
+	font-size: 1.5em;
+}
+
+#gameCanvas {
+	display: block;
+	background-color: #FFF;
+	margin: 1em auto;
+}
+
+#debugCanvas {
+	background-color: #FFF;
+}
+
+#debugLog {
+	background-color: #FFFFDD;
+	color: #333;
+	font-size: 1.5em;
+	padding: 1em;
+	width: 50%;
     height: 200px;
     overflow: auto;
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    filter: alpha(opacity=75);
+    -moz-opacity: 0.75;
+    opacity: 0.75; 
+}
+
+#debugLog ul {
+	list-style-type: none;
+}
+
+#debugButtons {
+	margin: 1em 0;
+}
+
+#debugButtons button {
+	padding: 1em;
+}
+
+#debugButtons button:hover {
+	cursor: pointer;
 }

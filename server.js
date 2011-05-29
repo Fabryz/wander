@@ -67,14 +67,9 @@ var server = http.createServer(function(req, res) {
 server.listen(8080);
 
 var socket = io.listen(server),
-	timer,
-	x = 0,
-	y = 0,
-	changed = false,
-	dir = 'd',
-	obj = { x: x, y: y, dir: dir, changed: changed}, //testing
-	speed = 5,
+	max_speed = 5,
 	dirs = ['u', 'd', 'l', 'r'],
+	init_dir = 'd',
 	total_players = 0;
 
 socket.on('connection', function(client) {
@@ -82,8 +77,8 @@ socket.on('connection', function(client) {
 	console.log('* Someone connected, total players: '+ total_players);
 	
 
-	client.on('message', function(data) {		
-		data = JSON.parse(data);
+	client.on('message', function(mess) {		
+		data = JSON.parse(mess);
 		
 		console.log(data);		
 	});

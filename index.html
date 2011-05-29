@@ -1,23 +1,31 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
     <title>Wander game</title>
     
-    <link rel="stylesheet" type="text/css" media="screen" href="./css/style.css">
+    <meta http-equiv="Content-type" content="text/html; charset=UTF-8" />
     
-    <script src="http://code.jquery.com/jquery-latest.min.js"></script>
-    <script src="./socket.io/socket.io.js"></script>
-    <script src="./js/wander.js"></script>
+    <link type="text/css" rel="stylesheet" href="./css/style.css" media="screen">
+    
+    <script type="text/javascript" src="http://code.jquery.com/jquery-latest.min.js"></script>
+    <script type="text/javascript" src="./socket.io/socket.io.js"></script>
+    <script type="text/javascript" src="./js/wander.js"></script>
     
 </head>
 <body>
 	<h1>Wander</h1>
-	<div id="viewport">
-		<canvas id="canvas" width="480" height="480"></canvas>
-	</div>
-	<canvas id="gui" width="500" height="70"></canvas>
+	<p>Use the arrow keys to wander around and explore.</p>
+	<canvas id="gameCanvas" width="480" height="480">
+		<p>Looks like your browser does NOT support HTML5 Canvas.</p>
+		<p>Please get a decent one.</p>
+	</canvas>
+
 	<h2>Debug</h2>
-	<div id="debug"></div>
+	<canvas id="debugCanvas" width="500" height="70"></canvas>
+	<div id="debugLog"><ul></ul></div>
+	<div id="debugButtons">
+		<button id="startAnimation">Start</button>
+		<button id="stopAnimation">Stop</button>
+	</div>
 </body>
 </html>
