@@ -153,6 +153,9 @@ $(document).ready(function() {
 	}
 	
 	function movePlayer(p) {
+		p.vX = 0;
+		p.vY = 0;
+	
 		if (p.moveLeft) {
 			p.vX = -speed;
 		}
