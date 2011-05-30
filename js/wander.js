@@ -1,10 +1,12 @@
 /*
 * Author: Fabrizio Codello
-* Date: 2011/05/29
-* Version: 0.3.5
+* Date: 2011/05/30
+* Version: 0.3.6
 *
 * TODO:
-*		+learn from RobHawkes, revise all the code
+*		+revise all the code
+*		+optimize socket messages
+*		+socket send on keypress
 *		+browser compatibility Chrome, FF, IE(?)
 *       ?move only on mod TILE_WIDTH, animation
 *       optimize drawmap: render only viewable
@@ -57,6 +59,7 @@ $(document).ready(function() {
 	
 	function Player(id, x, y) {
 		this.id = id;
+		this.nick = "Guest"+id;
 		this.x = x;
 		this.y = y;
 		
@@ -77,11 +80,12 @@ $(document).ready(function() {
 		this.moveDown = false;
 		
 		this.toString = function() {
-		    return 'id: '+ this.id +' x: '+ this.x +' ('+ (this.x+this.width) +') y: '+ this.y +' ('+ (this.y + this.height)+')';
+		    return this.nick +' id: '+ this.id +' x: '+ this.x +' ('+ (this.x+this.width) +') y: '+ this.y +' ('+ (this.y + this.height)+')';
 		};
 		    
 		this.draw = function(c) {
 		    c.drawImage(this.avatar, this.x, this.y, this.width, this.height);
+		    c.fillText(this.nick, this.x + this.halfWidth, this.y - 10);
 		};
 	}
 	
@@ -89,9 +93,42 @@ $(document).ready(function() {
 		arrowDown = 40,
 		arrowLeft = 37,
 		arrowRight = 39;
+		
+	var gameGUI = $("#gameGUI"),
+		gameIntro = $("#gameIntro"),
+		playerNick = $("#playerNick"),
+		buttonPlay = $("#play");
+	
+	buttonPlay.click(function() {
+		debugLog.append("<li>Clicked Play</li>");
+		
+		if (playerNick.val() != '') {
+			player.nick = playerNick.val();
+		}
+		debugLog.append("<li>Player name: "+ player.nick +"</li>");
+		
+		gameGUI.hide();
+		startGame();
+	});
 	
 	function startGame() {
 		//dostuff
+		
+		/*canvas.click(function(e) { //testing GUI clicks
+			var canvasOffset = canvas.offset();
+			var canvasX = Math.floor(e.pageX - canvasOffset.left);
+			var canvasY = Math.floor(e.pageY - canvasOffset.top);
+			
+			debugCtx.fillText(canvasX +"x"+ canvasY, 400, 15);
+			
+			ctx.strokeStyle = "rgb(0, 0, 0)";
+			ctx.lineWidth = 3;
+			ctx.beginPath();
+			ctx.moveTo(player.x + player.halfWidth, player.y + player.halfHeight);
+			ctx.lineTo(canvasX, canvasY);
+			ctx.closePath();
+			ctx.stroke();
+		});*/
 		
 		$(window).keydown(function(e) {
 			e.preventDefault();
@@ -106,7 +143,7 @@ $(document).ready(function() {
 				animate();
 			}
 			
-			if (keyCode == arrowLeft) {
+			/*if (keyCode == arrowLeft) {
 				player.moveLeft = true;
 			} else if (keyCode == arrowRight) {
 				player.moveRight = true;
@@ -114,7 +151,20 @@ $(document).ready(function() {
 				player.moveUp = true;
 			} else if (keyCode == arrowDown) {
 				player.moveDown = true;
-			}	
+			}*/
+			
+			if (keyCode == arrowLeft) {
+				dir = 'l';
+			} else if (keyCode == arrowRight) {
+				dir = 'r';
+			} else if (keyCode == arrowUp) {
+				dir = 'u';
+			} else if (keyCode == arrowDown) {
+				dir = 'd';
+			}
+			
+			//testing
+			socket.send(JSON.stringify({ x: player.x, y: player.y, dir: dir}));
 		});
 
 		$(window).keyup(function(e) {
@@ -136,7 +186,8 @@ $(document).ready(function() {
 	}
 	
 	var player,
-		players = [],
+		players = new Array(),
+		maxPlayers = 10,
 		speed = 5;
 	
 	function init() {		
@@ -145,11 +196,15 @@ $(document).ready(function() {
     	debugLog.append("<li>Connecting...</li>");
 		
 		player = new Player(playersId, 0, 0);
+		players.push(player);
+		
+		ctx.fillStyle = 'rgb(0, 0, 0)';
+    	ctx.font = "15px Lucida Console";
+		
+		debugCtx.fillStyle = 'rgb(0, 0, 0)';
+    	debugCtx.font = "15px Lucida Console";
 		
 		debugLog.append("<li>Inited.</li>");
-		
-		//put a button to start
-		startGame();
 	}
 	
 	function movePlayer(p) {
@@ -173,8 +228,25 @@ $(document).ready(function() {
 		p.y += p.vY;
 	}
 	
+	function checkBoundaries(p) {
+		if (p.x + p.width > canvasWidth) {
+			p.x = canvasWidth - p.width;
+		}
+		if (p.x < 0) {
+			p.x = 0;
+		}
+		
+		if (p.y + p.height > canvasHeight) {
+			p.y = canvasHeight - p.height;
+		}
+		if (p.y < 0) {
+			p.y = 0;
+		}
+	}
+	
 	function debugStuff() {
-		//debugCtx.filltext(player, 10, 10);
+		debugCtx.clearRect(0, 0, 500, 70);
+		debugCtx.fillText(player, 10, 15);
 	}
 	
 	var i = 0;
@@ -182,12 +254,16 @@ $(document).ready(function() {
 	function animate() {
 		ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 		
-		if (playGame) {
+		if (playGame) {			
 			
+			//movePlayer(player); using sockets
+			checkBoundaries(player);
 			
+			var playersLength = players.length;
+			for(var i = 0; i < playersLength; i++) {
+				players[i].draw(ctx);
+			}
 			
-			movePlayer(player);
-			player.draw(ctx);
 			debugStuff();
 			
 			setTimeout(animate, 33); //1000/desired_fps
@@ -220,6 +296,25 @@ $(document).ready(function() {
 	socket.on('message', function(mess) {
 		var data = JSON.parse(mess);
 		
+		var dir = data.dir;
+		if (dir = 'l') {
+			p.vX = -speed;
+		}
+		if (dir = 'r') {
+			p.vX = speed;
+		}
+		if (dir = 'u') {
+			p.vY = -speed;
+		}
+		if (dir = 'd') {
+			p.vY = speed;
+		}
+		
+		p.x += p.vX;
+		p.y += p.vY;
+		
+		//debugCtx(data, 10, 35);
+		
 		/*switch (data.msg_type) {
 			case 'test':
 					
@@ -230,5 +325,9 @@ $(document).ready(function() {
 				break;
 		}*/				
 		
+	});
+	
+	debugLog.click(function() {
+		debugLog.html("");
 	});
 });

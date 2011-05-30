@@ -68,8 +68,8 @@ server.listen(8080);
 
 var socket = io.listen(server),
 	max_speed = 5,
-	dirs = ['u', 'd', 'l', 'r'],
-	init_dir = 'd',
+	dirs = ['l', 'r', 'u', 'd'],
+	init_dir = 'l',
 	total_players = 0;
 
 socket.on('connection', function(client) {
@@ -80,8 +80,12 @@ socket.on('connection', function(client) {
 	client.on('message', function(mess) {		
 		data = JSON.parse(mess);
 		
-		console.log(data);		
+		console.log(data);	
+		socket.broadcast(JSON.stringify({x: data.x, y: data.y, dir: data.dir}));	
 	});
+	
+	/* Do bounds and anticheat checks*/
+	/* Elaborate next position, send confirmed position to client */
 
 	client.on('disconnect', function() {
 		total_players--;

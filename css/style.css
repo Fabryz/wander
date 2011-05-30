@@ -15,7 +15,7 @@ body {
 h1 {
     font-size: 3.2em;
     font-weight: bold;
-    margin-bottom: 1em;
+    margin-bottom: .5em;
 }
 
 h2 {
@@ -24,6 +24,58 @@ h2 {
 
 p {
 	font-size: 1.5em;
+}
+
+#gameGUI {
+	position: absolute;
+	width: 800px;
+	height: 600px;
+}
+
+#gameIntro {
+	background: rgba(0, 0, 0, .8);
+	margin-top: 100px;
+	padding: 40px 0;
+	text-align: center;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
+}
+
+#gameIntro input[type="text"] {
+	font-size: 1.8em;
+	margin-top: 10px;
+}
+
+a {
+	color: #FFF;
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a.button {
+	background: #185DA8;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
+	display: block;
+	font-size: 3em;
+	margin: 40px 0 0 270px;
+	padding: 10px;
+	width: 200px;
+}
+
+a.button:hover {
+	background: #2488F5;
+	color: #FFF;
+	text-decoration: none;
+}
+
+.button {
+
 }
 
 #gameCanvas {
@@ -66,4 +118,11 @@ p {
 
 #debugButtons button:hover {
 	cursor: pointer;
+}
+
+#startAnimation,
+#stopAnimation {
+	position: fixed;
+    bottom: 0;
+    right: 0;
 }
