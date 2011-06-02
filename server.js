@@ -14,7 +14,8 @@ var http = require('http'),
     url  = require('url');
 
 var server = http.createServer(function(req, res) {
-	var path = url.parse(req.url).pathname;  
+	var path = url.parse(req.url).pathname;
+	var rs;  
 
 	console.log("* HTTP request: "+ path);
 
@@ -24,17 +25,17 @@ var server = http.createServer(function(req, res) {
 			break;
 		/*case '/css/reset.css':
 				res.writeHead(200, { 'Content-Type': 'text/css' });
-				var rs = fs.createReadStream(__dirname + '/css/reset.css');
+				rs = fs.createReadStream(__dirname + '/css/reset.css');
 				sys.pump(rs, res);
 			break;*/
 		case '/css/style.css':
 				res.writeHead(200, { 'Content-Type': 'text/css' });
-				var rs = fs.createReadStream(__dirname + '/css/style.css');
+				rs = fs.createReadStream(__dirname + '/css/style.css');
 				sys.pump(rs, res);
 			break;
 		case '/js/wander.js':
 				res.writeHead(200, { 'Content-Type': 'text/css' });
-				var rs = fs.createReadStream(__dirname + '/js/wander.js');
+				rs = fs.createReadStream(__dirname + '/js/wander.js');
 				sys.pump(rs, res);
 			break;
 		case '/status':
@@ -44,12 +45,12 @@ var server = http.createServer(function(req, res) {
 		case '/':
 		case '/index.html':
 				res.writeHead(200, { 'Content-Type': 'text/html' });
-				var rs = fs.createReadStream(__dirname + '/index.html');
+				rs = fs.createReadStream(__dirname + '/index.html');
 				sys.pump(rs, res);
 			break;
 		case '/img/player.png':
 				res.writeHead(200, { 'Content-Type': 'image/png' });
-				var rs = fs.createReadStream(__dirname + '/img/player.png');
+				rs = fs.createReadStream(__dirname + '/img/player.png');
 				sys.pump(rs, res);
 			break;
 		
@@ -57,7 +58,7 @@ var server = http.createServer(function(req, res) {
 		default:
 			res.writeHead(404, { 'Content-Type': 'text/html' });
 			res.end('THIS CAN\'T BE HAPPENING, YOU CAN\'T BE HERE!');
-			//var rs = fs.createReadStream(__dirname + '/404.html');
+			//rs = fs.createReadStream(__dirname + '/404.html');
 			//sys.pump(rs, res);
 		break;
 	}
@@ -70,25 +71,67 @@ var socket = io.listen(server),
 	max_speed = 5,
 	dirs = ['l', 'r', 'u', 'd'],
 	init_dir = 'l',
-	total_players = 0;
+	total_players = 0,
+	max_players = 16,
+	playersid = 0,
+	playerid = 0,
+	players = [],
+	connected = false,
+	server_name = "Illusory One";
 
 socket.on('connection', function(client) {
 	total_players++;
 	console.log('* Someone connected, total players: '+ total_players);
 	
-
 	client.on('message', function(mess) {		
-		data = JSON.parse(mess);
+		var data = JSON.parse(mess);
 		
-		console.log(data);	
-		socket.broadcast(JSON.stringify({x: data.x, y: data.y, dir: data.dir}));	
+		if (!connected) {
+			client.send(JSON.stringify({type: 'srv_msg', msg: 'Welcome to "'+ server_name +'" server!'}));
+			client.send(JSON.stringify({type: 'srv_msg', msg: 'There are '+ total_players +' players online.'}));
+			connected = true;
+		} else {
+						
+			var msg_type = data.type;
+			switch (msg_type) {
+				case 'newPlayer':
+					playersid++;
+					playerid = playersid;
+					players[playerid].nick = data.nick;
+					client.send(JSON.stringify({type: 'newPlayer', id: playerid, x: 50, y: 50}));	
+				break;
+				case 'playersList':
+					players.forEach(function(pla) {
+						if (pla.id != playerid) {
+							client.send(JSON.stringify({type: 'playersList', x: pla.x, y: pla.y, id: pla.id, nick: pla.nick}));
+						}
+					});
+					
+				break;
+				case 'play':
+					var test = JSON.stringify({type: "play", id: data.id, x: data.x, y: data.y, dir: data.dir});
+
+					console.log('Arrived: '+ mess);	
+					console.log('Sending: '+ test);
+
+					socket.broadcast(test);	
+				break;
+					
+				default:
+					console.log('Unknown type: '+ mess);
+				break;
+			}
+		}
+
 	});
 	
 	/* Do bounds and anticheat checks*/
 	/* Elaborate next position, send confirmed position to client */
 
 	client.on('disconnect', function() {
+		delete players[playerid];
 		total_players--;
 		console.log('Someone disconnected, total players: '+ total_players);
+		client.send("You left "+ server_name +".");
 	});
 });

@@ -1,18 +1,19 @@
 /*
 * Author: Fabrizio Codello
-* Date: 2011/05/30
+* Date: 2011/06/02
 * Version: 0.3.6
 *
-* TODO:
+* TODO:	fix player list, fix multiplayer
 *		+revise all the code
 *		+optimize socket messages
-*		+socket send on keypress
+*		+socket send on keypress?
+*		socket movement only for who's not the player
+*
 *		+browser compatibility Chrome, FF, IE(?)
 *       ?move only on mod TILE_WIDTH, animation
 *       optimize drawmap: render only viewable
 *       *collision with walls (rewrite moveCanvas/movePlayer)
 *       check clear canvas on player
-*       ?wall outer shadows
 *       dirty tiles to re-render
 *
 */
@@ -25,7 +26,7 @@ $(document).ready(function() {
 	var canvasHeight = canvas.height();
 	
 	var playGame = false,
-		desiredFPS = 30
+		desiredFPS = 30;
 	
 	var startButton = $("#startAnimation"),
 		stopButton = $("#stopAnimation");
@@ -40,7 +41,7 @@ $(document).ready(function() {
 		stopButton.show();
 		
 		playGame = true;
-		debugLog.append("<li>Started</li>");
+		debugLog.prepend("<li>Started</li>");
 		animate();
 	});
 	
@@ -49,17 +50,17 @@ $(document).ready(function() {
 		startButton.show();
 		
 		playGame = false;
-		debugLog.append("<li>Stopped</li>");
+		debugLog.prepend("<li>Stopped</li>");
 	});
 	
-	var playersId = 0;
+	//var playersId = 0;
 	
 	var tileWidth = 32,
 		tileHeight = 32;
 	
-	function Player(id, x, y) {
-		this.id = id;
-		this.nick = "Guest"+id;
+	function Player(x, y) {
+		this.id = 0;
+		this.nick = "Guest"+0;
 		this.x = x;
 		this.y = y;
 		
@@ -80,7 +81,7 @@ $(document).ready(function() {
 		this.moveDown = false;
 		
 		this.toString = function() {
-		    return this.nick +' id: '+ this.id +' x: '+ this.x +' ('+ (this.x+this.width) +') y: '+ this.y +' ('+ (this.y + this.height)+')';
+		    return this.nick +' id: '+ this.id +' x: '+ this.x +' ('+ (this.x+this.width) +') y: '+ this.y +' ('+ (this.y + this.height)+') '+ this.vX +' '+ this.vY;
 		};
 		    
 		this.draw = function(c) {
@@ -100,21 +101,19 @@ $(document).ready(function() {
 		buttonPlay = $("#play");
 	
 	buttonPlay.click(function() {
-		debugLog.append("<li>Clicked Play</li>");
+		debugLog.prepend("<li>Clicked Play</li>");
 		
 		if (playerNick.val() != '') {
 			player.nick = playerNick.val();
 		}
-		debugLog.append("<li>Player name: "+ player.nick +"</li>");
+		debugLog.prepend("<li>Player name: "+ player.nick +"</li>");
 		
 		gameGUI.hide();
 		startGame();
 	});
 	
-	function startGame() {
-		//dostuff
-		
-		/*canvas.click(function(e) { //testing GUI clicks
+	/*function test_GUIclicks() {
+		canvas.click(function(e) { //testing GUI clicks
 			var canvasOffset = canvas.offset();
 			var canvasX = Math.floor(e.pageX - canvasOffset.left);
 			var canvasY = Math.floor(e.pageY - canvasOffset.top);
@@ -128,43 +127,47 @@ $(document).ready(function() {
 			ctx.lineTo(canvasX, canvasY);
 			ctx.closePath();
 			ctx.stroke();
-		});*/
+		});
+	}*/
+	
+	function startGame() {
+		//dostuff
+		if (connected) {
+			debugLog.prepend('<li>Requesting new player id</li>');
+			socket.send(JSON.stringify({ type: 'newPlayer', nick: player.nick}));
+			debugLog.prepend('<li>Requesting player list</li>');
+			socket.send(JSON.stringify({ type: 'playersList'}));
+		}
 		
-		$(window).keydown(function(e) {
+		$(window).keypress(function(e) {
 			e.preventDefault();
 			var keyCode = e.keyCode;
 
 			if (!playGame) {
 				playGame = true;
 				
-				debugLog.append("<li>Starting...</li>");
+				debugLog.prepend("<li>Starting...</li>");
 
 				//timer();
 				animate();
 			}
 			
-			/*if (keyCode == arrowLeft) {
-				player.moveLeft = true;
-			} else if (keyCode == arrowRight) {
-				player.moveRight = true;
-			} else if (keyCode == arrowUp) {
-				player.moveUp = true;
-			} else if (keyCode == arrowDown) {
-				player.moveDown = true;
-			}*/
-			
 			if (keyCode == arrowLeft) {
+				player.moveLeft = true;
 				dir = 'l';
 			} else if (keyCode == arrowRight) {
+				player.moveRight = true;
 				dir = 'r';
 			} else if (keyCode == arrowUp) {
+				player.moveUp = true;
 				dir = 'u';
 			} else if (keyCode == arrowDown) {
+				player.moveDown = true;
 				dir = 'd';
 			}
 			
 			//testing
-			socket.send(JSON.stringify({ x: player.x, y: player.y, dir: dir}));
+			socket.send(JSON.stringify({ type: 'play', id: player.id, x: player.x, y: player.y, dir: dir}));
 		});
 
 		$(window).keyup(function(e) {
@@ -180,34 +183,38 @@ $(document).ready(function() {
 			} else if (keyCode == arrowDown) {
 				player.moveDown = false;
 			}
+			
+			//player.vX = 0;
+			//player.vY = 0;
 		});
 		
 		animate();
 	}
 	
 	var player,
-		players = new Array(),
+		players = [],
 		maxPlayers = 10,
-		speed = 5;
+		speed = 5,
+		connected = false;
 	
 	function init() {		
 		socket = new io.Socket(null, {port: 8080, rememberTransport: false});
     	socket.connect();
-    	debugLog.append("<li>Connecting...</li>");
+    	debugLog.prepend("<li>Connecting...</li>");
 		
-		player = new Player(playersId, 0, 0);
+		player = new Player(0, 0);
 		players.push(player);
-		
+				
 		ctx.fillStyle = 'rgb(0, 0, 0)';
-    	ctx.font = "15px Lucida Console";
+    	ctx.font = "15px Monospace";
 		
 		debugCtx.fillStyle = 'rgb(0, 0, 0)';
-    	debugCtx.font = "15px Lucida Console";
+    	debugCtx.font = "15px Monospace";
 		
-		debugLog.append("<li>Inited.</li>");
+		debugLog.prepend("<li>Inited.</li>");
 	}
 	
-	function movePlayer(p) {
+	/*function movePlayer(p) {
 		p.vX = 0;
 		p.vY = 0;
 	
@@ -226,7 +233,7 @@ $(document).ready(function() {
 		
 		p.x += p.vX;
 		p.y += p.vY;
-	}
+	}*/
 	
 	function checkBoundaries(p) {
 		if (p.x + p.width > canvasWidth) {
@@ -249,8 +256,6 @@ $(document).ready(function() {
 		debugCtx.fillText(player, 10, 15);
 	}
 	
-	var i = 0;
-	
 	function animate() {
 		ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 		
@@ -270,7 +275,7 @@ $(document).ready(function() {
 		}
 	}
 	
-	function timer() {
+	function timer() {	//implement ping/userlist
 		if (playGame) {
 			scoreTimeout = setTimeout(function() {
 				//ping every second?
@@ -279,6 +284,10 @@ $(document).ready(function() {
 			}, 1000);
 		}
 	}
+		
+	debugLog.click(function() {
+		debugLog.html("");
+	});
 	
 	init();
 	
@@ -286,48 +295,78 @@ $(document).ready(function() {
 	var socket;
     
     socket.on('connect', function() {
-		debugLog.append('<li>* Connected to the server.</li>');
+    	connected = true;
+		debugLog.prepend('<li>* Connected to the server.</li>');
 	});
 			
 	socket.on('disconnect', function() {
-		debugLog.append('<li>* Disconnected from the server.</li>');
+		connected = false;
+		debugLog.prepend('<li>* Disconnected from the server.</li>');
 	});
-			
-	socket.on('message', function(mess) {
-		var data = JSON.parse(mess);
+	
+	function movePlayerSocket(p, dir) {
+		p.vX = 0;
+		p.vY = 0;
 		
-		var dir = data.dir;
-		if (dir = 'l') {
+		if (dir == 'l') {
 			p.vX = -speed;
 		}
-		if (dir = 'r') {
+		if (dir == 'r') {
 			p.vX = speed;
 		}
-		if (dir = 'u') {
+		if (dir == 'u') {
 			p.vY = -speed;
 		}
-		if (dir = 'd') {
+		if (dir == 'd') {
 			p.vY = speed;
 		}
 		
 		p.x += p.vX;
 		p.y += p.vY;
+	}
+			
+	socket.on('message', function(mess) {
+		var data = JSON.parse(mess);
+		var msg_type = data.type;
 		
-		//debugCtx(data, 10, 35);
+		//debugLog.prepend('<li>Message arrived: '+ mess +'</li>');		
 		
-		/*switch (data.msg_type) {
-			case 'test':
-					
+		switch (msg_type) {
+				case 'srv_msg':
+						debugLog.prepend('<li>'+ data.msg +'</li>');	
+					break;
+				case 'play':	//use players[id]
+						players.forEach(function(pla) {
+							if (pla.id == data.id) {
+								movePlayerSocket(pla, data.dir);
+							}
+						});
+					break;
+				case 'newPlayer':
+						player.id = data.id;
+						player.x = data.x;
+						player.y = data.y;
+						debugLog.prepend('<li>Received player id: '+ data.id +'</li>');
+						
+					break;
+				case 'playersList':
+						var tmpPlayer;
+						
+						tmpPlayer.id = data.id;
+						tmpPlayer.nick = data.nick;
+						tmpPlayer.x = data.x;
+						tmpPlayer.y = data.y;
+						
+						players.push(tmpPlayer);
+						debugLog.prepend('<li>Added player to list</li>');				
 				break;
-
-			default:
 					
+				default:
+					debugLog.prepend('<li>Unknown message format.</li>');
 				break;
-		}*/				
+		}
 		
-	});
-	
-	debugLog.click(function() {
-		debugLog.html("");
+			
+		
 	});
 });
