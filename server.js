@@ -4,6 +4,7 @@
 *		player spawning
 *		collisions
 *		tune up server messages/latency
+*		server authority
 *		
 */
 
@@ -87,8 +88,8 @@ socket.on('connection', function(client) {
 		var data = JSON.parse(mess);
 		
 		if (!connected) {
-			client.send(JSON.stringify({type: 'srv_msg', msg: 'Welcome to "'+ server_name +'" server!'}));
-			client.send(JSON.stringify({type: 'srv_msg', msg: 'There are '+ total_players +' players online.'}));
+			client.send(JSON.stringify({type: 'srv_msg', msg: '* Welcome to "'+ server_name +'" server!'}));
+			client.send(JSON.stringify({type: 'srv_msg', msg: '* There are '+ total_players +' players online.'}));
 			connected = true;
 		} else {
 						
@@ -97,16 +98,25 @@ socket.on('connection', function(client) {
 				case 'newPlayer':
 					playersid++;
 					playerid = playersid;
-					players[playerid].nick = data.nick;
+					
+					console.log('newPlayer id:'+ playersid +' nick: '+ data.nick);
+					
+					players[playerid] = { "nick": data.nick };
+					
+					
+					
 					client.send(JSON.stringify({type: 'newPlayer', id: playerid, x: 50, y: 50}));	
 				break;
 				case 'playersList':
-					players.forEach(function(pla) {
-						if (pla.id != playerid) {
-							client.send(JSON.stringify({type: 'playersList', x: pla.x, y: pla.y, id: pla.id, nick: pla.nick}));
-						}
-					});
-					
+					if (players.length > 0) {
+						players.forEach(function(pla) {
+							if (pla.id != playerid) {
+								client.send(JSON.stringify({type: 'playersList', x: pla.x, y: pla.y, id: pla.id, nick: pla.nick }));
+							}
+						});
+					} else {
+						client.send(JSON.stringify({type: 'playersList', msg: 'You are alone in the server' }));
+					}
 				break;
 				case 'play':
 					var test = JSON.stringify({type: "play", id: data.id, x: data.x, y: data.y, dir: data.dir});

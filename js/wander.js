@@ -1,13 +1,14 @@
 /*
 * Author: Fabrizio Codello
-* Date: 2011/06/02
+* Date: 2011/06/03
 * Version: 0.3.6
 *
-* TODO:	fix player list, fix multiplayer
+* TODO:	fix player list, fix welcome, add boolean var for every phase
 *		+revise all the code
 *		+optimize socket messages
 *		+socket send on keypress?
 *		socket movement only for who's not the player
+*		use NowJS
 *
 *		+browser compatibility Chrome, FF, IE(?)
 *       ?move only on mod TILE_WIDTH, animation
@@ -60,7 +61,7 @@ $(document).ready(function() {
 	
 	function Player(x, y) {
 		this.id = 0;
-		this.nick = "Guest"+0;
+		this.nick = "Guest"+this.id;
 		this.x = x;
 		this.y = y;
 		
@@ -350,15 +351,19 @@ $(document).ready(function() {
 						
 					break;
 				case 'playersList':
-						var tmpPlayer;
+						if (!data.msg) {
+							var tmpPlayer;
 						
-						tmpPlayer.id = data.id;
-						tmpPlayer.nick = data.nick;
-						tmpPlayer.x = data.x;
-						tmpPlayer.y = data.y;
+							tmpPlayer.id = data.id;
+							tmpPlayer.nick = data.nick;
+							tmpPlayer.x = data.x;
+							tmpPlayer.y = data.y;
 						
-						players.push(tmpPlayer);
-						debugLog.prepend('<li>Added player to list</li>');				
+							players.push(tmpPlayer);
+							debugLog.prepend('<li>Added player '+ tmpPlayer.nick +' to list</li>');				
+						} else {
+							debugLog.prepend('<li>PlayerList: '+ data.msg +'</li>');				
+						}
 				break;
 					
 				default:
