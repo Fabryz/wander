@@ -1,10 +1,12 @@
 /*
 * TODO:
-*		add sockets to frontend + backend
+*		fix current player id
+*		send new position instead of dir
 *		player spawning
 *		collisions
 *		tune up server messages/latency
 *		server authority
+*		broadcast playerlist on newplayer
 *		
 */
 
@@ -13,10 +15,20 @@ var http = require('http'),
     fs   = require('fs'),
     io   = require('socket.io'),
     url  = require('url');
+    
+function playerList() {
+	var list;
+	
+	players.forEach(function(p) {
+		list += p.id +' - '+ p.nick +'<br/>\n';
+	});
+	
+	return players.join("\n");
+}
 
 var server = http.createServer(function(req, res) {
-	var path = url.parse(req.url).pathname;
-	var rs;  
+	var path = url.parse(req.url).pathname,
+		rs;  
 
 	console.log("* HTTP request: "+ path);
 
@@ -41,7 +53,14 @@ var server = http.createServer(function(req, res) {
 			break;
 		case '/status':
 				res.writeHead(200, { 'Content-Type' : 'text/plain' });
-				res.end('Total players: '+ total_players);
+				res.write('Total players: '+ total_players +'\n');
+				if (total_players > 0) {
+					res.write('id - nickname\n');
+					res.end('Player list:\n'+ playerList());
+				} else {
+					res.end();
+				}
+				
 			break;
 		case '/':
 		case '/index.html':
@@ -58,7 +77,7 @@ var server = http.createServer(function(req, res) {
 
 		default:
 			res.writeHead(404, { 'Content-Type': 'text/html' });
-			res.end('THIS CAN\'T BE HAPPENING, YOU CAN\'T BE HERE!');
+			res.end("THIS CAN'T BE HAPPENING, YOU CAN'T BE HERE!");
 			//rs = fs.createReadStream(__dirname + '/404.html');
 			//sys.pump(rs, res);
 		break;
@@ -69,79 +88,119 @@ var server = http.createServer(function(req, res) {
 server.listen(8080);
 
 var socket = io.listen(server),
-	max_speed = 5,
-	dirs = ['l', 'r', 'u', 'd'],
-	init_dir = 'l',
-	total_players = 0,
-	max_players = 16,
-	playersid = 0,
-	playerid = 0,
+	totPlayers = 0,
 	players = [],
-	connected = false,
-	server_name = "Illusory One";
-
-socket.on('connection', function(client) {
-	total_players++;
-	console.log('* Someone connected, total players: '+ total_players);
+	currentId = -1,
+	currentPid = -1,
+	json = JSON.stringify;
 	
-	client.on('message', function(mess) {		
-		var data = JSON.parse(mess);
-		
-		if (!connected) {
-			client.send(JSON.stringify({type: 'srv_msg', msg: '* Welcome to "'+ server_name +'" server!'}));
-			client.send(JSON.stringify({type: 'srv_msg', msg: '* There are '+ total_players +' players online.'}));
-			connected = true;
-		} else {
-						
-			var msg_type = data.type;
-			switch (msg_type) {
-				case 'newPlayer':
-					playersid++;
-					playerid = playersid;
-					
-					console.log('newPlayer id:'+ playersid +' nick: '+ data.nick);
-					
-					players[playerid] = { "nick": data.nick };
-					
-					
-					
-					client.send(JSON.stringify({type: 'newPlayer', id: playerid, x: 50, y: 50}));	
-				break;
-				case 'playersList':
-					if (players.length > 0) {
-						players.forEach(function(pla) {
-							if (pla.id != playerid) {
-								client.send(JSON.stringify({type: 'playersList', x: pla.x, y: pla.y, id: pla.id, nick: pla.nick }));
-							}
-						});
-					} else {
-						client.send(JSON.stringify({type: 'playersList', msg: 'You are alone in the server' }));
-					}
-				break;
-				case 'play':
-					var test = JSON.stringify({type: "play", id: data.id, x: data.x, y: data.y, dir: data.dir});
+var config = {
+	maxPlayers: 16,
+	dirs: ['l', 'r', 'u', 'd'],
+	initdir: 'l',
+	maxSpeed: 5,
+	spawnX: 50,
+	spawnY: 50
+};
+	
+var serverInfo = {
+	name: "Illusory One",
+	desc: "<Server description here>",
+	ip: "localhost",
+	port: "8080",
+	url: "serverURL.com",
+	admin: "Fabryz",
+	mail: "admin@server.com"
+};
 
-					console.log('Arrived: '+ mess);	
-					console.log('Sending: '+ test);
+//player template test
+var player = {
+	id: -1,
+	nick: "Guest",
+	x: 0,
+	y: 0
+};
+	
+function addNewPlayer(data, client) {
+	client.send(json({type: 'info', msg: '# Welcome to "'+ serverInfo.name +'" server! ('+serverInfo.ip +':'+ serverInfo.port +')'}));
+	client.send(json({type: 'info', msg: '# There are '+ totPlayers +' players online.'}));
+	currentId++;
+	
+	player.id = currentId; //remove id
+	player.nick = data.nick;
+	player.x =  config.spawnX;
+	player.y =  config.spawnY;
+	
+	players[player.id] = player;
 
-					socket.broadcast(test);	
-				break;
-					
-				default:
-					console.log('Unknown type: '+ mess);
-				break;
+	client.send(json({type: 'newPlayer', id: player.id, x: player.x, y: player.y })); //init position
+	
+	//broadcast new player
+}
+
+function sendPlayerList(client) {
+	console.log('Requested player list');
+	/*if (players.length > 0) {
+		players.forEach(function(pla) {
+			if (pla.id != playerid) {
+				client.send(json({type: 'playersList', x: pla.x, y: pla.y, id: pla.id, nick: pla.nick }));
 			}
-		}
+		});
+	} else {
+		client.send(json({type: 'playersList', msg: 'You are alone in the server' }));
+	}*/
 
-	});
-	
+	var list = json(players);
+
+	console.log('Sending: '+ list);
+
+	client.send(json({type: 'playersList', list: list}));
+}
+
+function sendGameData(data) {
 	/* Do bounds and anticheat checks*/
 	/* Elaborate next position, send confirmed position to client */
 
+	socket.broadcast(json({type: "play", id: data.id, x: data.x, y: data.y, dir: data.dir }));	
+}
+
+socket.on('connection', function(client) {
+	totPlayers++;
+	console.log('* Player connected, total players: '+ totPlayers);
+	
+	client.on('message', function(mess) {		
+		try {
+            var data = JSON.parse(mess);
+        } catch (err) {
+            //console.log("skip: " + sys.inspect(err));
+            console.log('[Error] Malformed JSON');
+            return; 
+        }
+		
+		console.log('Arrived: '+ mess);
+					
+		switch (data.type) {
+			case 'newPlayer':
+				addNewPlayer(data, client);
+			break;
+			case 'playersList':
+				sendPlayerList(client);
+			break;
+			case 'play':
+				sendGameData(data);
+			break;
+				
+			default:
+				console.log('[Error] Unknown message type: '+ mess);
+			break;
+		}
+
+	});
+
 	client.on('disconnect', function() {
-		delete players[playerid];
-		total_players--;
-		console.log('Someone disconnected, total players: '+ total_players);
-		client.send("You left "+ server_name +".");
+		delete players[player.id];
+		totPlayers--;
+		console.log('Player disconnected, total players: '+ totPlayers);
+		client.send("You left "+ serverInfo.name +".");
 	});
 });
