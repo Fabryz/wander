@@ -37,9 +37,9 @@ p {
 	margin-top: 100px;
 	padding: 40px 0;
 	text-align: center;
-	-webkit-border-radius: 5px;
-	-moz-border-radius: 5px;
-	border-radius: 5px;
+	-webkit-border-radius: 10px;
+	-moz-border-radius: 10px;
+	border-radius: 10px;
 }
 
 #gameIntro input[type="text"] {
@@ -57,7 +57,7 @@ a:hover {
 }
 
 a.button {
-	background: #185DA8;
+	background: #2488F5;
 	-webkit-border-radius: 5px;
 	-moz-border-radius: 5px;
 	border-radius: 5px;
@@ -69,13 +69,13 @@ a.button {
 }
 
 a.button:hover {
-	background: #2488F5;
-	color: #FFF;
+	background: #F7F7F7;
+	color: #333;
 	text-decoration: none;
 }
 
-.button {
-
+a.disconnected {
+	background: #185DA8;
 }
 
 #gameCanvas {
