@@ -1,6 +1,6 @@
 /*
 * Author: Fabrizio Codello
-* Date: 2011/06/03
+* Date: 2011/06/05
 * Version: 0.3.6
 *
 * TODO:	fix player list, fix 50px/no welcome on 2nd players, add boolean var for every phase
@@ -44,7 +44,7 @@ $(document).ready(function() {
 		
 		isPlaying = true;
 		debugLog.prepend("<li>Started</li>");
-		animate();
+		gameLoop();
 	});
 	
 	stopButton.click(function() {
@@ -63,18 +63,23 @@ $(document).ready(function() {
 		this.nick = "Guest";
 		this.x = x;
 		this.y = y;
+		this.vX = 0;
+		this.vY = 0;
+		
+		this.alive = true;
+		this.status = "normal";
+		this.hp = 100;
+		this.inventory = [];
 		
 		this.width = tileWidth;
 		this.height = tileHeight;
 		this.halfWidth = this.width/2;
-		this.halfHeight = this.height/2; 
-		
-		this.vX = 0;
-		this.vY = 0;		
+		this.halfHeight = this.height/2; 		
 		
 		this.avatar = new Image();
 		this.avatar.src = './img/player.png';
 		
+		this.moved = false;
 		this.moveLeft = false;
 		this.moveRight = false;
 		this.moveUp = false;
@@ -99,6 +104,8 @@ $(document).ready(function() {
 		gameIntro = $("#gameIntro"),
 		playerNick = $("#playerNick"),
 		playButton = $("#play");
+		
+	var json = JSON.stringify;
 	
 	playButton.click(function() {
 		debugLog.prepend("<li>Clicked Play</li>");
@@ -109,10 +116,11 @@ $(document).ready(function() {
 			}
 			debugLog.prepend("<li>Player name: "+ player.nick +"</li>");
 		
-			gameGUI.hide();
-			startGame();
+			gameGUI.fadeOut();
+			startGame();	//start the game only if connected
 		} else {
 			debugLog.prepend("<li>You cannot play until you are connected to the server.</li>");
+			//set a timer to autorestart?
 		}
 	});
 	
@@ -136,56 +144,34 @@ $(document).ready(function() {
 	
 	var receivedId = false,
 		receivedPlayersList = false;
-		
-	//test
-	var milli;
-		
-	function limitSend(fn, ms) {
-		var last = (new Date()).getTime();
-		return (function() {
-			var now = (new Date()).getTime();
-			milli = now - last;
-			if (now - last > ms) {
-				last = now;
-				fn.apply(null, arguments);
-			}
-		});
-	}
-	
+			
 	function startGame() {
-		debugLog.prepend('<li>Requesting new player id</li>');
-		socket.send(JSON.stringify({ type: 'newPlayer', nick: player.nick}));
-		debugLog.prepend('<li>Requesting player list</li>');
-		socket.send(JSON.stringify({ type: 'playersList'}));
+		debugLog.prepend('<li>Sending nickname</li>');
+		socket.send(json({ type: 'setNick', nick: player.nick}));
+		debugLog.prepend('<li>Requesting players list</li>');
+		socket.send(json({ type: 'playersList'}));
 		
 		if (!isPlaying) {
-			isPlaying = true;
-			
 			debugLog.prepend("<li>Starting...</li>");
-			//timer();
-			animate();
-				
+			isPlaying = true;
+							
 			$(window).keypress(function(e) {
 				e.preventDefault();
 				var keyCode = e.keyCode;
 			
 				if (keyCode == arrowLeft) {
 					player.moveLeft = true;
-					dir = 'l';
 				} else if (keyCode == arrowRight) {
 					player.moveRight = true;
-					dir = 'r';
 				} else if (keyCode == arrowUp) {
 					player.moveUp = true;
-					dir = 'u';
 				} else if (keyCode == arrowDown) {
 					player.moveDown = true;
-					dir = 'd';
 				}
-			
-				//find a way to socket.send only every X ms and not continuosly
-				limitSend(socket.send(JSON.stringify({ type: 'play', id: player.id, dir: dir})), 40);
 				
+				if (playerMoved) {
+					player.moved = true;
+				}
 			});
 
 			$(window).keyup(function(e) {
@@ -201,14 +187,19 @@ $(document).ready(function() {
 				} else if (keyCode == arrowDown) {
 					player.moveDown = false;
 				}
+				
+				if (playerMoved) {
+					player.moved = false;
+				}
 			
-				//player.vX = 0;
-				//player.vY = 0;
+				player.vX = 0;
+				player.vY = 0;
 			});
 			
-		} else {
-			animate();
-		}
+			//timer();
+		} 
+		
+		gameLoop();
 	}
 	
 	var player,
@@ -276,13 +267,63 @@ $(document).ready(function() {
 	function debugStuff() {
 		debugCtx.clearRect(0, 0, 500, 70);
 		debugCtx.fillText(player, 10, 15);
-		debugCtx.fillText(milli, 10, 35);
+		debugCtx.fillText(fps(), 10, 35);
 	}
 	
-	function animate() {
+	//test
+	var lastFps;
+		
+	function fps() {
+			var now = new Date().getTime();
+			var fps = 1000/(now - lastFps);
+			lastFps = now;
+			
+			return Math.floor(fps);
+	}
+	
+	function playerMoved() {
+		return (player.moveLeft || player.moveRight || player.moveUp || player.moveDown);
+	}
+	
+	var sent,
+		lastMove;
+	
+	// test. Put socket.send back inside .keypress?
+	// goddamn this is the hell of lag
+	function sendMovement() {	
+		if (playerMoved) {	//player moved. Use player.sendupdate?
+							//check if position differs from old one?
+			var dir;
+		
+			if (player.moveLeft) {
+				dir = 'l';
+			}
+			if (player.moveRight) {
+				dir = 'r';
+			}
+			if (player.moveUp) {
+				dir = 'u';
+			}
+			if (player.moveDown) {
+				dir = 'd';
+			}
+		
+			//find a way to socket.send only every X ms and not continuosly			
+			nowMove = new Date.getTime();
+			
+			if (nowMove - lastMove > 1000) {
+				lastMove = nowMove;
+				socket.send(json({ type: 'play', id: player.id, dir: dir }));
+			}
+		}
+	}
+	
+	function gameLoop() {
 		ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 		
-		if (isPlaying) {			
+		if (isPlaying) {
+			lastMove = new Date().getTime();
+			sendMovement();
 			
 			//movePlayer(player); using sockets
 			checkBoundaries(player);
@@ -294,7 +335,9 @@ $(document).ready(function() {
 			
 			debugStuff();
 			
-			setTimeout(animate, 33); //1000/desired_fps
+			lastFps = new Date().getTime();
+			
+			setTimeout(gameLoop, 33); //1000/desired_fps
 		}
 	}
 	
@@ -351,6 +394,7 @@ $(document).ready(function() {
 			
 	socket.on('disconnect', function() {
 		isConnected = false;
+		playButton.addClass("disconnected");
 		debugLog.prepend('<li>* Disconnected from the server.</li>');
 	});
 			
@@ -369,6 +413,8 @@ $(document).ready(function() {
 								movePlayerSocket(pla, data.dir);
 							}
 						});
+						
+						//movePlayerSocket(players[data.id], data.dir);
 					break;
 				case 'newPlayer':
 						player.id = data.id;

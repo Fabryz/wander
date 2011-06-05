@@ -1,6 +1,7 @@
 /*
 * TODO:
 *		fix current player id
+*		fix empty players on players array
 *		send new position instead of dir
 *		player spawning
 *		collisions
@@ -20,10 +21,10 @@ function playerList() {
 	var list;
 	
 	players.forEach(function(p) {
-		list += p.id +' - '+ p.nick +'<br/>\n';
+		list += p.id +' - '+ p.nick +'\n';
 	});
 	
-	return players.join("\n");
+	return list;
 }
 
 var server = http.createServer(function(req, res) {
@@ -53,8 +54,8 @@ var server = http.createServer(function(req, res) {
 			break;
 		case '/status':
 				res.writeHead(200, { 'Content-Type' : 'text/plain' });
-				res.write('Total players: '+ total_players +'\n');
-				if (total_players > 0) {
+				res.write('Total players: '+ totPlayers +'\n\n');
+				if (totPlayers > 0) {
 					res.write('id - nickname\n');
 					res.end('Player list:\n'+ playerList());
 				} else {
@@ -88,8 +89,9 @@ var server = http.createServer(function(req, res) {
 server.listen(8080);
 
 var socket = io.listen(server),
-	totPlayers = 0,
+	player,
 	players = [],
+	totPlayers = 0,
 	currentId = -1,
 	currentPid = -1,
 	json = JSON.stringify;
@@ -114,23 +116,22 @@ var serverInfo = {
 };
 
 //player template test
-var player = {
-	id: -1,
-	nick: "Guest",
-	x: 0,
-	y: 0
-};
-	
-function addNewPlayer(data, client) {
+function Player(id, nick, x, y) {
+	this.id = id;
+	this.nick = nick;
+	this.x = x;
+	this.y = y;
+}
+
+function sendServerInfo(client) {
 	client.send(json({type: 'info', msg: '# Welcome to "'+ serverInfo.name +'" server! ('+serverInfo.ip +':'+ serverInfo.port +')'}));
-	client.send(json({type: 'info', msg: '# There are '+ totPlayers +' players online.'}));
-	currentId++;
+	client.send(json({type: 'info', msg: '# There are now '+ totPlayers +' players online.'}));
+}
 	
-	player.id = currentId; //remove id
-	player.nick = data.nick;
-	player.x =  config.spawnX;
-	player.y =  config.spawnY;
+function newPlayer(id, client) {
+	sendServerInfo(client);
 	
+	player = new Player(id, 'Guest'+id , config.spawnX, config.spawnY);	
 	players[player.id] = player;
 
 	client.send(json({type: 'newPlayer', id: player.id, x: player.x, y: player.y })); //init position
@@ -152,7 +153,7 @@ function sendPlayerList(client) {
 
 	var list = json(players);
 
-	console.log('Sending: '+ list);
+	console.log('Sending player list: '+ list);
 
 	client.send(json({type: 'playersList', list: list}));
 }
@@ -166,8 +167,11 @@ function sendGameData(data) {
 
 socket.on('connection', function(client) {
 	totPlayers++;
-	console.log('* Player connected, total players: '+ totPlayers);
+	currentId++;
+	newPlayer(currentId, client);
 	
+	console.log('* Player connected, total players: '+ totPlayers);
+		
 	client.on('message', function(mess) {		
 		try {
             var data = JSON.parse(mess);
@@ -181,7 +185,11 @@ socket.on('connection', function(client) {
 					
 		switch (data.type) {
 			case 'newPlayer':
-				addNewPlayer(data, client);
+				//addNewPlayer(data, client);
+			break;
+			case 'setNick':	//must grab and update also on players array
+				players[player.id].nick = data.nick;
+				console.log('Nick set to '+ data.nick);
 			break;
 			case 'playersList':
 				sendPlayerList(client);
