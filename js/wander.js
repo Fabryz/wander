@@ -210,16 +210,16 @@ $(document).ready(function() {
 	
 	var player,
 		players = [],
-		maxPlayers = 10, //get from server
+		maxPlayers = 16, //get from server
 		speed = 5;		//get from server
 	
-	function init() {		
+	function gameInit() {		
 		socket = new io.Socket(null, {port: 8080, rememberTransport: false});
     	socket.connect();
     	debugLog.prepend("<li>Connecting...</li>");
 		
-		player = new Player(0, 0);
-		players.push(player);	//remove?
+		//player = new Player(0, 0);
+		//players.push(player);	//remove?
 				
 		ctx.fillStyle = 'rgb(0, 0, 0)';
     	ctx.font = "15px Monospace";
@@ -227,7 +227,7 @@ $(document).ready(function() {
 		debugCtx.fillStyle = 'rgb(0, 0, 0)';
     	debugCtx.font = "15px Monospace";
 		
-		debugLog.prepend("<li>Inited.</li>");
+		debugLog.prepend("<li>Game inited.</li>");
 	}
 	
 	/*
@@ -333,10 +333,9 @@ $(document).ready(function() {
 			//movePlayer(player); using sockets
 			checkBoundaries(player);
 			
-			/*var playersLength = players.length;
-			for(var i = 0; i < playersLength; i++) {
-				players[i].draw(ctx);
-			}*/
+			players.forEach(function(p) {
+				p.draw(ctx);
+			});
 			
 			debugStuff();
 			
@@ -362,7 +361,7 @@ $(document).ready(function() {
 		debugLog.html("");
 	});
 	
-	init();
+	gameInit();
 	
 	/* 
 	* Multiplayer stuff	
@@ -415,9 +414,9 @@ $(document).ready(function() {
 						debugLog.prepend('<li>'+ data.msg +'</li>');	
 					break;
 				case 'play':	//use players[id]
-						players.forEach(function(pla) {
-							if (pla.id == data.id) {
-								movePlayerSocket(pla, data.dir);
+						players.forEach(function(p) {
+							if (p.id == data.id) {
+								movePlayerSocket(p, data.dir);
 							}
 						});
 						//check.isPlaying = true;
@@ -439,15 +438,28 @@ $(document).ready(function() {
 							debugLog.prepend('<li>Nick not usable.</li>');
 						}
 					break;
+				case 'nickChange':
+						players.forEach(function(p) {
+							if (p.id == data.id) {
+								var oldNick = p.nick;
+								p.nick = data.nick;
+							}
+						});
+						debugLog.prepend('<li>'+ oldNick +' changed nick to '+ data.nick +'.</li>');
+					break;
 				case 'newPlayer':
 						var tmpPlayer = JSON.parse(data.player);
 						
 						if (tmpPlayer.id != player.id) {
-							players[tmpPlayer.id] = tmpPlayer;
-							debugLog.prepend('<li>New player joined: '+ json(tmpPlayer) +'</li>');					}
+							//players[tmpPlayer.id] = tmpPlayer;
+							players.push(tmpPlayer);
+							debugLog.prepend('<li>New player joined: '+ json(tmpPlayer) +'</li>');					} else { //current player
+							players.push(tmpPlayer);
+							debugLog.prepend('<li>You\'ve joined: '+ json(tmpPlayer) +'</li>');	
+						}
 					break;
 				case 'playersList': //check for empty list?
-						debugLog.prepend('<li>Receiving players list...</li>');				
+						debugLog.prepend('<li>Receiving initial players list...</li>');				
 						players = []; //prepare for new list
 						var playerList = JSON.parse(data.list);
 					
@@ -472,8 +484,8 @@ $(document).ready(function() {
 						*/
 						
 						playerList.forEach(function(p) {
-							debugLog.prepend('<li>Added player '+ p.nick +' to list</li>');				
-				
+							debugLog.prepend('<li>Adding player '+ p.nick +' ('+ p.id +') to list</li>');				
+							players.push(p);
 						});
 	
 						debugLog.prepend('<li>Player list received.</li>');
