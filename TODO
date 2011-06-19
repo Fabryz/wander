@@ -1,7 +1,8 @@
 fix nick on wrong id
+fix player.id scope
+fix more players than connected clients
 
-don't use player, store playerId and use on players array
-|-> so it will be needed to hash id to avoid client hacks
+hash player ids to avoid client hacks
 refresh newnick on players client
 
 ping clients and refresh playerlist
