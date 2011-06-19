@@ -1,0 +1,23 @@
+fix nick on wrong id
+
+don't use player, store playerId and use on players array
+|-> so it will be needed to hash id to avoid client hacks
+refresh newnick on players client
+
+ping clients and refresh playerlist
+check for doublenick
+player registration (use db)
++revise all the code
++optimize socket messages
++socket send on keypress?
+socket movement only for who's not the player
+use NowJS
+readd map data structure and map rendering stuff
+minify/obfuscate client code
+
++browser compatibility Chrome, FF, IE(?)
+?move only on mod TILE_WIDTH, animation
+optimize drawmap: render only viewable
+*collision with walls (rewrite moveCanvas/movePlayer)
+check clear canvas on player
+dirty tiles to re-render
