@@ -1,22 +1,7 @@
 /*
 * Author: Fabrizio Codello
-* Date: 2011/06/05
+* Date: 2011/06/19
 * Version: 0.3.6
-*
-* TODO:	fix player list, fix 50px/no welcome on 2nd players, add boolean var for every phase
-*		fix connect on startgame, use init.ziocan hasId haslist...
-*		+revise all the code
-*		+optimize socket messages
-*		+socket send on keypress?
-*		socket movement only for who's not the player
-*		use NowJS
-*
-*		+browser compatibility Chrome, FF, IE(?)
-*       ?move only on mod TILE_WIDTH, animation
-*       optimize drawmap: render only viewable
-*       *collision with walls (rewrite moveCanvas/movePlayer)
-*       check clear canvas on player
-*       dirty tiles to re-render
 *
 */
 
@@ -27,8 +12,7 @@ $(document).ready(function() {
 	var canvasWidth = canvas.width();
 	var canvasHeight = canvas.height();
 	
-	var isPlaying = false,
-		desiredFPS = 30;
+	var desiredFPS = 30;
 	
 	var startButton = $("#startAnimation"),
 		stopButton = $("#stopAnimation");
@@ -37,12 +21,12 @@ $(document).ready(function() {
 		debugCtx = debugCanvas.get(0).getContext("2d"),
 		debugLog = $("#debugLog ul");
 	
-	startButton.hide();
+	/*startButton.hide();
 	startButton.click(function() {
 		$(this).hide();
 		stopButton.show();
 		
-		isPlaying = true;
+		check.isPlaying = true;
 		debugLog.prepend("<li>Started</li>");
 		gameLoop();
 	});
@@ -51,16 +35,16 @@ $(document).ready(function() {
 		$(this).hide();
 		startButton.show();
 		
-		isPlaying = false;
+		check.isPlaying = false;
 		debugLog.prepend("<li>Stopped</li>");
-	});
+	});*/
 	
 	var tileWidth = 32,
 		tileHeight = 32;
 	
 	function Player(x, y) {
 		this.id = -1;
-		this.nick = "Guest";
+		this.nick = "";
 		this.x = x;
 		this.y = y;
 		this.vX = 0;
@@ -71,13 +55,12 @@ $(document).ready(function() {
 		this.hp = 100;
 		this.inventory = [];
 		
+		this.avatar = new Image();
+		this.avatar.src = './img/player.png';
 		this.width = tileWidth;
 		this.height = tileHeight;
 		this.halfWidth = this.width/2;
 		this.halfHeight = this.height/2; 		
-		
-		this.avatar = new Image();
-		this.avatar.src = './img/player.png';
 		
 		this.moved = false;
 		this.moveLeft = false;
@@ -110,7 +93,7 @@ $(document).ready(function() {
 	playButton.click(function() {
 		debugLog.prepend("<li>Clicked Play</li>");
 		
-		if (isConnected) {
+		if (check.isConnected) {
 			if (playerNick.val() != '') {
 				player.nick = playerNick.val();
 			}
@@ -142,18 +125,32 @@ $(document).ready(function() {
 		});
 	}*/
 	
-	var receivedId = false,
-		receivedPlayersList = false;
+	//boolean var for every phase of the connection
+	var check = {
+		isConnected: false,
+		hasId: false,
+		hasNick: false,
+		hasPlayerList: false,
+		isReady: false,
+		isPlaying: false
+	};
+	
+	var attempt = 0,
+		maxAttempts = 5,
+		attemptTime = 1000;
 			
 	function startGame() {
-		debugLog.prepend('<li>Sending nickname</li>');
-		socket.send(json({ type: 'setNick', nick: player.nick}));
-		debugLog.prepend('<li>Requesting players list</li>');
-		socket.send(json({ type: 'playersList'}));
-		
-		if (!isPlaying) {
+		if (!check.hasNick) { //todo: keep gameUI form open till nick is ok
+			debugLog.prepend('<li>Sending nickname</li>');
+			socket.send(json({ type: 'setNick', nick: player.nick}));
+		}
+		if (!check.hasPlayerList) {
+			debugLog.prepend('<li>Requesting players list</li>');
+			socket.send(json({ type: 'playersList'}));
+		}	
+		if (check.isReady) {
 			debugLog.prepend("<li>Starting...</li>");
-			isPlaying = true;
+			check.isPlaying = true;
 							
 			$(window).keypress(function(e) {
 				e.preventDefault();
@@ -197,16 +194,24 @@ $(document).ready(function() {
 			});
 			
 			//timer();
-		} 
+		} else {
+			attempt++;
+			if (attempt <= maxAttempts) {
+				setTimeout(startGame, attemptTime);
+				debugLog.prepend("<li>- - - Not ready, restarting in 5s... (Attempt "+ attempt+")</li>");
+			} else {
+				check.isPlaying = false;
+				debugLog.prepend("<li>- - - Unable to start, game stopped.</li>");
+			}
+		}
 		
 		gameLoop();
 	}
 	
 	var player,
 		players = [],
-		maxPlayers = 10,
-		speed = 5,
-		isConnected = false;
+		maxPlayers = 10, //get from server
+		speed = 5;		//get from server
 	
 	function init() {		
 		socket = new io.Socket(null, {port: 8080, rememberTransport: false});
@@ -214,7 +219,7 @@ $(document).ready(function() {
     	debugLog.prepend("<li>Connecting...</li>");
 		
 		player = new Player(0, 0);
-		players.push(player);
+		players.push(player);	//remove?
 				
 		ctx.fillStyle = 'rgb(0, 0, 0)';
     	ctx.font = "15px Monospace";
@@ -321,17 +326,17 @@ $(document).ready(function() {
 	function gameLoop() {
 		ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 		
-		if (isPlaying) {
+		if (check.isPlaying) {
 			lastMove = new Date().getTime();
 			sendMovement();
 			
 			//movePlayer(player); using sockets
 			checkBoundaries(player);
 			
-			var playersLength = players.length;
+			/*var playersLength = players.length;
 			for(var i = 0; i < playersLength; i++) {
 				players[i].draw(ctx);
-			}
+			}*/
 			
 			debugStuff();
 			
@@ -344,7 +349,7 @@ $(document).ready(function() {
 	var pingTimeout;
 	
 	function timer() {	//implement ping/userlist
-		if (isPlaying) {
+		if (check.isPlaying) {
 			pingTimeout = setTimeout(function() {
 				//ping every X seconds?
 		
@@ -387,13 +392,15 @@ $(document).ready(function() {
 	}
 	    
     socket.on('connect', function() {
-    	isConnected = true;
+    	check.isConnected = true;
     	playButton.removeClass("disconnected");
 		debugLog.prepend('<li>* Connected to the server.</li>');
 	});
 			
 	socket.on('disconnect', function() {
-		isConnected = false;
+		check.isConnected = false;
+		check.isReady = false;
+		check.isPlaying = false;
 		playButton.addClass("disconnected");
 		debugLog.prepend('<li>* Disconnected from the server.</li>');
 	});
@@ -413,34 +420,69 @@ $(document).ready(function() {
 								movePlayerSocket(pla, data.dir);
 							}
 						});
-						
+						//check.isPlaying = true;
 						//movePlayerSocket(players[data.id], data.dir);
 					break;
-				case 'newPlayer':
-						player.id = data.id;
-						player.x = data.x;
-						player.y = data.y;
-						debugLog.prepend('<li>Received player id: '+ data.id +'</li>');
+				case 'join':
+						var tmpPlayer = JSON.parse(data.player);
 						
+						player = tmpPlayer;
+						check.hasId = true;
+						debugLog.prepend('<li>Received current player id: '+ tmpPlayer.id +'</li>');
 					break;
-				case 'playersList':
-						if (!data.msg) {
-							var tmpPlayer;
+				case 'nickRes':
+						if (data.res == 'ok') {
+							check.hasNick = true;
+							debugLog.prepend('<li>Nick confirmed.</li>');
+						} else { //reopen input form
+							check.hasNick = false;
+							debugLog.prepend('<li>Nick not usable.</li>');
+						}
+					break;
+				case 'newPlayer':
+						var tmpPlayer = JSON.parse(data.player);
 						
-							tmpPlayer.id = data.id;
-							tmpPlayer.nick = data.nick;
-							tmpPlayer.x = data.x;
-							tmpPlayer.y = data.y;
-						
+						if (tmpPlayer.id != player.id) {
+							players[tmpPlayer.id] = tmpPlayer;
+							debugLog.prepend('<li>New player joined: '+ json(tmpPlayer) +'</li>');					}
+					break;
+				case 'playersList': //check for empty list?
+						debugLog.prepend('<li>Receiving players list...</li>');				
+						players = []; //prepare for new list
+						var playerList = JSON.parse(data.list);
+					
+						debugLog.prepend('<li>Received: '+ data.list +'</li>');
+					
+						/*playerList.forEach(function(p) {
+							debugLog.prepend('<li>INSIDE FOREACH</li>');				
+							var tmpPlayer = JSON.parse(p);
+				
+							//tmpPlayer.id = data.id;
+							//tmpPlayer.nick = data.nick;
+							//tmpPlayer.x = data.x;
+							//tmpPlayer.y = data.y;
+				
 							players.push(tmpPlayer);
 							debugLog.prepend('<li>Added player '+ tmpPlayer.nick +' to list</li>');				
-						} else {
-							debugLog.prepend('<li>PlayerList: '+ data.msg +'</li>');				
+						});
+						for(var i = 0; i < playerList.length; i++) {
+							var tmpPlayer = playerList[i];
 						}
+						
+						*/
+						
+						playerList.forEach(function(p) {
+							debugLog.prepend('<li>Added player '+ p.nick +' to list</li>');				
+				
+						});
+	
+						debugLog.prepend('<li>Player list received.</li>');
+						check.hasPlayerList = true;	
+						check.isReady = true;			
 				break;
 					
 				default:
-					debugLog.prepend('<li>[Error] Unknown message format.</li>');
+					debugLog.prepend('<li>[Error] Unknown message type: '+ data.type +'.</li>');
 				break;
 		}
 		
