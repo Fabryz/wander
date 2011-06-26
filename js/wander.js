@@ -1,7 +1,7 @@
 /*
 * Author: Fabrizio Codello
-* Date: 2011/06/19
-* Version: 0.3.6
+* Date: 2011/06/26
+* Version: 0.3.6.4
 *
 */
 
@@ -42,11 +42,11 @@ $(document).ready(function() {
 	var tileWidth = 32,
 		tileHeight = 32;
 	
-	function Player(x, y) {
+	function Player() {
 		this.id = -1;
 		this.nick = "";
-		this.x = x;
-		this.y = y;
+		this.x = 0;
+		this.y = 0;
 		this.vX = 0;
 		this.vY = 0;
 		
@@ -72,19 +72,22 @@ $(document).ready(function() {
 		    return this.nick +' id: '+ this.id +' x: '+ this.x +' ('+ (this.x+this.width) +') y: '+ this.y +' ('+ (this.y + this.height)+') '+ this.vX +' '+ this.vY;
 		};
 		    
-		this.draw = function(c) {
+		/*this.draw = function(c) {
 		    c.drawImage(this.avatar, this.x, this.y, this.width, this.height);
 		    c.fillText(this.nick, this.x + this.halfWidth, this.y - 10);
-		};
+		};*/
 	}
 	
 	var arrowUp = 38,
 		arrowDown = 40,
 		arrowLeft = 37,
-		arrowRight = 39;
+		arrowRight = 39,
+		keyTab = 9,
+		keySpace = 32;
 		
 	var gameGUI = $("#gameGUI"),
 		gameIntro = $("#gameIntro"),
+		gamePlayersList = $("#gamePlayersList"),
 		playerNick = $("#playerNick"),
 		playButton = $("#play");
 		
@@ -99,14 +102,14 @@ $(document).ready(function() {
 			}
 			debugLog.prepend("<li>Player name: "+ player.nick +"</li>");
 		
-			gameGUI.fadeOut();
+			gameIntro.fadeOut();
 			startGame();	//start the game only if connected
 		} else {
 			debugLog.prepend("<li>You cannot play until you are connected to the server.</li>");
 			//set a timer to autorestart?
 		}
 	});
-	
+		
 	/*function test_GUIclicks() {
 		canvas.click(function(e) { //testing GUI clicks
 			var canvasOffset = canvas.offset();
@@ -134,6 +137,13 @@ $(document).ready(function() {
 		isReady: false,
 		isPlaying: false
 	};
+	
+	function showPlayersList() {	
+		gamePlayersList.find("ul").html("");
+		players.forEach(function(p) {
+			gamePlayersList.find("ul").append("<li>"+ json(p) +"</li>");
+		});
+	}
 	
 	var attempt = 0,
 		maxAttempts = 5,
@@ -169,6 +179,11 @@ $(document).ready(function() {
 				if (playerMoved) {
 					player.moved = true;
 				}
+				
+				if (keyCode == keyTab) {
+					gamePlayersList.fadeIn('fast');
+					showPlayersList();
+				} 
 			});
 
 			$(window).keyup(function(e) {
@@ -191,6 +206,11 @@ $(document).ready(function() {
 			
 				player.vX = 0;
 				player.vY = 0;
+				
+				if (keyCode == keyTab) {
+					gamePlayersList.fadeOut('fast');
+					
+				} 
 			});
 			
 			//timer();
@@ -214,13 +234,15 @@ $(document).ready(function() {
 		speed = 5;		//get from server
 	
 	function gameInit() {		
+		gamePlayersList.hide();
+	
 		socket = new io.Socket(null, {port: 8080, rememberTransport: false});
     	socket.connect();
     	debugLog.prepend("<li>Connecting...</li>");
-		
-		//player = new Player(0, 0);
+    	
+		player = new Player();
 		//players.push(player);	//remove?
-				
+
 		ctx.fillStyle = 'rgb(0, 0, 0)';
     	ctx.font = "15px Monospace";
 		
@@ -271,7 +293,7 @@ $(document).ready(function() {
 	
 	function debugStuff() {
 		debugCtx.clearRect(0, 0, 500, 70);
-		debugCtx.fillText(player, 10, 15);
+		debugCtx.fillText(json(player), 10, 15);
 		debugCtx.fillText(fps(), 10, 35);
 	}
 	
@@ -279,7 +301,7 @@ $(document).ready(function() {
 	var lastFps;
 		
 	function fps() {
-			var now = new Date().getTime();
+			var now = (new Date()).getTime();
 			var fps = 1000/(now - lastFps);
 			lastFps = now;
 			
@@ -314,9 +336,9 @@ $(document).ready(function() {
 			}
 		
 			//find a way to socket.send only every X ms and not continuosly			
-			nowMove = new Date.getTime();
+			nowMove = (new Date).getTime();
 			
-			if (nowMove - lastMove > 1000) {
+			if (nowMove - lastMove > 1000) { //send movement every 1sec
 				lastMove = nowMove;
 				socket.send(json({ type: 'play', id: player.id, dir: dir }));
 			}
@@ -327,19 +349,25 @@ $(document).ready(function() {
 		ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 		
 		if (check.isPlaying) {
-			lastMove = new Date().getTime();
+			lastMove = (new Date()).getTime();
 			sendMovement();
 			
 			//movePlayer(player); using sockets
 			checkBoundaries(player);
 			
-			players.forEach(function(p) {
-				p.draw(ctx);
+			/*players.forEach(function(p) {
+				ctx.fillRect(p.x, p.y, 10, 10);
+		    	ctx.fillText(p.nick, p.x + p.halfWidth, p.y - 10);
 			});
+			//player.draw(ctx);
+			
+			//ctx.drawImage(player.avatar, player.x, player.y, player.width, player.height);
+			ctx.fillRect(player.x, player.y, 10, 10);
+		    ctx.fillText(player.nick, player.x + player.halfWidth, player.y - 10);
 			
 			debugStuff();
 			
-			lastFps = new Date().getTime();
+			lastFps = (new Date()).getTime();
 			
 			setTimeout(gameLoop, 33); //1000/desired_fps
 		}
@@ -356,12 +384,8 @@ $(document).ready(function() {
 			}, 5000);
 		}
 	}
-		
-	debugLog.click(function() {
-		debugLog.html("");
-	});
 	
-	gameInit();
+	gameInit();	//Everything starts here
 	
 	/* 
 	* Multiplayer stuff	
@@ -439,9 +463,11 @@ $(document).ready(function() {
 						}
 					break;
 				case 'nickChange':
+						var oldNick = '';
+						
 						players.forEach(function(p) {
 							if (p.id == data.id) {
-								var oldNick = p.nick;
+								oldNick = p.nick;
 								p.nick = data.nick;
 							}
 						});
@@ -482,6 +508,7 @@ $(document).ready(function() {
 						}
 						
 						*/
+						
 						
 						playerList.forEach(function(p) {
 							debugLog.prepend('<li>Adding player '+ p.nick +' ('+ p.id +') to list</li>');				

@@ -28,6 +28,14 @@ function playerList() {
 	return list;
 }
 
+function dateString(d1, d2) {
+    function pad(n) {
+        return (n<10? '0'+n : n);
+    }
+    
+    return pad(d1.getHours() - d2.getHours())+'h'+ pad(d1.getMinutes() - d2.getMinutes())+'m'+ pad(d1.getSeconds() - d2.getSeconds() +'s');
+}
+
 var server = http.createServer(function(req, res) {
 	var path = url.parse(req.url).pathname,
 		rs;  
@@ -60,6 +68,12 @@ var server = http.createServer(function(req, res) {
 			break;
 		case '/status':
 				res.writeHead(200, { 'Content-Type' : 'text/plain' });
+				res.write('Server info:\n');
+				res.write(serverInfo.name +' (' + serverInfo.ip +':'+ serverInfo.port +')\n');
+				res.write(serverInfo.url +'\n\n'+ serverInfo.desc +'\n\n');
+				res.write('Admin: '+ serverInfo.admin +' ('+ serverInfo.email +')\n\n');
+							
+				res.write('The server has been up for: '+ dateString(new Date(), serverInfo.uptime) +'\n\n');
 				res.write('Total players: '+ totPlayers +'\n\n');
 				if (totPlayers > 0) {
 					res.end('Player list:\n'+ playerList());
@@ -104,7 +118,8 @@ var serverInfo = {
 	port: "8080",
 	url: "serverURL.com",
 	admin: "Fabryz",
-	mail: "admin@server.com"
+	email: "admin@server.com",
+	uptime: new Date()
 };
 
 //player template test
