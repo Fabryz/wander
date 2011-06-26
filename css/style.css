@@ -32,7 +32,8 @@ p {
 	height: 600px;
 }
 
-#gameIntro {
+#gameIntro,
+#gamePlayersList {
 	background: rgba(0, 0, 0, .8);
 	margin-top: 100px;
 	padding: 40px 0;
@@ -40,6 +41,13 @@ p {
 	-webkit-border-radius: 10px;
 	-moz-border-radius: 10px;
 	border-radius: 10px;
+}
+
+#gamePlayersList ul {
+	font-size: 1.8em;
+	list-style-type: none;
+	height: 300px;
+	overflow: auto;
 }
 
 #gameIntro input[type="text"] {
