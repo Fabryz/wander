@@ -1,5 +1,5 @@
 !fix on client reconnect the wrong player is removed
-fix movements
+fix movements -> position refresh every X (or on playerlist it will start from spawn.xy
 fix gameloop draw
 fix uptime date
 
