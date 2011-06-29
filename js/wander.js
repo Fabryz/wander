@@ -321,10 +321,11 @@ $(document).ready(function() {
 	// test. Put socket.send back inside .keypress?
 	// goddamn this is the hell of lag
 	function sendMovement() {	
+		debugLog.prepend("<li>1.</li>");
 		if (playerMoved) {	//player moved. Use player.sendupdate?
 							//check if position differs from old one?
 			var dir;
-		
+		debugLog.prepend("<li>2.</li>");
 			if (player.moveLeft) {
 				dir = 'l';
 			}
@@ -337,14 +338,16 @@ $(document).ready(function() {
 			if (player.moveDown) {
 				dir = 'd';
 			}
-		
+		debugLog.prepend("<li>3.</li>");
 			//find a way to socket.send only every X ms and not continuosly			
-			nowMove = (new Date()).getTime();
+			//nowMove = (new Date()).getTime();
 			
-			if (nowMove - lastMove > 1000) { //send movement every 1sec
-				lastMove = nowMove;
+			//if (nowMove - lastMove > 1000) { //send movement every 1sec
+				//lastMove = nowMove;
 				socket.send(json({ type: 'play', id: player.id, dir: dir }));
-			}
+				console.log('sending movement');
+			//}
+			debugLog.prepend("<li>4.</li>");
 		}
 	}
 	
@@ -444,6 +447,7 @@ $(document).ready(function() {
 						players.forEach(function(p) {
 							if (p.id == data.id) {
 								movePlayerSocket(p, data.dir);
+								console.log('player ' + p.id +' moved '+ data.dir);
 							}
 						});
 						//check.isPlaying = true;
