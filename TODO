@@ -1,18 +1,22 @@
 !fix on client reconnect the wrong player is removed
-fix movements -> position refresh every X (or on playerlist it will start from spawn.xy
-fix gameloop draw
 fix uptime date
+exchange server configs (map size) on handshake -> build canvas/viewport accordingly
+fix player spawn before Play
 
 fix nick on wrong id
 fix player.id scope
 fix more players than connected clients, playerlist incoherence
+fix false start attempt1
 
 hash player ids to avoid client hacks
 refresh newnick on players client
 fix joining problem (server started, browser opened, client not connected)
 keep player stuff for max TOT mins after disconnection, reload on reconnect
 fix random disconnections
+validate messages (check msg from client, p.id existing?...)
 
+add changelog
+diagonal movements
 resize canvas
 config button
 ping clients and refresh playerlist
