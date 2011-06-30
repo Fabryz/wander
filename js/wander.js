@@ -1,7 +1,8 @@
 /*
 * Author: Fabrizio Codello
-* Date: 2011/06/28
-* Version: 0.3.6.4
+* Date: 2011/06/30
+* Version: 0.3.7
+* https://github.com/Fabryz/wander
 *
 */
 
@@ -54,6 +55,7 @@ $(document).ready(function() {
 		
 		this.alive = true;
 		this.status = "normal";
+		this.lastMove = (new Date()).getTime();;
 		this.hp = 100;
 		this.inventory = [];
 		
@@ -167,7 +169,7 @@ $(document).ready(function() {
 					player.moveDown = true;
 				}
 				
-				if (playerMoved) {
+				if (playerMoved()) {
 					player.moved = true;
 				}
 				
@@ -191,7 +193,7 @@ $(document).ready(function() {
 					player.moveDown = false;
 				}
 				
-				if (playerMoved) {
+				if (playerMoved()) {
 					player.moved = false;
 				}
 			
@@ -203,6 +205,8 @@ $(document).ready(function() {
 					
 				} 
 			});
+			
+			nowMove = (new Date()).getTime(); //test
 			
 			//timer();
 		} else {
@@ -256,7 +260,7 @@ $(document).ready(function() {
 	});
 	
 	/*
-	//keep for better interaction?
+	//keep for a better client side interaction?
 	function movePlayer(p) {
 		p.vX = 0;
 		p.vY = 0;
@@ -278,7 +282,7 @@ $(document).ready(function() {
 		p.y += p.vY;
 	}*/
 	
-	function checkBoundaries(p) {
+	function checkBounds(p) {
 		if (p.x + p.width > canvasWidth) {
 			p.x = canvasWidth - p.width;
 		}
@@ -294,7 +298,6 @@ $(document).ready(function() {
 		}
 	}
 	
-	//test
 	var lastFps;
 		
 	function calcFps() {
@@ -308,24 +311,19 @@ $(document).ready(function() {
 	function debugStuff() {
 		debugCtx.clearRect(0, 0, 500, 70);
 		debugCtx.fillText(player, 10, 15);
-		debugCtx.fillText(calcFps(), 10, 35);
+		ctx.fillText(calcFps(), canvasWidth - 30, 20);
 	}
 	
 	function playerMoved() {
 		return (player.moveLeft || player.moveRight || player.moveUp || player.moveDown);
 	}
 	
-	var sent,
-		lastMove;
+	var nowMove,
+		allowSendEvery = 50;
 	
-	// test. Put socket.send back inside .keypress?
-	// goddamn this is the hell of lag
 	function sendMovement() {	
-		debugLog.prepend("<li>1.</li>");
-		if (playerMoved) {	//player moved. Use player.sendupdate?
-							//check if position differs from old one?
-			var dir;
-		debugLog.prepend("<li>2.</li>");
+		if (playerMoved()) {	//player moved. Use player.sendupdate?
+			var dir = 'idle';
 			if (player.moveLeft) {
 				dir = 'l';
 			}
@@ -338,16 +336,16 @@ $(document).ready(function() {
 			if (player.moveDown) {
 				dir = 'd';
 			}
-		debugLog.prepend("<li>3.</li>");
-			//find a way to socket.send only every X ms and not continuosly			
-			//nowMove = (new Date()).getTime();
 			
-			//if (nowMove - lastMove > 1000) { //send movement every 1sec
-				//lastMove = nowMove;
-				socket.send(json({ type: 'play', id: player.id, dir: dir }));
-				console.log('sending movement');
-			//}
-			debugLog.prepend("<li>4.</li>");
+			//send a movement every X ms
+			nowMove = (new Date()).getTime();
+			if (nowMove - player.lastMove > allowSendEvery) { 
+				//debugLog.prepend("<li>5. "+ (nowMove - player.lastMove) +"</li>");
+				socket.send(json({  type: 'play', id: player.id, dir: dir  }));
+				
+				player.lastMove = (new Date()).getTime();
+			}
+			//debugLog.prepend("<li>4. "+nowMove+"-"+player.lastMove+"="+ (nowMove - player.lastMove) +"</li>");
 		}
 	}
 	
@@ -355,24 +353,15 @@ $(document).ready(function() {
 		ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 		
 		if (check.isPlaying) {
-			lastMove = (new Date()).getTime();
 			sendMovement();
-			
-			//movePlayer(player); using sockets
-			checkBoundaries(player);
-			
-			// * * * the problem is here * * *
-			
+			checkBounds(player);
+
 			players.forEach(function(p) {
-				ctx.fillRect(p.x, p.y, 10, 10);
+				//ctx.fillRect(p.x, p.y, 10, 10);
+				ctx.drawImage(p.avatar, p.x, p.y, p.width, p.height);
 		    	ctx.fillText(p.nick, p.x + p.halfWidth, p.y - 10);
 			});
-			//player.draw(ctx);
-			
-			//ctx.drawImage(player.avatar, player.x, player.y, player.width, player.height);
-			//ctx.fillRect(player.x, player.y, 10, 10);
-		    //ctx.fillText(player.nick, player.x + player.halfWidth, player.y - 10);
-			
+
 			debugStuff();
 			
 			lastFps = (new Date()).getTime();
@@ -399,7 +388,7 @@ $(document).ready(function() {
 	* Multiplayer stuff	
 	*/
 	
-	function movePlayerSocket(p, dir) {
+	/*function movePlayerSocket(p, dir) {
 		p.vX = 0;
 		p.vY = 0;
 		
@@ -418,7 +407,7 @@ $(document).ready(function() {
 		
 		p.x += p.vX;
 		p.y += p.vY;
-	}
+	}*/
 	    
     socket.on('connect', function() {
     	check.isConnected = true;
@@ -446,8 +435,12 @@ $(document).ready(function() {
 				case 'play':	//use players[id]
 						players.forEach(function(p) {
 							if (p.id == data.id) {
-								movePlayerSocket(p, data.dir);
-								console.log('player ' + p.id +' moved '+ data.dir);
+								//movePlayerSocket(p, data.dir);
+								p.x = data.x;
+								p.y = data.y;
+								player.x = data.x;
+								player.y = data.y;
+								console.log('player ' + p.id +' moved to '+ p.x +':'+ p.y);
 							}
 						});
 						//check.isPlaying = true;
