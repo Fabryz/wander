@@ -122,12 +122,24 @@ var serverInfo = {
 	uptime: new Date()
 };
 
+var serverConfig = {
+	maxPlayers: 16,
+	dirs: ['l', 'r', 'u', 'd'],
+	speed: 16,
+	spawnX: 50,
+	spawnY: 50,
+	tileMapWidth: 15,
+	tileMapHeight: 15,
+	tileWidth: 32,
+	tileHeight: 32
+};
+
 //player template test
-function Player(id, nick, x, y) {
+function Player(id, nick) {
 	this.id = id;
 	this.nick = nick;
-	this.x = x;
-	this.y = y;
+	this.x = serverConfig.spawnX;
+	this.y = serverConfig.spawnY;
 	
 	this.playing = false;
 }
@@ -137,19 +149,10 @@ function sendServerInfo(client) {
 	client.send(json({type: 'info', msg: '# There are now '+ totPlayers +' players online.'}));
 }
 	
-var config = {
-	maxPlayers: 16,
-	dirs: ['l', 'r', 'u', 'd'],
-	initDir: 'l',
-	maxSpeed: 5,
-	spawnX: 50,
-	spawnY: 50
-};
-	
 function newPlayer(id, client) {
 	sendServerInfo(client);
 	
-	p = new Player(id, 'Guest'+id , config.spawnX, config.spawnY);	
+	p = new Player(id, 'Guest'+id);	
 	players.push(p);
 
 	client.send(json({type: 'join', player: json(p) }));
@@ -176,11 +179,49 @@ function sendPlayerList(client) {
 	console.log('Sent player list: '+ json(players) );
 }
 
-function sendGameData(data) {
+function checkBounds(player) {
+	var pixelMapWidth = serverConfig.tileMapWidth * serverConfig.tileWidth,
+		pixelMapHeight = serverConfig.tileMapHeight * serverConfig.tileHeight;
+
+	if (player.x + serverConfig.tileWidth > pixelMapWidth) {
+		player.x = pixelMapWidth - serverConfig.tileWidth;
+	}
+	if (player.x < 0) {
+		player.x = 0;
+	}
+	
+	if (player.y + serverConfig.tileHeight > pixelMapHeight) {
+		player.y = pixelMapHeight - serverConfig.tileHeight;
+	}
+	if (player.y < 0) {
+		player.y = 0;
+	}
+	
+	return player;
+}
+
+function sendGameData(player, data) {
 	/* Do bounds and anticheat checks*/
 	/* Elaborate next position, send confirmed position to client */
 
-	socket.broadcast(json({type: "play", id: data.id, x: data.x, y: data.y, dir: data.dir }));	
+	players.forEach(function(p) {
+		if (p.id == player.id) {
+			if (data.dir == 'l') {
+				p.x += -serverConfig.speed;
+			}
+			if (data.dir == 'r') {
+				p.x += serverConfig.speed;
+			}
+			if (data.dir == 'u') {
+				p.y += -serverConfig.speed;
+			}
+			if (data.dir == 'd') {
+				p.y += serverConfig.speed;
+			}
+			p = checkBounds(p);
+			socket.broadcast(json({type: "play", id: p.id, x: p.x, y: p.y }));
+		}
+	});	
 }
 
 var socket = io.listen(server),
@@ -191,11 +232,11 @@ var socket = io.listen(server),
 	json = JSON.stringify;
 
 socket.on('connection', function(client) {
-	var player;
-
 	totPlayers++;
 	currentId++;
-	player = newPlayer(currentId, client);
+	var player = newPlayer(currentId, client);
+	
+	console.log('NEW ' +json(player));
 	
 	console.log('* Player connected, total players: '+ totPlayers);
 		
@@ -228,7 +269,7 @@ socket.on('connection', function(client) {
 				sendPlayerList(client);
 			break;
 			case 'play':
-				sendGameData(data);
+				sendGameData(player, data);
 			break;
 				
 			default:
@@ -253,7 +294,8 @@ socket.on('connection', function(client) {
 
 		totPlayers--;
 		console.log('- Player '+ player.nick +' disconnected, total players: '+ totPlayers);
-		client.send("You left "+ serverInfo.name +".");
-		player = null;
+		player = {};
+		
+		console.log('DNED ' +json(players));
 	});
 });
