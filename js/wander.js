@@ -226,7 +226,7 @@ $(document).ready(function() {
 	function gameInit() {		
 		gamePlayersList.hide();
 	
-		socket = new io.Socket(null, {port: 80, rememberTransport: false});
+		socket = new io.Socket(null, {port: window.location.port, rememberTransport: false});
     	socket.connect();
     	debugLog.prepend("<li>Connecting...</li>");
     	
