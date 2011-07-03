@@ -12,6 +12,14 @@ body {
     padding: 0;
 }
 
+a {
+	color: #FFF;
+}
+
+a:hover {
+	color: #1D7CF2;
+}
+
 h1 {
     font-size: 3.2em;
     font-weight: bold;
@@ -26,28 +34,32 @@ p {
 	font-size: 1.5em;
 }
 
-#ribbon {
-	position: absolute;
-	top: 0;
-	right: 0;
-	border: 0;
-}
-
-#gameGUI {
+#gameUI {
 	position: absolute;
 	width: 800px;
-	height: 600px;
+	height: 480px; /* change according to canvas height */
+	margin-top: 1em;
 }
 
 #gameIntro,
 #gamePlayersList {
 	background: rgba(0, 0, 0, .8);
-	margin-top: 100px;
+	margin: 0 auto;
 	padding: 40px 0;
 	text-align: center;
 	-webkit-border-radius: 10px;
 	-moz-border-radius: 10px;
 	border-radius: 10px;
+}
+
+#gameIntro {
+	width: 500px;
+	margin-top: 80px;
+}
+
+#gamePlayersList {
+	width: 90%;
+	margin-top: 20px;
 }
 
 #gamePlayersList ul {
@@ -62,45 +74,40 @@ p {
 	margin-top: 10px;
 }
 
-a {
-	color: #FFF;
-}
-
-a:hover {
-	color: #1D7CF2;
-}
-
-a.button {
+#gameIntro a.button {
 	background: #2488F5;
 	-webkit-border-radius: 5px;
 	-moz-border-radius: 5px;
 	border-radius: 5px;
 	display: block;
 	font-size: 3em;
-	margin: 40px 0 0 270px;
+	margin: 0 auto;
+	margin-top: 30px;
 	padding: 10px;
 	width: 200px;
 	text-decoration: none;
 }
 
-a.button:hover {
+#gameIntro a.button:hover {
 	background: #F7F7F7;
 	color: #333;
 	text-decoration: none;
 }
 
-a.disconnected {
+#gameIntro a.disconnected {
 	background: #185DA8;
 }
 
 #gameCanvas {
-	display: block;
 	background-color: #FFF;
-	margin: 1em auto;
+	margin: 1em 0;
 }
 
 #debugCanvas {
 	background-color: #FFF;
+	position: absolute;
+	top: 10px;
+	left: 50%;
 }
 
 #debugLog {
@@ -133,6 +140,13 @@ a.disconnected {
 
 #debugButtons button:hover {
 	cursor: pointer;
+}
+
+#ribbon {
+	position: absolute;
+	top: 0;
+	right: 0;
+	border: 0;
 }
 
 #startAnimation,
