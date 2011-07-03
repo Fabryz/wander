@@ -1,5 +1,10 @@
+fix playerlist distortion on new player
+find out why it doesn't start without firebug opened
+improve movement animation/refresh rate
+check debugcanvas data refresh
+start making the viewport
+
 !fix on client reconnect the wrong player is removed
-fix uptime date
 exchange server configs (map size) on handshake -> build canvas/viewport accordingly
 fix player spawn before Play
 
@@ -22,12 +27,12 @@ config button
 ping clients and refresh playerlist
 check for doublenick
 onLoad for images
-player registration (use db)
+player registration (via Twitter auth or use internal db)
 +revise all the code
 +optimize socket messages
 +socket send on keypress?
 socket movement only for who's not the player
-use NowJS
+use NowJS / BISON
 readd map data structure and map rendering stuff
 minify/obfuscate client code
 
