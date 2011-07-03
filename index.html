@@ -15,11 +15,11 @@
 <body>
 	<h1>Wander</h1>
 	<p>Use the arrow keys to wander around and explore.</p>
-	<div id="gameGUI">
+	<div id="gameUI">
 		<div id="gameIntro">
 			<h1>Who are you?</h1>
 			<p>Insert your nick and press Play to start</p>
-			<p><input type="text" value="" id="playerNick" name="playerNick" maxlength="30"></p>
+			<p><input type="text" value="Player" id="playerNick" name="playerNick" maxlength="30"></p>
 			<p><a href="#" id ="play" class="button disconnected">Play</a></p>
 		</div>
 		<div id="gamePlayersList">
@@ -31,16 +31,15 @@
 		<p>Looks like your browser does NOT support HTML5 Canvas.</p>
 		<p>Please get a decent one.</p>
 	</canvas>
-
-	<h2>Debug</h2>
+	
+	<!-- <h2>Debug</h2> -->
 	<canvas id="debugCanvas" width="500" height="70"></canvas>
 	<div id="debugLog"><ul></ul></div>
-	
 	<!-- <div id="debugButtons">
 		<button id="startAnimation">Start</button>
 		<button id="stopAnimation">Stop</button>
 	</div> -->
 	<p>&copy; 2011 Fabrizio Codello - Follow me on <a href="http://twitter.com/#!/fabryz">Twitter</a>!</p>
-	<a href="https://github.com/Fabryz/wander"><img id="ribbon" src="https://d3nwyuy0nl342s.cloudfront.net/img/4c7dc970b89fd04b81c8e221ba88ff99a06c6b61/687474703a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f77686974655f6666666666662e706e67" alt="Fork me on GitHub"></a>
+	<a href="https://github.com/Fabryz/wander"><img id="ribbon" src="./img/ribbon.png" alt="Fork me on GitHub"></a>
 </body>
 </html>
