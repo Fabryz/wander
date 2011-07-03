@@ -1,7 +1,7 @@
 /*
 * Author: Fabrizio Codello
-* Date: 2011/06/30
-* Version: 0.3.7
+* Date: 2011/07/03
+* Version: 0.3.7.2
 * https://github.com/Fabryz/wander
 *
 */
@@ -9,7 +9,7 @@
 $(document).ready(function() {
 	var canvas = $("#gameCanvas");
 	var ctx = canvas.get(0).getContext("2d");
-		
+	
 	var canvasWidth = canvas.width();
 	var canvasHeight = canvas.height();
 	
@@ -89,7 +89,7 @@ $(document).ready(function() {
 		keyTab = 9,
 		keySpace = 32;
 		
-	var gameGUI = $("#gameGUI"),
+	var gameUI = $("#gameUI"),
 		gameIntro = $("#gameIntro"),
 		gamePlayersList = $("#gamePlayersList"),
 		playerNick = $("#playerNick"),
@@ -100,18 +100,21 @@ $(document).ready(function() {
 	//boolean var for every phase of the connection
 	var check = {
 		isConnected: false,
+		hasConfig: false,
 		hasId: false,
 		hasNick: false,
 		hasPlayerList: false,
-		isReady: false,
+		//isReady: false,
 		isPlaying: false
 	};
 	
-	var player,
-		players = [],
-		maxPlayers = 16, //get from server
-		speed = 5;		//get from server
+	function isReady() {
+		debugLog.prepend('<li>Ready!</li>');
+		return check.isConnected && check.hasConfig && check.hasId && check.hasNick && check.hasPlayerList;
+	}
 	
+	var player,
+		players = [];	
 		
 	/*function test_GUIclicks() {
 		canvas.click(function(e) { //testing GUI clicks
@@ -147,15 +150,15 @@ $(document).ready(function() {
 			debugLog.prepend('<li>Sending nickname</li>');
 			socket.send(json({ type: 'setNick', nick: player.nick}));
 		}
-		if (!check.hasPlayerList) {
+		if (!check.hasPlayerList) {	//todo: autosend from server on join
 			debugLog.prepend('<li>Requesting players list</li>');
 			socket.send(json({ type: 'playersList'}));
 		}	
-		if (check.isReady) {
+		if (isReady() == true) {
 			debugLog.prepend("<li>Starting...</li>");
 			check.isPlaying = true;
 							
-			$(window).keypress(function(e) {
+			$(window).keypress(function(e) { //keydown?
 				e.preventDefault();
 				var keyCode = e.keyCode;
 			
@@ -202,7 +205,6 @@ $(document).ready(function() {
 				
 				if (keyCode == keyTab) {
 					gamePlayersList.fadeOut('fast');
-					
 				} 
 			});
 			
@@ -213,7 +215,7 @@ $(document).ready(function() {
 			attempt++;
 			if (attempt <= maxAttempts) {
 				setTimeout(startGame, attemptTime);
-				debugLog.prepend("<li>- - - Not ready, restarting in 5s... (Attempt "+ attempt+")</li>");
+				debugLog.prepend("<li>- - - Not ready, restarting in "+ attemptTime +"ms... (Attempt "+ attempt+")</li>");
 			} else {
 				check.isPlaying = false;
 				debugLog.prepend("<li>- - - Unable to start, game stopped.</li>");
@@ -223,7 +225,24 @@ $(document).ready(function() {
 		gameLoop();
 	}
 	
-	function gameInit() {		
+	var tileWidth = 32; //manual test
+	
+	function resizeCanvas() {
+		//width is 90% of the page and a multiple of tileWidth
+		var roughWidth = Math.floor($(window).width() * 0.9);		
+		canvasWidth = Math.floor(roughWidth / tileWidth) * tileWidth;		
+		canvasHeight = 480;
+			
+		$(canvas).attr("width", canvasWidth);
+		$(canvas).attr("height", canvasHeight);
+		
+    	ctx.font = "15px Monospace"; //workaround
+	}
+	
+	function gameInit() {	
+		window.addEventListener("resize", resizeCanvas, false);
+		resizeCanvas();
+		
 		gamePlayersList.hide();
 	
 		socket = new io.Socket(null, {port: window.location.port, rememberTransport: false});
@@ -241,6 +260,12 @@ $(document).ready(function() {
 		
 		debugLog.prepend("<li>Game inited.</li>");
 	}
+	
+	playerNick.focus(function() {
+		if (this.value == this.defaultValue) {
+		    this.select();
+		}
+	});
 	
 	playButton.click(function() {
 		debugLog.prepend("<li>Clicked Play</li>");
@@ -422,6 +447,17 @@ $(document).ready(function() {
 		playButton.addClass("disconnected");
 		debugLog.prepend('<li>* Disconnected from the server.</li>');
 	});
+	
+var serverConfig = {
+	maxPlayers: 0,
+	speed: 0,
+	spawnX: 0,
+	spawnY: 0,
+	tileMapWidth: 0,
+	tileMapHeight: 0,
+	tileWidth: 0,
+	tileHeight: 0
+};
 			
 	socket.on('message', function(mess) {
 		var data = JSON.parse(mess);
@@ -431,6 +467,21 @@ $(document).ready(function() {
 		switch (data.type) {
 				case 'info':
 						debugLog.prepend('<li>'+ data.msg +'</li>');	
+					break;
+				case 'config':
+						var config = JSON.parse(data.config);
+						
+						serverConfig.maxPlayers = config.maxPlayers;
+						serverConfig.speed = config.speed;
+						serverConfig.spawnX = config.spawnX;
+						serverConfig.spawnY = config.spawnY;
+						serverConfig.tileMapWidth = config.tileMapWidth;
+						serverConfig.tileMapHeight = config.tileMapHeight;
+						serverConfig.tileWidth = config.tileWidth;
+						serverConfig.tileHeight = config.tileHeight;
+						
+						debugLog.prepend('<li>Server config received.</li>');
+						check.hasConfig = true;	
 					break;
 				case 'play':	//use players[id]
 						players.forEach(function(p) {
@@ -532,8 +583,7 @@ $(document).ready(function() {
 						});
 	
 						debugLog.prepend('<li>Player list received.</li>');
-						check.hasPlayerList = true;	
-						check.isReady = true;			
+						check.hasPlayerList = true;			
 				break;
 					
 				default:
