@@ -1,11 +1,9 @@
 /*
 * TODO:
-*		send new position instead of dir
 *		player spawning
 *		collisions
 *		tune up server messages/latency
 *		server authority
-*		broadcast playerlist on newplayer
 */
 
 var http = require('http'),
@@ -33,7 +31,9 @@ function dateString(d1, d2) {
         return (n<10? '0'+n : n);
     }
     
-    return pad(d1.getHours() - d2.getHours())+'h'+ pad(d1.getMinutes() - d2.getMinutes())+'m'+ pad(d1.getSeconds() - d2.getSeconds() +'s');
+    var diff = new Date(d1 - d2);
+
+    return pad(diff.getUTCHours())+'h'+ pad(diff.getUTCMinutes())+'m'+ pad(diff.getUTCSeconds() +'s');
 }
 
 var server = http.createServer(function(req, res) {
@@ -71,9 +71,10 @@ var server = http.createServer(function(req, res) {
 				res.write('Server info:\n');
 				res.write(serverInfo.name +' (' + serverInfo.ip +':'+ serverInfo.port +')\n');
 				res.write(serverInfo.url +'\n\n'+ serverInfo.desc +'\n\n');
+				res.write('Max Players: '+ serverConfig.maxPlayers +'\n\n');
 				res.write('Admin: '+ serverInfo.admin +' ('+ serverInfo.email +')\n\n');
 							
-				res.write('The server has been up for: '+ dateString(new Date(), serverInfo.uptime) +'\n\n');
+				res.write('The server has been up for: '+ dateString(Date.now(), serverInfo.startedAt) +'\n\n');
 				res.write('Total players: '+ totPlayers +'\n\n');
 				if (totPlayers > 0) {
 					res.end('Player list:\n'+ playerList());
@@ -93,11 +94,15 @@ var server = http.createServer(function(req, res) {
 				rs = fs.createReadStream(__dirname + '/img/player.png');
 				sys.pump(rs, res);
 			break;
-		
+		case '/img/ribbon.png':
+				res.writeHead(200, { 'Content-Type': 'image/png' });
+				rs = fs.createReadStream(__dirname + '/img/ribbon.png');
+				sys.pump(rs, res);
+			break;
 
 		default:
 			res.writeHead(404, { 'Content-Type': 'text/html' });
-			res.end("THIS CAN'T BE HAPPENING, YOU CAN'T BE HERE!");
+			res.end("<h1>THIS CAN'T BE HAPPENING, YOU CAN'T BE HERE!</h1>");
 			//rs = fs.createReadStream(__dirname + '/404.html');
 			//sys.pump(rs, res);
 		break;
@@ -113,18 +118,17 @@ server.listen(8080);
 	
 var serverInfo = {
 	name: "Illusory One",
-	desc: "<Server description here>",
+	desc: "Test server #001",
 	ip: "localhost",
 	port: "8080",
 	url: "serverURL.com",
 	admin: "Fabryz",
-	email: "admin@server.com",
-	uptime: new Date()
+	email: "admin@server.com", //obfuscate
+	startedAt: Date.now()
 };
 
 var serverConfig = {
 	maxPlayers: 16,
-	dirs: ['l', 'r', 'u', 'd'],
 	speed: 16,
 	spawnX: 50,
 	spawnY: 50,
@@ -148,9 +152,15 @@ function sendServerInfo(client) {
 	client.send(json({type: 'info', msg: '# Welcome to "'+ serverInfo.name +'" server! ('+serverInfo.ip +':'+ serverInfo.port +')'}));
 	client.send(json({type: 'info', msg: '# There are now '+ totPlayers +' players online.'}));
 }
+
+function sendServerConfig(client) {
+	client.send(json({type: 'config', config: json(serverConfig) }));
+	console.log('Sent server config');
+}
 	
 function newPlayer(id, client) {
 	sendServerInfo(client);
+	sendServerConfig(client);
 	
 	p = new Player(id, 'Guest'+id);	
 	players.push(p);
