@@ -26,14 +26,12 @@ function playerList() {
 	return list;
 }
 
-function dateString(d1, d2) {
+function dateString(date) {
     function pad(n) {
         return (n<10? '0'+n : n);
     }
     
-    var diff = new Date(d1 - d2);
-
-    return pad(diff.getUTCHours())+'h'+ pad(diff.getUTCMinutes())+'m'+ pad(diff.getUTCSeconds() +'s');
+    return pad(date.getUTCHours())+'h'+ pad(date.getUTCMinutes())+'m'+ pad(date.getUTCSeconds() +'s');
 }
 
 var server = http.createServer(function(req, res) {
@@ -44,7 +42,7 @@ var server = http.createServer(function(req, res) {
 
 	switch (path) {
 		case '/favicon.ico':
-		
+				/* TODO: add favicon */
 			break;
 		/*case '/css/reset.css':
 				res.writeHead(200, { 'Content-Type': 'text/css' });
@@ -73,8 +71,10 @@ var server = http.createServer(function(req, res) {
 				res.write(serverInfo.url +'\n\n'+ serverInfo.desc +'\n\n');
 				res.write('Max Players: '+ serverConfig.maxPlayers +'\n\n');
 				res.write('Admin: '+ serverInfo.admin +' ('+ serverInfo.email +')\n\n');
-							
-				res.write('The server has been up for: '+ dateString(Date.now(), serverInfo.startedAt) +'\n\n');
+				
+				uptime = new Date(Date.now() - serverInfo.startedAt);
+				
+				res.write('The server has been up for: '+ dateString(uptime) +'\n\n');
 				res.write('Total players: '+ totPlayers +'\n\n');
 				if (totPlayers > 0) {
 					res.end('Player list:\n'+ playerList());
@@ -246,6 +246,8 @@ socket.on('connection', function(client) {
 	currentId++;
 	var player = newPlayer(currentId, client);
 	
+	sendPlayerList(client);
+	
 	console.log('NEW ' +json(player));
 	
 	console.log('* Player connected, total players: '+ totPlayers);
@@ -281,6 +283,9 @@ socket.on('connection', function(client) {
 			case 'play':
 				sendGameData(player, data);
 			break;
+			case 'ping':
+				client.send(json({type: 'pong', time: Date.now() }));
+			break;
 				
 			default:
 				console.log('[Error] Unknown message type: '+ mess);
@@ -290,22 +295,19 @@ socket.on('connection', function(client) {
 	});
 
 	client.on('disconnect', function() {
-		/*for (var i = 0; i < players.length; i++) {
-			if (players[i] == player.id) {         
-				var test = players.splice(i, 1);
-				console.log('<-<-<- removed: '+ test);
-			}
-		}*/
 		players.forEach(function(p) {
 			if (p.id == player.id) {
-				players.splice(0, 1); //test
+				players.splice(0, 1);
 			}
 		});
-
+		socket.broadcast(json({type: 'quit', id: player.id }));
+		console.log('sent player quit: '+ json({type: 'quit', id: player.id }));
+		
+		
 		totPlayers--;
 		console.log('- Player '+ player.nick +' disconnected, total players: '+ totPlayers);
 		player = {};
 		
-		console.log('DNED ' +json(players));
+		console.log('Current player list: ' +json(players));
 	});
 });
