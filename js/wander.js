@@ -1,7 +1,7 @@
 /*
 * Author: Fabrizio Codello
-* Date: 2011/07/03
-* Version: 0.3.7.2
+* Date: 2011/07/10
+* Version: 0.3.7.4
 * https://github.com/Fabryz/wander
 *
 */
@@ -42,8 +42,16 @@ $(document).ready(function() {
 		debugLog.prepend("<li>Stopped</li>");
 	});*/
 	
-	var tileWidth = 32,
-		tileHeight = 32;
+	var serverConfig = {	//default config
+		maxPlayers: 8,
+		speed: 16,
+		spawnX: 0,
+		spawnY: 0,
+		tileMapWidth: 15,
+		tileMapHeight: 15,
+		tileWidth: 32,
+		tileHeight: 32
+	};
 	
 	function Player() {
 		this.id = -1;
@@ -61,8 +69,8 @@ $(document).ready(function() {
 		
 		this.avatar = new Image();
 		this.avatar.src = './img/player.png';
-		this.width = tileWidth;
-		this.height = tileHeight;
+		this.width = serverConfig.tileWidth;
+		this.height = serverConfig.tileHeight;
 		this.halfWidth = this.width/2;
 		this.halfHeight = this.height/2; 		
 		
@@ -109,7 +117,7 @@ $(document).ready(function() {
 	};
 	
 	function isReady() {
-		debugLog.prepend('<li>Ready!</li>');
+		debugLog.prepend('<li>'+ check.isConnected +' '+ check.hasConfig +' '+ check.hasId +' '+ check.hasNick +' '+ check.hasPlayerList + '</li>');
 		return check.isConnected && check.hasConfig && check.hasId && check.hasNick && check.hasPlayerList;
 	}
 	
@@ -134,31 +142,61 @@ $(document).ready(function() {
 		});
 	}*/
 	
-	function showPlayersList() {	
-		gamePlayersList.find("ul").html("");
+	function showPlayersList() {
+		var list = gamePlayersList.find("ul");
+	
+		list.html("");
 		players.forEach(function(p) {
-			gamePlayersList.find("ul").append("<li>"+ p +"</li>");
+			list.append("<li>"+ p +"</li>");
 		});
+		
+		list.append("<li>&nbsp;</li>");
+		list.append("<li>Total players: "+ players.length +"</li>");
+		//gamePlayersList.stop().fadeIn('fast');
+		gamePlayersList.show();
 	}
 	
 	var attempt = 0,
 		maxAttempts = 5,
 		attemptTime = 1000;
-			
-	function startGame() {
-		if (!check.hasNick) { //todo: keep gameUI form open till nick is ok
+		
+	function setNick() {
+		if (!check.hasNick) { //TODO: keep gameUI form open till nick is ok
 			debugLog.prepend('<li>Sending nickname</li>');
 			socket.send(json({ type: 'setNick', nick: player.nick}));
 		}
-		if (!check.hasPlayerList) {	//todo: autosend from server on join
+	}
+	
+	function requestPlayerList() {
+		if (!check.hasPlayerList) {
 			debugLog.prepend('<li>Requesting players list</li>');
 			socket.send(json({ type: 'playersList'}));
-		}	
+		}
+	}
+	
+	var FPS = { //test
+		fps: 0,  //hold element to display fps
+		fps_count: 0, //hold frame count
+		fps_timer: 0, //timer for FPS update (2 sec)
+		init: function(){
+			FPS.fps = document.getElementById('fps');
+			debugLog.prepend('FPS inited');
+			FPS.fps_timer = setInterval(FPS.updateFPS, 2000);
+		},
+		updateFPS: function(){ //add new message
+			if(FPS.fps){
+				FPS.fps.innerHTML = (FPS.fps_count / 2) + 'fps';
+			}
+			FPS.fps_count = 0;
+		}
+	};
+			
+	function startGame() {
 		if (isReady() == true) {
-			debugLog.prepend("<li>Starting...</li>");
+			debugLog.prepend("<li>Ready! Starting...</li>");
 			check.isPlaying = true;
 							
-			$(window).keypress(function(e) { //keydown?
+			$(window).keydown(function(e) { //keypress?
 				e.preventDefault();
 				var keyCode = e.keyCode;
 			
@@ -176,10 +214,15 @@ $(document).ready(function() {
 					player.moved = true;
 				}
 				
-				if (keyCode == keyTab) {
-					gamePlayersList.fadeIn('fast');
+				if (keyCode == keyTab) { //TODO: fix animation loop
 					showPlayersList();
 				} 
+			});
+			
+			$(window).keypress(function(e) {
+				e.preventDefault();
+				var keyCode = e.keyCode;
+			
 			});
 
 			$(window).keyup(function(e) {
@@ -204,13 +247,16 @@ $(document).ready(function() {
 				player.vY = 0;
 				
 				if (keyCode == keyTab) {
-					gamePlayersList.fadeOut('fast');
+					//gamePlayersList.stop().fadeOut('fast');
+					gamePlayersList.hide();
 				} 
 			});
 			
-			nowMove = (new Date()).getTime(); //test
+			nowMove = (new Date()).getTime();
 			
-			//timer();
+			FPS.init();
+			//effe();
+			ping();
 		} else {
 			attempt++;
 			if (attempt <= maxAttempts) {
@@ -224,13 +270,11 @@ $(document).ready(function() {
 		
 		gameLoop();
 	}
-	
-	var tileWidth = 32; //manual test
-	
+		
 	function resizeCanvas() {
 		//width is 90% of the page and a multiple of tileWidth
 		var roughWidth = Math.floor($(window).width() * 0.9);		
-		canvasWidth = Math.floor(roughWidth / tileWidth) * tileWidth;		
+		canvasWidth = Math.floor(roughWidth / serverConfig.tileWidth) * serverConfig.tileWidth;		
 		canvasHeight = 480;
 			
 		$(canvas).attr("width", canvasWidth);
@@ -248,15 +292,16 @@ $(document).ready(function() {
 		socket = new io.Socket(null, {port: window.location.port, rememberTransport: false});
     	socket.connect();
     	debugLog.prepend("<li>Connecting...</li>");
-    	
-		player = new Player();
-		//players.push(player);	//remove?
 
 		ctx.fillStyle = 'rgb(0, 0, 0)';
     	ctx.font = "15px Monospace";
 		
 		debugCtx.fillStyle = 'rgb(0, 0, 0)';
     	debugCtx.font = "15px Monospace";
+    	
+    	//if (check.hasConfig) { //TODO: grab configs before starting
+    		player = new Player();
+    	//}
 		
 		debugLog.prepend("<li>Game inited.</li>");
 	}
@@ -264,23 +309,6 @@ $(document).ready(function() {
 	playerNick.focus(function() {
 		if (this.value == this.defaultValue) {
 		    this.select();
-		}
-	});
-	
-	playButton.click(function() {
-		debugLog.prepend("<li>Clicked Play</li>");
-	
-		if (check.isConnected) {
-			if (playerNick.val() != '') {
-				player.nick = playerNick.val();
-			}
-			debugLog.prepend("<li>Player name: "+ player.nick +"</li>");
-	
-			gameIntro.fadeOut();
-			startGame();	//start the game only if connected
-		} else {
-			debugLog.prepend("<li>You cannot play until you are connected to the server.</li>");
-			//set a timer to autorestart?
 		}
 	});
 	
@@ -336,7 +364,8 @@ $(document).ready(function() {
 	function debugStuff() {
 		debugCtx.clearRect(0, 0, 500, 70);
 		debugCtx.fillText(player, 10, 15);
-		ctx.fillText(calcFps(), canvasWidth - 30, 20);
+		ctx.fillText(calcFps()+ 'fps', canvasWidth - 60, 20);
+		ctx.fillText(showPing()+ 'ms', canvasWidth - 120, 20);
 	}
 	
 	function playerMoved() {
@@ -344,7 +373,7 @@ $(document).ready(function() {
 	}
 	
 	var nowMove,
-		allowSendEvery = 50;
+		allowSendEvery = 62; //TODO: tune this, 1/16s
 	
 	function sendMovement() {	
 		if (playerMoved()) {	//player moved. Use player.sendupdate?
@@ -374,37 +403,112 @@ $(document).ready(function() {
 		}
 	}
 	
+	function drawPlayer(p) {
+		ctx.drawImage(p.avatar, p.x, p.y, p.width, p.height);
+		ctx.fillText(p.nick, p.x + p.halfWidth, p.y - 10);
+	}
+	
+	function drawMapBounds() {
+		ctx.strokeStyle = "#CCC";
+		ctx.lineWidth = 8;
+		
+		ctx.strokeRect(0, 0, canvasWidth, canvasHeight);// CHANGE with map size!
+	}
+	
+	function moveViewport(p) {
+		//ctx.save();
+		//ctx.translate(player.x - (canvasWidth / 2), player.y - (canvasHeight / 2));
+		//ctx.restore();
+	}
+	
 	function gameLoop() {
 		ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 		
 		if (check.isPlaying) {
 			sendMovement();
+			
+			drawMapBounds();
+			moveViewport(player);
+			
 			checkBounds(player);
-
+			drawPlayer(player);
+			
 			players.forEach(function(p) {
-				//ctx.fillRect(p.x, p.y, 10, 10);
-				ctx.drawImage(p.avatar, p.x, p.y, p.width, p.height);
-		    	ctx.fillText(p.nick, p.x + p.halfWidth, p.y - 10);
+				if (p.id != player.id) {
+					drawPlayer(p);
+		    	}
 			});
 
 			debugStuff();
 			
 			lastFps = (new Date()).getTime();
+			FPS.fps_count++; //test
 			
 			setTimeout(gameLoop, 33); //1000/desired_fps
 		}
 	}
 	
-	var pingTimeout;
+	var pingTimeout,
+		pings = [];
 	
-	function timer() {	//implement ping/userlist
+	function ping() {
 		if (check.isPlaying) {
 			pingTimeout = setTimeout(function() {
-				//ping every X seconds?
-		
-				timer();
+				socket.send(json({ type: 'ping'}));
+				//debugLog.prepend('<li>Ping?</li>');
+				ping();
 			}, 5000);
 		}
+	}
+	
+	function showPing() {
+		var avgPing = 0;
+		
+		if (pings.length > 0) {
+			pings.forEach(function(p) {
+				avgPing += p;
+			});
+			avgPing = Math.floor(avgPing / pings.length);
+		}
+		
+		return avgPing;
+	}
+	
+	var efpiesTimeout,
+		efpies = [];
+	
+	function effe() {
+		if (check.isPlaying) {
+			efpiesTimeout = setTimeout(function() {
+				var now = (new Date()).getTime();
+				var fps = Math.floor(1000/(now - lastFps));
+				lastFps = now;
+				
+				if (efpies.length < 5) {
+					if (fps != 'Infinity') {
+						efpies.push(fps);
+					}
+				} else {
+					efpies.splice(0, 1);
+				}
+				debugLog.prepend('<li>'+ fps +'</li>');
+				
+				effe();
+			}, 1000);
+		}
+	}
+		
+	function showEfpies() {
+		var avgEfpies = 0;
+		
+		if (efpies.length > 0) {
+			efpies.forEach(function(e) {
+				avgEfpies += e;
+			});
+			avgEfpies = Math.floor(avgEfpies / efpies.length);
+		}
+		
+		return avgEfpies;
 	}
 	
 	gameInit();	//Everything starts here
@@ -435,8 +539,30 @@ $(document).ready(function() {
 	}*/
 	    
     socket.on('connect', function() {
+    
+		playButton.click(function() { //move below?
+			debugLog.prepend("<li>Clicked Play</li>");
+
+			if (check.isConnected) {
+				if (playerNick.val() != '') {
+					player.nick = playerNick.val();
+				}
+				debugLog.prepend("<li>Player name set: "+ player.nick +"</li>");
+
+				gameIntro.fadeOut();
+		
+				setNick();
+				//requestPlayerList();
+				startGame();	//start the game only if connected
+			} else {
+				debugLog.prepend("<li>You cannot play until you are connected to the server.</li>");
+				//set a timer to autorestart?
+			}
+		});
+	
     	check.isConnected = true;
     	playButton.removeClass("disconnected");
+    	playButton.html('Play');
 		debugLog.prepend('<li>* Connected to the server.</li>');
 	});
 			
@@ -445,19 +571,9 @@ $(document).ready(function() {
 		check.isReady = false;
 		check.isPlaying = false;
 		playButton.addClass("disconnected");
+		clearTimeout(pingTimeout);
 		debugLog.prepend('<li>* Disconnected from the server.</li>');
 	});
-	
-var serverConfig = {
-	maxPlayers: 0,
-	speed: 0,
-	spawnX: 0,
-	spawnY: 0,
-	tileMapWidth: 0,
-	tileMapHeight: 0,
-	tileWidth: 0,
-	tileHeight: 0
-};
 			
 	socket.on('message', function(mess) {
 		var data = JSON.parse(mess);
@@ -465,6 +581,16 @@ var serverConfig = {
 		//debugLog.prepend('<li>Message arrived: '+ mess +'</li>');		
 		
 		switch (data.type) {
+				case 'pong':
+						var ping = Date.now() - data.time;
+						if (pings.length <= 5) {
+							pings.push(ping);
+						} else {
+							pings.splice(0, 1);
+						}
+				
+						//debugLog.prepend('<li>Pong! '+ ping +'ms</li>');
+					break;
 				case 'info':
 						debugLog.prepend('<li>'+ data.msg +'</li>');	
 					break;
@@ -483,19 +609,18 @@ var serverConfig = {
 						debugLog.prepend('<li>Server config received.</li>');
 						check.hasConfig = true;	
 					break;
-				case 'play':	//use players[id]
+				case 'play':
 						players.forEach(function(p) {
 							if (p.id == data.id) {
-								//movePlayerSocket(p, data.dir);
 								p.x = data.x;
 								p.y = data.y;
-								player.x = data.x;
-								player.y = data.y;
+								if (p.id == player.id) {
+									player.x = data.x;
+									player.y = data.y;
+								}
 								console.log('player ' + p.id +' moved to '+ p.x +':'+ p.y);
 							}
 						});
-						//check.isPlaying = true;
-						//movePlayerSocket(players[data.id], data.dir);
 					break;
 				case 'join':
 						var tmpPlayer = JSON.parse(data.player);
@@ -508,11 +633,20 @@ var serverConfig = {
 						check.hasId = true;
 						debugLog.prepend('<li>Received current player id: '+ player.id +'</li>');
 					break;
+				case 'quit': //TODO: FIXME
+						players.forEach(function(p) {
+							if (p.id == data.id) {
+								players.splice(0, 1);
+							}
+						});
+						
+						debugLog.prepend('<li>Player quitted, '+ p.nick +' (id '+ data.id +')</li>');
+					break;
 				case 'nickRes':
 						if (data.res == 'ok') {
 							check.hasNick = true;
 							debugLog.prepend('<li>Nick confirmed.</li>');
-						} else { //reopen input form
+						} else { //TODO: reopen input form
 							check.hasNick = false;
 							debugLog.prepend('<li>Nick not usable.</li>');
 						}
