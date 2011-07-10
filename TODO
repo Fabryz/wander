@@ -1,17 +1,24 @@
+fix efpies, check github
+fix player quit on page refresh, don't allow 2x clients of same player
+fix move viewport
+
 fix playerlist distortion on new player
 find out why it doesn't start without firebug opened
 improve movement animation/refresh rate
 check debugcanvas data refresh
 start making the viewport
+disconnect/standby client after X pings with no answer
 
 !fix on client reconnect the wrong player is removed
 exchange server configs (map size) on handshake -> build canvas/viewport accordingly
-fix player spawn before Play
+?fix player spawn before Play
 
 fix nick on wrong id
 fix player.id scope
 fix more players than connected clients, playerlist incoherence
 fix false start attempt1
+add timestamp on server logs
+develop anon stat system (screen/canvas size, OS, browser used...)
 
 hash player ids to avoid client hacks
 refresh newnick on players client
@@ -19,26 +26,24 @@ fix joining problem (server started, browser opened, client not connected)
 keep player stuff for max TOT mins after disconnection, reload on reconnect
 fix random disconnections
 validate messages (check msg from client, p.id existing?...)
+check all comments for todos
+add days to status uptime
 
 add changelog
 diagonal movements
-resize canvas
 config button
 ping clients and refresh playerlist
 check for doublenick
 onLoad for images
 player registration (via Twitter auth or use internal db)
-+revise all the code
-+optimize socket messages
-+socket send on keypress?
-socket movement only for who's not the player
+?strict socket movement only for who's not the player
 use NowJS / BISON
 readd map data structure and map rendering stuff
 minify/obfuscate client code
 
-+browser compatibility Chrome, FF, IE(?)
++browser compatibility Chrome, FF, IE... (add reset.css)
 ?move only on mod TILE_WIDTH, animation
 optimize drawmap: render only viewable
-*collision with walls (rewrite moveCanvas/movePlayer)
+*collision with walls
 check clear canvas on player
 dirty tiles to re-render
