@@ -30,7 +30,7 @@ $(document).ready(function() {
 		stopButton.show();
 		
 		check.isPlaying = true;
-		debugLog.prepend("<li>Started</li>");
+		debugMsg('Started');
 		gameLoop();
 	});
 	
@@ -39,7 +39,7 @@ $(document).ready(function() {
 		startButton.show();
 		
 		check.isPlaying = false;
-		debugLog.prepend("<li>Stopped</li>");
+		debugMsg('Stopped');
 	});*/
 	
 	var serverConfig = {	//default config
@@ -50,7 +50,9 @@ $(document).ready(function() {
 		tileMapWidth: 15,
 		tileMapHeight: 15,
 		tileWidth: 32,
-		tileHeight: 32
+		tileHeight: 32,
+		pixelMapWidth: this.tileMapWidth * this.tileWidth,
+		pixelMapHeight: this.tileMapHeight * this.tileHeight
 	};
 	
 	function Player() {
@@ -63,7 +65,7 @@ $(document).ready(function() {
 		
 		this.alive = true;
 		this.status = "normal";
-		this.lastMove = (new Date()).getTime();;
+		this.lastMove = Date.now();
 		this.hp = 100;
 		this.inventory = [];
 		
@@ -116,8 +118,12 @@ $(document).ready(function() {
 		isPlaying: false
 	};
 	
+	function debugMsg(msg) {
+		debugLog.prepend('<li>'+ msg +'</li>');
+	}
+	
 	function isReady() {
-		debugLog.prepend('<li>'+ check.isConnected +' '+ check.hasConfig +' '+ check.hasId +' '+ check.hasNick +' '+ check.hasPlayerList + '</li>');
+		debugMsg(check.isConnected +' '+ check.hasConfig +' '+ check.hasId +' '+ check.hasNick +' '+ check.hasPlayerList);
 		return check.isConnected && check.hasConfig && check.hasId && check.hasNick && check.hasPlayerList;
 	}
 	
@@ -162,28 +168,28 @@ $(document).ready(function() {
 		
 	function setNick() {
 		if (!check.hasNick) { //TODO: keep gameUI form open till nick is ok
-			debugLog.prepend('<li>Sending nickname</li>');
+			debugMsg('Sending nickname');
 			socket.send(json({ type: 'setNick', nick: player.nick}));
 		}
 	}
 	
 	function requestPlayerList() {
 		if (!check.hasPlayerList) {
-			debugLog.prepend('<li>Requesting players list</li>');
+			debugMsg('Requesting players list');
 			socket.send(json({ type: 'playersList'}));
 		}
 	}
 	
-	var FPS = { //test
-		fps: 0,  //hold element to display fps
-		fps_count: 0, //hold frame count
-		fps_timer: 0, //timer for FPS update (2 sec)
+	var FPS = { 
+		fps: 0,  
+		fps_count: 0,
+		fps_timer: 0,
 		init: function(){
 			FPS.fps = document.getElementById('fps');
-			debugLog.prepend('FPS inited');
+			debugMsg('FPS inited');
 			FPS.fps_timer = setInterval(FPS.updateFPS, 2000);
 		},
-		updateFPS: function(){ //add new message
+		updateFPS: function(){
 			if(FPS.fps){
 				FPS.fps.innerHTML = (FPS.fps_count / 2) + 'fps';
 			}
@@ -193,7 +199,7 @@ $(document).ready(function() {
 			
 	function startGame() {
 		if (isReady() == true) {
-			debugLog.prepend("<li>Ready! Starting...</li>");
+			debugMsg('Ready! Starting...');
 			check.isPlaying = true;
 							
 			$(window).keydown(function(e) { //keypress?
@@ -208,10 +214,6 @@ $(document).ready(function() {
 					player.moveUp = true;
 				} else if (keyCode == arrowDown) {
 					player.moveDown = true;
-				}
-				
-				if (playerMoved()) {
-					player.moved = true;
 				}
 				
 				if (keyCode == keyTab) { //TODO: fix animation loop
@@ -238,10 +240,6 @@ $(document).ready(function() {
 				} else if (keyCode == arrowDown) {
 					player.moveDown = false;
 				}
-				
-				if (playerMoved()) {
-					player.moved = false;
-				}
 			
 				player.vX = 0;
 				player.vY = 0;
@@ -261,10 +259,10 @@ $(document).ready(function() {
 			attempt++;
 			if (attempt <= maxAttempts) {
 				setTimeout(startGame, attemptTime);
-				debugLog.prepend("<li>- - - Not ready, restarting in "+ attemptTime +"ms... (Attempt "+ attempt+")</li>");
+				debugMsg('- - - Not ready, restarting in '+ attemptTime +'ms... (Attempt '+ attempt +')');
 			} else {
 				check.isPlaying = false;
-				debugLog.prepend("<li>- - - Unable to start, game stopped.</li>");
+				debugMsg('- - - Unable to start, game stopped.');
 			}
 		}
 		
@@ -283,7 +281,7 @@ $(document).ready(function() {
     	ctx.font = "15px Monospace"; //workaround
 	}
 	
-	function gameInit() {	
+	function gameInit() {
 		window.addEventListener("resize", resizeCanvas, false);
 		resizeCanvas();
 		
@@ -291,7 +289,7 @@ $(document).ready(function() {
 	
 		socket = new io.Socket(null, {port: window.location.port, rememberTransport: false});
     	socket.connect();
-    	debugLog.prepend("<li>Connecting...</li>");
+    	debugMsg('Connecting...');
 
 		ctx.fillStyle = 'rgb(0, 0, 0)';
     	ctx.font = "15px Monospace";
@@ -303,7 +301,7 @@ $(document).ready(function() {
     		player = new Player();
     	//}
 		
-		debugLog.prepend("<li>Game inited.</li>");
+		debugMsg('Game inited.');
 	}
 	
 	playerNick.focus(function() {
@@ -366,14 +364,18 @@ $(document).ready(function() {
 		debugCtx.fillText(player, 10, 15);
 		ctx.fillText(calcFps()+ 'fps', canvasWidth - 60, 20);
 		ctx.fillText(showPing()+ 'ms', canvasWidth - 120, 20);
+		ctx.fillText(vpX +':'+ vpY, 10, 20);
 	}
 	
 	function playerMoved() {
-		return (player.moveLeft || player.moveRight || player.moveUp || player.moveDown);
+		player.moved = (player.moveLeft || player.moveRight || player.moveUp || player.moveDown);
+		//debugMsg(player.moved);
+		
+		return player.moved;
 	}
 	
 	var nowMove,
-		allowSendEvery = 62; //TODO: tune this, 1/16s
+		allowSendEvery = 50; //TODO: tune this, 1/16s
 	
 	function sendMovement() {	
 		if (playerMoved()) {	//player moved. Use player.sendupdate?
@@ -392,47 +394,75 @@ $(document).ready(function() {
 			}
 			
 			//send a movement every X ms
-			nowMove = (new Date()).getTime();
+			nowMove = Date.now();
 			if (nowMove - player.lastMove > allowSendEvery) { 
-				//debugLog.prepend("<li>5. "+ (nowMove - player.lastMove) +"</li>");
+				//debugMsg('5. '+ (nowMove - player.lastMove));
 				socket.send(json({  type: 'play', id: player.id, dir: dir  }));
 				
-				player.lastMove = (new Date()).getTime();
+				player.lastMove = Date.now();
 			}
-			//debugLog.prepend("<li>4. "+nowMove+"-"+player.lastMove+"="+ (nowMove - player.lastMove) +"</li>");
+			//debugMsg('4. '+nowMove+'-'+player.lastMove+'='+ (nowMove - player.lastMove) +'('+ allowSendEvery +')');
 		}
 	}
 	
-	function drawPlayer(p) {
-		ctx.drawImage(p.avatar, p.x, p.y, p.width, p.height);
-		ctx.fillText(p.nick, p.x + p.halfWidth, p.y - 10);
+	var vpX = 0,
+		vpY = 0;
+		
+	function moveViewport(p) {
+		vpX = p.x - (canvasWidth / 2);
+		vpY = p.y - (canvasHeight / 2);
+	}
+		
+	function swapCoords(x, y) {
+		var coords = {};
+		
+		coords.x = Math.abs(vpX) + x;
+		coords.y = Math.abs(vpY) + y
+		
+		debugMsg(x +':'+ y +' -> '+ coords.x +':'+ coords.y);
+		
+		return coords;
+	}
+	
+	function drawPlayer(p) {	
+		if (p.id == player.id) {
+			ctx.drawImage(p.avatar, canvasWidth / 2, canvasHeight / 2, p.width, p.height);
+			ctx.fillText(p.nick +' - '+ p.moved, canvasWidth / 2 + p.halfWidth,  canvasHeight / 2 - 10);
+		} else {	//everyone but player
+			var coords = swapCoords(p.x, p.y);
+			
+			if (((coords.x >= 0) && (coords.x < canvasWidth)) && ((coords.y >= 0) && (coords.y < canvasHeight))) { 
+					//TODO: add outer render range, TILE_SIZE * X on if
+				ctx.drawImage(p.avatar, coords.x, coords.y, p.width, p.height);
+				ctx.fillText(p.nick +' - '+ p.moved, coords.x + p.halfWidth, coords.y - 10);
+			} else {
+				debugMsg(p.id +' is moving out of viewport'); //don't render moving stuff out of viewport
+			}
+		}
 	}
 	
 	function drawMapBounds() {
 		ctx.strokeStyle = "#CCC";
 		ctx.lineWidth = 8;
 		
-		ctx.strokeRect(0, 0, canvasWidth, canvasHeight);// CHANGE with map size!
-	}
-	
-	function moveViewport(p) {
-		//ctx.save();
-		//ctx.translate(player.x - (canvasWidth / 2), player.y - (canvasHeight / 2));
-		//ctx.restore();
+		var coords = swapCoords(0, 0);
+		
+		//debugMsg(json(coords));
+		
+		ctx.strokeRect(coords.x, coords.y, serverConfig.pixelMapWidth, serverConfig.pixelMapHeight);
 	}
 	
 	function gameLoop() {
 		ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 		
-		if (check.isPlaying) {
-			sendMovement();
+		if (check.isPlaying) {			
+			sendMovement();						
+			//ctx.fillRect((canvasWidth/2) -1, (canvasHeight/2) -1, 3, 3);
+			//checkBounds(player);
 			
-			drawMapBounds();
 			moveViewport(player);
-			
-			checkBounds(player);
-			drawPlayer(player);
-			
+			drawMapBounds();
+			drawPlayer(player);	//assume the local copy is more updated		
 			players.forEach(function(p) {
 				if (p.id != player.id) {
 					drawPlayer(p);
@@ -444,7 +474,7 @@ $(document).ready(function() {
 			lastFps = (new Date()).getTime();
 			FPS.fps_count++; //test
 			
-			setTimeout(gameLoop, 33); //1000/desired_fps
+			setTimeout(gameLoop, 10); //test! - 1000/desired_fps
 		}
 	}
 	
@@ -454,8 +484,8 @@ $(document).ready(function() {
 	function ping() {
 		if (check.isPlaying) {
 			pingTimeout = setTimeout(function() {
-				socket.send(json({ type: 'ping'}));
-				//debugLog.prepend('<li>Ping?</li>');
+				socket.send(json({ type: 'ping', id: player.id }));
+				//debugMsg('Ping?');
 				ping();
 			}, 5000);
 		}
@@ -476,6 +506,8 @@ $(document).ready(function() {
 	
 	var efpiesTimeout,
 		efpies = [];
+		
+		//testing two kind of fps calculations
 	
 	function effe() {
 		if (check.isPlaying) {
@@ -491,7 +523,7 @@ $(document).ready(function() {
 				} else {
 					efpies.splice(0, 1);
 				}
-				debugLog.prepend('<li>'+ fps +'</li>');
+				debugMsg(fps);
 				
 				effe();
 			}, 1000);
@@ -541,13 +573,13 @@ $(document).ready(function() {
     socket.on('connect', function() {
     
 		playButton.click(function() { //move below?
-			debugLog.prepend("<li>Clicked Play</li>");
+			debugMsg('Clicked Play');
 
 			if (check.isConnected) {
 				if (playerNick.val() != '') {
 					player.nick = playerNick.val();
 				}
-				debugLog.prepend("<li>Player name set: "+ player.nick +"</li>");
+				debugMsg('Player name set: '+ player.nick);
 
 				gameIntro.fadeOut();
 		
@@ -555,7 +587,7 @@ $(document).ready(function() {
 				//requestPlayerList();
 				startGame();	//start the game only if connected
 			} else {
-				debugLog.prepend("<li>You cannot play until you are connected to the server.</li>");
+				debugMsg('You cannot play until you are connected to the server.');
 				//set a timer to autorestart?
 			}
 		});
@@ -563,7 +595,7 @@ $(document).ready(function() {
     	check.isConnected = true;
     	playButton.removeClass("disconnected");
     	playButton.html('Play');
-		debugLog.prepend('<li>* Connected to the server.</li>');
+		debugMsg('* Connected to the server.');
 	});
 			
 	socket.on('disconnect', function() {
@@ -572,13 +604,13 @@ $(document).ready(function() {
 		check.isPlaying = false;
 		playButton.addClass("disconnected");
 		clearTimeout(pingTimeout);
-		debugLog.prepend('<li>* Disconnected from the server.</li>');
+		debugMsg('* Disconnected from the server.');
 	});
 			
 	socket.on('message', function(mess) {
 		var data = JSON.parse(mess);
 		
-		//debugLog.prepend('<li>Message arrived: '+ mess +'</li>');		
+		//debugMsg('Message arrived: '+ mess);		
 		
 		switch (data.type) {
 				case 'pong':
@@ -589,10 +621,10 @@ $(document).ready(function() {
 							pings.splice(0, 1);
 						}
 				
-						//debugLog.prepend('<li>Pong! '+ ping +'ms</li>');
+						//debugMsg('Pong! '+ ping +'ms');
 					break;
 				case 'info':
-						debugLog.prepend('<li>'+ data.msg +'</li>');	
+						debugMsg(data.msg);	
 					break;
 				case 'config':
 						var config = JSON.parse(data.config);
@@ -605,8 +637,10 @@ $(document).ready(function() {
 						serverConfig.tileMapHeight = config.tileMapHeight;
 						serverConfig.tileWidth = config.tileWidth;
 						serverConfig.tileHeight = config.tileHeight;
+						serverConfig.pixelMapWidth = serverConfig.tileMapWidth * serverConfig.tileWidth,
+						serverConfig.pixelMapHeight = serverConfig.tileMapHeight * serverConfig.tileHeight;
 						
-						debugLog.prepend('<li>Server config received.</li>');
+						debugMsg('Server config received.');
 						check.hasConfig = true;	
 					break;
 				case 'play':
@@ -618,7 +652,7 @@ $(document).ready(function() {
 									player.x = data.x;
 									player.y = data.y;
 								}
-								console.log('player ' + p.id +' moved to '+ p.x +':'+ p.y);
+								//console.log('player ' + p.id +' moved to '+ p.x +':'+ p.y);
 							}
 						});
 					break;
@@ -631,7 +665,7 @@ $(document).ready(function() {
 						player.y = tmpPlayer.y;
 						
 						check.hasId = true;
-						debugLog.prepend('<li>Received current player id: '+ player.id +'</li>');
+						debugMsg('Received current player id: '+ player.id);
 					break;
 				case 'quit': //TODO: FIXME
 						players.forEach(function(p) {
@@ -640,15 +674,15 @@ $(document).ready(function() {
 							}
 						});
 						
-						debugLog.prepend('<li>Player quitted, '+ p.nick +' (id '+ data.id +')</li>');
+						debugMsg('Player quitted, '+ p.nick +' (id '+ data.id +')');
 					break;
 				case 'nickRes':
 						if (data.res == 'ok') {
 							check.hasNick = true;
-							debugLog.prepend('<li>Nick confirmed.</li>');
+							debugMsg('Nick confirmed.');
 						} else { //TODO: reopen input form
 							check.hasNick = false;
-							debugLog.prepend('<li>Nick not usable.</li>');
+							debugMsg('Nick not usable.');
 						}
 					break;
 				case 'nickChange':
@@ -660,7 +694,7 @@ $(document).ready(function() {
 								p.nick = data.nick;
 							}
 						});
-						debugLog.prepend('<li>'+ oldNick +' changed nick to '+ data.nick +'.</li>');
+						debugMsg(oldNick +' changed nick to '+ data.nick);
 					break;
 				case 'newPlayer':
 						var tmpPlayer = JSON.parse(data.player);
@@ -674,20 +708,20 @@ $(document).ready(function() {
 						if (newPlayer.id != player.id) {
 							//players[tmpPlayer.id] = tmpPlayer;
 							players.push(newPlayer);
-							debugLog.prepend('<li>New player joined: '+ json(newPlayer) +'</li>');					} else { //current player
+							debugMsg('New player joined: '+ json(newPlayer));					} else { //current player
 							//players.push(tmpPlayer); test * * *
-							debugLog.prepend('<li>You have joined the server. '+ json(newPlayer) +'</li>');	
+							debugMsg('You have joined the server. '+ json(newPlayer));	
 						}
 					break;
 				case 'playersList': //check for empty list?
-						debugLog.prepend('<li>Receiving initial players list...</li>');				
+						debugMsg('Receiving initial players list...');				
 						players = []; //prepare for new list
 						var playerList = JSON.parse(data.list);
 					
-						debugLog.prepend('<li>Received: '+ data.list +'</li>');
+						debugMsg('Received: '+ data.list );
 					
 						/*playerList.forEach(function(p) {
-							debugLog.prepend('<li>INSIDE FOREACH</li>');				
+							debugMsg('INSIDE FOREACH');				
 							var tmpPlayer = JSON.parse(p);
 				
 							//tmpPlayer.id = data.id;
@@ -696,7 +730,7 @@ $(document).ready(function() {
 							//tmpPlayer.y = data.y;
 				
 							players.push(tmpPlayer);
-							debugLog.prepend('<li>Added player '+ tmpPlayer.nick +' to list</li>');				
+							debugMsg('Added player '+ tmpPlayer.nick +' to list');				
 						});
 						for(var i = 0; i < playerList.length; i++) {
 							var tmpPlayer = playerList[i];
@@ -706,7 +740,7 @@ $(document).ready(function() {
 						
 						players = [];
 						playerList.forEach(function(p) {
-							debugLog.prepend('<li>Adding player '+ p.nick +' (id '+ p.id +') to list</li>');				
+							debugMsg('Adding player '+ p.nick +' (id '+ p.id +') to list');				
 							var tmpPlayer = new Player();
 							tmpPlayer.id = p.id;
 							tmpPlayer.nick = p.nick;
@@ -716,12 +750,12 @@ $(document).ready(function() {
 							players.push(tmpPlayer);
 						});
 	
-						debugLog.prepend('<li>Player list received.</li>');
+						debugMsg('Player list received.');
 						check.hasPlayerList = true;			
 				break;
 					
 				default:
-					debugLog.prepend('<li>[Error] Unknown message type: '+ data.type +'.</li>');
+					debugMsg('[Error] Unknown message type: '+ data.type +'.');
 				break;
 		}
 		
