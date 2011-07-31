@@ -1,6 +1,7 @@
+!fix move viewport/draw player, swapcoords opposite after halfway
+
 fix efpies, check github
 fix player quit on page refresh, don't allow 2x clients of same player
-fix move viewport
 
 fix playerlist distortion on new player
 find out why it doesn't start without firebug opened
