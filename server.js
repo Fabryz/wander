@@ -10,7 +10,8 @@ var http = require('http'),
     sys  = require('sys'),
     fs   = require('fs'),
     io   = require('socket.io'),
-    url  = require('url');
+    url  = require('url'),
+    util = require('util');
     
 function playerList() {
 	var list = '',
@@ -65,14 +66,15 @@ var server = http.createServer(function(req, res) {
 				sys.pump(rs, res);
 			break;
 		case '/status':
-				res.writeHead(200, { 'Content-Type' : 'text/plain' });
+				//console.log(util.inspect(process.memoryUsage()));
+				res.writeHead(200, { 'Content-Type' : 'text/plain' });				
 				res.write('Server info:\n');
 				res.write(serverInfo.name +' (' + serverInfo.ip +':'+ serverInfo.port +')\n');
 				res.write(serverInfo.url +'\n\n'+ serverInfo.desc +'\n\n');
 				res.write('Max Players: '+ serverConfig.maxPlayers +'\n\n');
 				res.write('Admin: '+ serverInfo.admin +' ('+ serverInfo.email +')\n\n');
 				
-				uptime = new Date(Date.now() - serverInfo.startedAt);
+				uptime = new Date(Date.now() - serverInfo.startedAt); //TODO: use process.uptime?
 				
 				res.write('The server has been up for: '+ dateString(uptime) +'\n\n');
 				res.write('Total players: '+ totPlayers +'\n\n');
@@ -81,7 +83,6 @@ var server = http.createServer(function(req, res) {
 				} else {
 					res.end();
 				}
-				
 			break;
 		case '/':
 		case '/index.html':
@@ -132,8 +133,8 @@ var serverConfig = {
 	speed: 16,
 	spawnX: 50,
 	spawnY: 50,
-	tileMapWidth: 15,
-	tileMapHeight: 15,
+	tileMapWidth: 30,
+	tileMapHeight: 30,
 	tileWidth: 32,
 	tileHeight: 32
 };
