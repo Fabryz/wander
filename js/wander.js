@@ -1,7 +1,7 @@
 /*
 * Author: Fabrizio Codello
-* Date: 2011/07/10
-* Version: 0.3.7.4
+* Date: 2011/08/2
+* Version: 0.3.8
 * https://github.com/Fabryz/wander
 *
 */
@@ -119,7 +119,13 @@ $(document).ready(function() {
 	};
 	
 	function debugMsg(msg) {
+		var maxAllowed = 25;
+		
 		debugLog.prepend('<li>'+ msg +'</li>');
+		
+		if (debugLog.find('li').size() > maxAllowed) {
+			debugLog.find('li:gt(' + ( maxAllowed-1 ) + ')' ).remove();
+		}
 	}
 	
 	function isReady() {
@@ -184,23 +190,32 @@ $(document).ready(function() {
 		fps: 0,  
 		fps_count: 0,
 		fps_timer: 0,
-		init: function(){
+		init: function() {
 			FPS.fps = document.getElementById('fps');
 			debugMsg('FPS inited');
 			FPS.fps_timer = setInterval(FPS.updateFPS, 2000);
 		},
-		updateFPS: function(){
+		updateFPS: function() {
 			if(FPS.fps){
 				FPS.fps.innerHTML = (FPS.fps_count / 2) + 'fps';
 			}
 			FPS.fps_count = 0;
 		}
 	};
+	
+	var GAME = {	//test
+		tick_count: 0,
+		tick_timer: 0,
+		init: function() {
+			debugMsg('Tick inited');
+		}
+	}
 			
 	function startGame() {
 		if (isReady() == true) {
 			debugMsg('Ready! Starting...');
 			check.isPlaying = true;
+			//canvas.focus();
 							
 			$(window).keydown(function(e) { //keypress?
 				e.preventDefault();
@@ -253,6 +268,7 @@ $(document).ready(function() {
 			nowMove = (new Date()).getTime();
 			
 			FPS.init();
+			GAME.init();
 			//effe();
 			ping();
 		} else {
@@ -362,6 +378,7 @@ $(document).ready(function() {
 	function debugStuff() {
 		debugCtx.clearRect(0, 0, 500, 70);
 		debugCtx.fillText(player, 10, 15);
+		debugCtx.fillText(GAME.tick_count, 10, 35);
 		ctx.fillText(calcFps()+ 'fps', canvasWidth - 60, 20);
 		ctx.fillText(showPing()+ 'ms', canvasWidth - 120, 20);
 		ctx.fillText(vpX +':'+ vpY, 10, 20);
@@ -413,15 +430,23 @@ $(document).ready(function() {
 		vpY = p.y - (canvasHeight / 2);
 	}
 		
-	function swapCoords(x, y) {
+	function mapToVp(x, y) {
 		var coords = {};
 		
-		coords.x = Math.abs(vpX) + x;
-		coords.y = Math.abs(vpY) + y
+		coords.x = x - vpX;
+		coords.y = y - vpY;
 		
-		debugMsg(x +':'+ y +' -> '+ coords.x +':'+ coords.y);
+		//debugMsg(x +':'+ y +' -> '+ coords.x +':'+ coords.y);
 		
 		return coords;
+	}
+	
+	function isInsideVp(x, y) {
+		if (((x >= 0) && (x < canvasWidth)) && ((y >= 0) && (y < canvasHeight))) {
+			return true;
+		}
+		
+		return false;
 	}
 	
 	function drawPlayer(p) {	
@@ -429,9 +454,9 @@ $(document).ready(function() {
 			ctx.drawImage(p.avatar, canvasWidth / 2, canvasHeight / 2, p.width, p.height);
 			ctx.fillText(p.nick +' - '+ p.moved, canvasWidth / 2 + p.halfWidth,  canvasHeight / 2 - 10);
 		} else {	//everyone but player
-			var coords = swapCoords(p.x, p.y);
+			var coords = mapToVp(p.x, p.y);
 			
-			if (((coords.x >= 0) && (coords.x < canvasWidth)) && ((coords.y >= 0) && (coords.y < canvasHeight))) { 
+			if (isInsideVp(coords.x, coords.y)) { 
 					//TODO: add outer render range, TILE_SIZE * X on if
 				ctx.drawImage(p.avatar, coords.x, coords.y, p.width, p.height);
 				ctx.fillText(p.nick +' - '+ p.moved, coords.x + p.halfWidth, coords.y - 10);
@@ -445,11 +470,20 @@ $(document).ready(function() {
 		ctx.strokeStyle = "#CCC";
 		ctx.lineWidth = 8;
 		
-		var coords = swapCoords(0, 0);
+		var coords = mapToVp(0, 0);
 		
 		//debugMsg(json(coords));
 		
 		ctx.strokeRect(coords.x, coords.y, serverConfig.pixelMapWidth, serverConfig.pixelMapHeight);
+	}
+	
+	function drawTiles() {
+	
+	}
+	
+	function drawMap() {
+		drawMapBounds();
+		drawTiles();
 	}
 	
 	function gameLoop() {
@@ -461,7 +495,7 @@ $(document).ready(function() {
 			//checkBounds(player);
 			
 			moveViewport(player);
-			drawMapBounds();
+			drawMap();
 			drawPlayer(player);	//assume the local copy is more updated		
 			players.forEach(function(p) {
 				if (p.id != player.id) {
@@ -473,8 +507,9 @@ $(document).ready(function() {
 			
 			lastFps = (new Date()).getTime();
 			FPS.fps_count++; //test
-			
-			setTimeout(gameLoop, 10); //test! - 1000/desired_fps
+			GAME.tick_count++;		
+
+			setTimeout(gameLoop, 30); //test! - 1000/desired_fps
 		}
 	}
 	
@@ -601,7 +636,7 @@ $(document).ready(function() {
 	socket.on('disconnect', function() {
 		check.isConnected = false;
 		check.isReady = false;
-		check.isPlaying = false;
+		//check.isPlaying = false;
 		playButton.addClass("disconnected");
 		clearTimeout(pingTimeout);
 		debugMsg('* Disconnected from the server.');
@@ -652,7 +687,7 @@ $(document).ready(function() {
 									player.x = data.x;
 									player.y = data.y;
 								}
-								//console.log('player ' + p.id +' moved to '+ p.x +':'+ p.y);
+								debugMsg('player ' + p.id +' moved to '+ p.x +':'+ p.y);
 							}
 						});
 					break;
