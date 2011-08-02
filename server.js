@@ -13,6 +13,17 @@ var http = require('http'),
     url  = require('url'),
     util = require('util');
     
+var serverInfo = {
+	name: "Illusory One",
+	desc: "Test server #001",
+	ip: "localhost",
+	port: "8080",
+	url: "www.serverURL.com",
+	admin: "Fabryz",
+	email: "admin@server.com", //obfuscate
+	startedAt: Date.now()
+};
+    
 function playerList() {
 	var list = '',
 		i = 0;
@@ -37,7 +48,9 @@ function dateString(date) {
 
 var server = http.createServer(function(req, res) {
 	var path = url.parse(req.url).pathname,
-		rs;  
+		rs,
+		uptime,
+		memUsed;  
 
 	console.log("* HTTP request: "+ path);
 
@@ -66,23 +79,24 @@ var server = http.createServer(function(req, res) {
 				sys.pump(rs, res);
 			break;
 		case '/status':
-				//console.log(util.inspect(process.memoryUsage()));
+				memUsed = process.memoryUsage();				
+				memUsed = Math.floor((memUsed.heapTotal / 1000000) * 100) / 100;
+				console.log(memUsed +'MB used.');
+				
 				res.writeHead(200, { 'Content-Type' : 'text/plain' });				
 				res.write('Server info:\n');
-				res.write(serverInfo.name +' (' + serverInfo.ip +':'+ serverInfo.port +')\n');
-				res.write(serverInfo.url +'\n\n'+ serverInfo.desc +'\n\n');
-				res.write('Max Players: '+ serverConfig.maxPlayers +'\n\n');
+				res.write('\t'+ serverInfo.name +'\n\t' + serverInfo.ip +':'+ serverInfo.port +'\n');
+				res.write('\t'+ serverInfo.url +'\n\n\t'+ serverInfo.desc +'\n\n');
+				
 				res.write('Admin: '+ serverInfo.admin +' ('+ serverInfo.email +')\n\n');
+
+				res.write('Players: '+ totPlayers +'/'+ serverConfig.maxPlayers +'\n\n');
+				if (totPlayers > 0) {
+					res.write('Player list:\n'+ playerList() +'\n');
+				} 
 				
 				uptime = new Date(Date.now() - serverInfo.startedAt); //TODO: use process.uptime?
-				
-				res.write('The server has been up for: '+ dateString(uptime) +'\n\n');
-				res.write('Total players: '+ totPlayers +'\n\n');
-				if (totPlayers > 0) {
-					res.end('Player list:\n'+ playerList());
-				} else {
-					res.end();
-				}
+				res.end('Uptime: '+ dateString(uptime) +'\n');
 			break;
 		case '/':
 		case '/index.html':
@@ -111,23 +125,13 @@ var server = http.createServer(function(req, res) {
 
 });
 
-server.listen(8080);
+server.listen(serverInfo.port);
+console.log('Server started on Node '+ process.version +', platform '+ process.platform +'.');
 
 /*
 * Socket stuff
 */
 	
-var serverInfo = {
-	name: "Illusory One",
-	desc: "Test server #001",
-	ip: "localhost",
-	port: "8080",
-	url: "serverURL.com",
-	admin: "Fabryz",
-	email: "admin@server.com", //obfuscate
-	startedAt: Date.now()
-};
-
 var serverConfig = {
 	maxPlayers: 16,
 	speed: 16,
@@ -194,7 +198,7 @@ function checkBounds(player) {
 	var pixelMapWidth = serverConfig.tileMapWidth * serverConfig.tileWidth,
 		pixelMapHeight = serverConfig.tileMapHeight * serverConfig.tileHeight;
 
-	if (player.x + serverConfig.tileWidth > pixelMapWidth) {
+	if (player.x + serverConfig.tileWidth > pixelMapWidth) { //TODO: player is as large as a map tile?
 		player.x = pixelMapWidth - serverConfig.tileWidth;
 	}
 	if (player.x < 0) {
@@ -212,7 +216,7 @@ function checkBounds(player) {
 }
 
 function sendGameData(player, data) {
-	/* Do bounds and anticheat checks*/
+	/* TODO: Do bounds and anticheat checks*/
 	/* Elaborate next position, send confirmed position to client */
 
 	players.forEach(function(p) {
