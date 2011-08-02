@@ -1,6 +1,6 @@
-!fix move viewport/draw player, swapcoords opposite after halfway
+find what causes the sloppy movements
 
-fix efpies, check github
+fix efpies
 fix player quit on page refresh, don't allow 2x clients of same player
 
 fix playerlist distortion on new player
@@ -13,6 +13,7 @@ disconnect/standby client after X pings with no answer
 !fix on client reconnect the wrong player is removed
 exchange server configs (map size) on handshake -> build canvas/viewport accordingly
 ?fix player spawn before Play
+!!!memory leaks
 
 fix nick on wrong id
 fix player.id scope
