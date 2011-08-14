@@ -9,7 +9,6 @@
 var http = require('http'),
     sys  = require('sys'),
     fs   = require('fs'),
-    io   = require('socket.io'),
     url  = require('url'),
     util = require('util');
     
@@ -17,11 +16,22 @@ var serverInfo = {
 	name: "Illusory One",
 	desc: "Test server #001",
 	ip: "localhost",
-	port: "8080",
+	port: 8080,
 	url: "www.serverURL.com",
 	admin: "Fabryz",
-	email: "admin@server.com", //obfuscate
+	email: "admin@server.com", //TODO: obfuscate
 	startedAt: Date.now()
+};
+
+var serverConfig = {
+	maxPlayers: 16,
+	speed: 16,
+	spawnX: 50,
+	spawnY: 50,
+	tileMapWidth: 30,
+	tileMapHeight: 30,
+	tileWidth: 32,
+	tileHeight: 32
 };
     
 function playerList() {
@@ -78,6 +88,11 @@ var server = http.createServer(function(req, res) {
 				rs = fs.createReadStream(__dirname + '/js/wander.js');
 				sys.pump(rs, res);
 			break;
+		case '/js/Map.js':
+				res.writeHead(200, { 'Content-Type': 'application/javascript' });
+				rs = fs.createReadStream(__dirname + '/js/Map.js');
+				sys.pump(rs, res);
+			break;
 		case '/status':
 				memUsed = process.memoryUsage();				
 				memUsed = Math.floor((memUsed.heapTotal / 1000000) * 100) / 100;
@@ -114,7 +129,7 @@ var server = http.createServer(function(req, res) {
 				rs = fs.createReadStream(__dirname + '/img/ribbon.png');
 				sys.pump(rs, res);
 			break;
-
+			
 		default:
 			res.writeHead(404, { 'Content-Type': 'text/html' });
 			res.end("<h1>THIS CAN'T BE HAPPENING, YOU CAN'T BE HERE!</h1>");
@@ -126,23 +141,12 @@ var server = http.createServer(function(req, res) {
 });
 
 server.listen(serverInfo.port);
-console.log('Server started on Node '+ process.version +', platform '+ process.platform +'.');
+//console.log('Server started on Node '+ process.version +', platform '+ process.platform +'.');
 
 /*
 * Socket stuff
 */
 	
-var serverConfig = {
-	maxPlayers: 16,
-	speed: 16,
-	spawnX: 50,
-	spawnY: 50,
-	tileMapWidth: 30,
-	tileMapHeight: 30,
-	tileWidth: 32,
-	tileHeight: 32
-};
-
 //player template test
 function Player(id, nick) {
 	this.id = id;
@@ -154,12 +158,12 @@ function Player(id, nick) {
 }
 
 function sendServerInfo(client) {
-	client.send(json({type: 'info', msg: '# Welcome to "'+ serverInfo.name +'" server! ('+serverInfo.ip +':'+ serverInfo.port +')'}));
-	client.send(json({type: 'info', msg: '# There are now '+ totPlayers +' players online.'}));
+	client.emit('info', { msg: '# Welcome to "'+ serverInfo.name +'" server! ('+serverInfo.ip +':'+ serverInfo.port +')' });
+	client.emit('info', { msg: '# There are now '+ totPlayers +' players online.' });
 }
 
 function sendServerConfig(client) {
-	client.send(json({type: 'config', config: json(serverConfig) }));
+	client.emit('config', { config: json(serverConfig) });
 	console.log('Sent server config');
 }
 	
@@ -170,8 +174,8 @@ function newPlayer(id, client) {
 	p = new Player(id, 'Guest'+id);	
 	players.push(p);
 
-	client.send(json({type: 'join', player: json(p) }));
-	socket.broadcast(json({type: 'newPlayer', player: json(p) }));
+	client.emit('join', { player: json(p) });
+	io.sockets.send('newPlayer', { player: json(p) });
 	
 	console.log('+ newPlayer: '+ json(p));
 	return p;
@@ -182,15 +186,15 @@ function sendPlayerList(client) {
 	/*if (players.length > 0) {
 		players.forEach(function(pla) {
 			if (pla.id != playerid) {
-				client.send(json({type: 'playersList', x: pla.x, y: pla.y, id: pla.id, nick: pla.nick }));
+				client.emit('playersList', { x: pla.x, y: pla.y, id: pla.id, nick: pla.nick });
 			}
 		});
 	} else {
-		client.send(json({type: 'playersList', msg: 'You are alone in the server' }));
+		client.emit('playersList', msg: 'You are alone in the server' });
 	}*/
 
 	
-	client.send(json({type: 'playersList', list: json(players) }));
+	client.emit('playersList', { list: json(players) });
 	console.log('Sent player list: '+ json(players) );
 }
 
@@ -234,19 +238,21 @@ function sendGameData(player, data) {
 				p.y += serverConfig.speed;
 			}
 			p = checkBounds(p);
-			socket.broadcast(json({type: "play", id: p.id, x: p.x, y: p.y }));
+			io.sockets.emit('play', { id: p.id, x: p.x, y: p.y });
 		}
 	});	
 }
 
-var socket = io.listen(server),
+var io = require('socket.io').listen(server),
 	players = [],
 	totPlayers = 0,
 	currentId = -1,
 	currentPid = -1,
 	json = JSON.stringify;
+	
+io.set('log level', 1);
 
-socket.on('connection', function(client) {
+io.sockets.on('connection', function(client) {
 	totPlayers++;
 	currentId++;
 	var player = newPlayer(currentId, client);
@@ -269,27 +275,17 @@ socket.on('connection', function(client) {
 		console.log('Arrived: '+ mess);
 					
 		switch (data.type) {
-			case 'setNick':	//todo: must grab and update also on players array
-				//players[player.id].nick = data.nick;
-				players.forEach(function(p) {
-					if (p.id == player.id) {
-						p.nick = data.nick;
-					}
-				});
-				socket.broadcast(json({type: 'nickChange', id: player.id, nick: data.nick }));
-				console.log('Nick set to '+ data.nick);
-				
-				//todo: check doublenick
-				client.send(json({type: 'nickRes', res: 'ok'}));
+			case 'setNick':	
+			
 			break;
 			case 'playersList':
-				sendPlayerList(client);
+				
 			break;
 			case 'play':
-				sendGameData(player, data);
+
 			break;
 			case 'ping':
-				client.send(json({type: 'pong', time: Date.now() }));
+			
 			break;
 				
 			default:
@@ -298,6 +294,39 @@ socket.on('connection', function(client) {
 		}
 
 	});
+	
+	client.on('setNick', function(data) {
+		//var data = JSON.parse(mess);
+		
+		//todo: must grab and update also on players array
+		//players[player.id].nick = data.nick;
+		players.forEach(function(p) {
+			if (p.id == player.id) {
+				p.nick = data.nick;
+			}
+		});
+		io.sockets.send('nickChange', { id: player.id, nick: data.nick });
+		console.log('Nick set to '+ data.nick);
+		
+		//todo: check doublenick
+		client.emit('nickRes', { res: 'ok' });	
+	});
+	
+	client.on('playersList', function() {
+		sendPlayerList(client);
+	});
+	
+	client.on('play', function(data) {
+		//var data = JSON.parse(mess);
+		
+		sendGameData(player, data);
+	});
+	
+	client.on('ping', function(data) {
+		//var data = JSON.parse(mess);
+		
+		client.emit('pong', { time: Date.now() });
+	});
 
 	client.on('disconnect', function() {
 		players.forEach(function(p) {
@@ -305,8 +334,8 @@ socket.on('connection', function(client) {
 				players.splice(0, 1);
 			}
 		});
-		socket.broadcast(json({type: 'quit', id: player.id }));
-		console.log('sent player quit: '+ json({type: 'quit', id: player.id }));
+		io.sockets.send('quit', { id: player.id });
+		console.log('sent player quit: '+ player.id );
 		
 		
 		totPlayers--;

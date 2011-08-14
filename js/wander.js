@@ -1,7 +1,7 @@
 /*
 * Author: Fabrizio Codello
-* Date: 2011/08/2
-* Version: 0.3.8
+* Date: 2011/08/13
+* Version: 0.3.9
 * https://github.com/Fabryz/wander
 *
 */
@@ -175,14 +175,14 @@ $(document).ready(function() {
 	function setNick() {
 		if (!check.hasNick) { //TODO: keep gameUI form open till nick is ok
 			debugMsg('Sending nickname');
-			socket.send(json({ type: 'setNick', nick: player.nick}));
+			socket.emit('setNick', { nick: player.nick });
 		}
 	}
 	
 	function requestPlayerList() {
 		if (!check.hasPlayerList) {
 			debugMsg('Requesting players list');
-			socket.send(json({ type: 'playersList'}));
+			socket.emit('playersList');
 		}
 	}
 	
@@ -297,14 +297,17 @@ $(document).ready(function() {
     	ctx.font = "15px Monospace"; //workaround
 	}
 	
+	var map,
+		tileSet;
+	
 	function gameInit() {
 		window.addEventListener("resize", resizeCanvas, false);
 		resizeCanvas();
 		
 		gamePlayersList.hide();
 	
-		socket = new io.Socket(null, {port: window.location.port, rememberTransport: false});
-    	socket.connect();
+		//socket = new io.connect(null, {port: window.location.port, rememberTransport: false});
+		socket = new io.connect('http://localhost:8080');
     	debugMsg('Connecting...');
 
 		ctx.fillStyle = 'rgb(0, 0, 0)';
@@ -316,6 +319,8 @@ $(document).ready(function() {
     	//if (check.hasConfig) { //TODO: grab configs before starting
     		player = new Player();
     	//}
+    	
+    	world = new Map();
 		
 		debugMsg('Game inited.');
 	}
@@ -414,7 +419,7 @@ $(document).ready(function() {
 			nowMove = Date.now();
 			if (nowMove - player.lastMove > allowSendEvery) { 
 				//debugMsg('5. '+ (nowMove - player.lastMove));
-				socket.send(json({  type: 'play', id: player.id, dir: dir  }));
+				socket.emit('play', { id: player.id, dir: dir });
 				
 				player.lastMove = Date.now();
 			}
@@ -483,7 +488,7 @@ $(document).ready(function() {
 	
 	function drawMap() {
 		drawMapBounds();
-		drawTiles();
+		//world.drawMap(ctx); FIXME DEBUG
 	}
 	
 	function gameLoop() {
@@ -519,7 +524,7 @@ $(document).ready(function() {
 	function ping() {
 		if (check.isPlaying) {
 			pingTimeout = setTimeout(function() {
-				socket.send(json({ type: 'ping', id: player.id }));
+				socket.emit('ping', { id: player.id });
 				//debugMsg('Ping?');
 				ping();
 			}, 5000);
@@ -635,166 +640,221 @@ $(document).ready(function() {
 			
 	socket.on('disconnect', function() {
 		check.isConnected = false;
-		check.isReady = false;
+		//check.isReady = false;
 		//check.isPlaying = false;
 		playButton.addClass("disconnected");
 		clearTimeout(pingTimeout);
 		debugMsg('* Disconnected from the server.');
 	});
+	
+	socket.on('pong', function(data) {
+		//var data = JSON.parse(mess);
+		
+		var ping = Date.now() - data.time;
+		if (pings.length <= 5) {
+			pings.push(ping);
+		} else {
+			pings.splice(0, 1);
+		}
+
+		//debugMsg('Pong! '+ ping +'ms');
+	});
+	
+	socket.on('info', function(data) {
+		//var data = JSON.parse(mess);
+		
+		debugMsg(data.msg);	
+	});
+	
+	socket.on('config', function(data) {
+		//var data = JSON.parse(mess);
+		var config = JSON.parse(data.config);
+						
+		serverConfig.maxPlayers = config.maxPlayers;
+		serverConfig.speed = config.speed;
+		serverConfig.spawnX = config.spawnX;
+		serverConfig.spawnY = config.spawnY;
+		serverConfig.tileMapWidth = config.tileMapWidth;
+		serverConfig.tileMapHeight = config.tileMapHeight;
+		serverConfig.tileWidth = config.tileWidth;
+		serverConfig.tileHeight = config.tileHeight;
+		serverConfig.pixelMapWidth = serverConfig.tileMapWidth * serverConfig.tileWidth,
+		serverConfig.pixelMapHeight = serverConfig.tileMapHeight * serverConfig.tileHeight;
+		
+		debugMsg('Server config received.');
+		check.hasConfig = true;	
+	});
+	
+	socket.on('play', function(data) {
+		//var data = JSON.parse(mess);
+		
+		players.forEach(function(p) {
+			if (p.id == data.id) {
+				p.x = data.x;
+				p.y = data.y;
+				if (p.id == player.id) {
+					player.x = data.x;
+					player.y = data.y;
+				}
+				debugMsg('player ' + p.id +' moved to '+ p.x +':'+ p.y);
+			}
+		});
+	});
+	
+	socket.on('join', function(data) {
+		//var data = JSON.parse(mess);
+		var tmpPlayer = JSON.parse(data.player);
+						
+		player.id = tmpPlayer.id;
+		player.nick = tmpPlayer.nick;
+		player.x = tmpPlayer.x;
+		player.y = tmpPlayer.y;
+		
+		check.hasId = true;
+		debugMsg('Received current player id: '+ player.id);
+	});
+	
+	socket.on('quit', function(data) {	//TODO: FIXME
+		//var data = JSON.parse(mess);
+			
+		players.forEach(function(p) {
+			if (p.id == data.id) {
+				players.splice(0, 1);
+			}
+		});
+		
+		debugMsg('Player quitted, '+ p.nick +' (id '+ data.id +')');
+	});
+	
+	socket.on('nickRes', function(data) {
+		//var data = JSON.parse(mess);
+			
+		if (data.res == 'ok') {
+			check.hasNick = true;
+			debugMsg('Nick confirmed.');
+		} else { //TODO: reopen input form
+			check.hasNick = false;
+			debugMsg('Nick not usable.');
+		}
+	});
+	
+	socket.on('nickChange', function(data) {
+		//var data = JSON.parse(mess);
+		var oldNick = '';
+						
+		players.forEach(function(p) {
+			if (p.id == data.id) {
+				oldNick = p.nick;
+				p.nick = data.nick;
+			}
+		});
+		debugMsg(oldNick +' changed nick to '+ data.nick);
+	});
+	
+	socket.on('newPlayer', function(data) {
+		//var data = JSON.parse(mess);
+		var tmpPlayer = JSON.parse(data.player);
+						
+		var newPlayer = new Player();
+		newPlayer.id = tmpPlayer.id;
+		newPlayer.nick = tmpPlayer.nick;
+		newPlayer.x = tmpPlayer.x;
+		newPlayer.y = tmpPlayer.y;
+		
+		if (newPlayer.id != player.id) {
+			//players[tmpPlayer.id] = tmpPlayer;
+			players.push(newPlayer);
+			debugMsg('New player joined: '+ json(newPlayer));					} else { //current player
+			//players.push(tmpPlayer); test * * *
+			debugMsg('You have joined the server. '+ json(newPlayer));	
+		}
+	});
+	
+	socket.on('playersList', function(data) {
+		//var data = JSON.parse(mess);
+		
+		//check for empty list?
+		debugMsg('Receiving initial players list...');				
+		players = []; //prepare for new list
+		var playerList = JSON.parse(data.list);
+	
+		debugMsg('Received: '+ data.list );
+	
+		/*playerList.forEach(function(p) {
+			debugMsg('INSIDE FOREACH');				
+			var tmpPlayer = JSON.parse(p);
+
+			//tmpPlayer.id = data.id;
+			//tmpPlayer.nick = data.nick;
+			//tmpPlayer.x = data.x;
+			//tmpPlayer.y = data.y;
+
+			players.push(tmpPlayer);
+			debugMsg('Added player '+ tmpPlayer.nick +' to list');				
+		});
+		for(var i = 0; i < playerList.length; i++) {
+			var tmpPlayer = playerList[i];
+		}
+		
+		*/
+		
+		players = [];
+		playerList.forEach(function(p) {
+			debugMsg('Adding player '+ p.nick +' (id '+ p.id +') to list');				
+			var tmpPlayer = new Player();
+			tmpPlayer.id = p.id;
+			tmpPlayer.nick = p.nick;
+			tmpPlayer.x = p.x;
+			tmpPlayer.y = p.y;
+			
+			players.push(tmpPlayer);
+		});
+
+		debugMsg('Player list received.');
+		check.hasPlayerList = true;		
+	});
 			
 	socket.on('message', function(mess) {
 		var data = JSON.parse(mess);
 		
-		//debugMsg('Message arrived: '+ mess);		
+		debugMsg('Message arrived: '+ mess);		
 		
 		switch (data.type) {
 				case 'pong':
-						var ping = Date.now() - data.time;
-						if (pings.length <= 5) {
-							pings.push(ping);
-						} else {
-							pings.splice(0, 1);
-						}
-				
-						//debugMsg('Pong! '+ ping +'ms');
+						
 					break;
 				case 'info':
-						debugMsg(data.msg);	
+						
 					break;
 				case 'config':
-						var config = JSON.parse(data.config);
 						
-						serverConfig.maxPlayers = config.maxPlayers;
-						serverConfig.speed = config.speed;
-						serverConfig.spawnX = config.spawnX;
-						serverConfig.spawnY = config.spawnY;
-						serverConfig.tileMapWidth = config.tileMapWidth;
-						serverConfig.tileMapHeight = config.tileMapHeight;
-						serverConfig.tileWidth = config.tileWidth;
-						serverConfig.tileHeight = config.tileHeight;
-						serverConfig.pixelMapWidth = serverConfig.tileMapWidth * serverConfig.tileWidth,
-						serverConfig.pixelMapHeight = serverConfig.tileMapHeight * serverConfig.tileHeight;
-						
-						debugMsg('Server config received.');
-						check.hasConfig = true;	
 					break;
 				case 'play':
-						players.forEach(function(p) {
-							if (p.id == data.id) {
-								p.x = data.x;
-								p.y = data.y;
-								if (p.id == player.id) {
-									player.x = data.x;
-									player.y = data.y;
-								}
-								debugMsg('player ' + p.id +' moved to '+ p.x +':'+ p.y);
-							}
-						});
+						
 					break;
 				case 'join':
-						var tmpPlayer = JSON.parse(data.player);
 						
-						player.id = tmpPlayer.id;
-						player.nick = tmpPlayer.nick;
-						player.x = tmpPlayer.x;
-						player.y = tmpPlayer.y;
-						
-						check.hasId = true;
-						debugMsg('Received current player id: '+ player.id);
 					break;
 				case 'quit': //TODO: FIXME
-						players.forEach(function(p) {
-							if (p.id == data.id) {
-								players.splice(0, 1);
-							}
-						});
 						
-						debugMsg('Player quitted, '+ p.nick +' (id '+ data.id +')');
 					break;
 				case 'nickRes':
-						if (data.res == 'ok') {
-							check.hasNick = true;
-							debugMsg('Nick confirmed.');
-						} else { //TODO: reopen input form
-							check.hasNick = false;
-							debugMsg('Nick not usable.');
-						}
+						
 					break;
 				case 'nickChange':
-						var oldNick = '';
 						
-						players.forEach(function(p) {
-							if (p.id == data.id) {
-								oldNick = p.nick;
-								p.nick = data.nick;
-							}
-						});
-						debugMsg(oldNick +' changed nick to '+ data.nick);
 					break;
 				case 'newPlayer':
-						var tmpPlayer = JSON.parse(data.player);
 						
-						var newPlayer = new Player();
-						newPlayer.id = tmpPlayer.id;
-						newPlayer.nick = tmpPlayer.nick;
-						newPlayer.x = tmpPlayer.x;
-						newPlayer.y = tmpPlayer.y;
-						
-						if (newPlayer.id != player.id) {
-							//players[tmpPlayer.id] = tmpPlayer;
-							players.push(newPlayer);
-							debugMsg('New player joined: '+ json(newPlayer));					} else { //current player
-							//players.push(tmpPlayer); test * * *
-							debugMsg('You have joined the server. '+ json(newPlayer));	
-						}
 					break;
-				case 'playersList': //check for empty list?
-						debugMsg('Receiving initial players list...');				
-						players = []; //prepare for new list
-						var playerList = JSON.parse(data.list);
+				case 'playersList': 
 					
-						debugMsg('Received: '+ data.list );
-					
-						/*playerList.forEach(function(p) {
-							debugMsg('INSIDE FOREACH');				
-							var tmpPlayer = JSON.parse(p);
-				
-							//tmpPlayer.id = data.id;
-							//tmpPlayer.nick = data.nick;
-							//tmpPlayer.x = data.x;
-							//tmpPlayer.y = data.y;
-				
-							players.push(tmpPlayer);
-							debugMsg('Added player '+ tmpPlayer.nick +' to list');				
-						});
-						for(var i = 0; i < playerList.length; i++) {
-							var tmpPlayer = playerList[i];
-						}
-						
-						*/
-						
-						players = [];
-						playerList.forEach(function(p) {
-							debugMsg('Adding player '+ p.nick +' (id '+ p.id +') to list');				
-							var tmpPlayer = new Player();
-							tmpPlayer.id = p.id;
-							tmpPlayer.nick = p.nick;
-							tmpPlayer.x = p.x;
-							tmpPlayer.y = p.y;
-							
-							players.push(tmpPlayer);
-						});
-	
-						debugMsg('Player list received.');
-						check.hasPlayerList = true;			
 				break;
 					
 				default:
 					debugMsg('[Error] Unknown message type: '+ data.type +'.');
 				break;
 		}
-		
-			
 		
 	});
 });
