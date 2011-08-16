@@ -10,7 +10,12 @@ var http = require('http'),
     sys  = require('sys'),
     fs   = require('fs'),
     url  = require('url'),
-    util = require('util');
+    util = require('util'),
+    express = require('express');
+    
+/*
+* Game configs
+*/
     
 var serverInfo = {
 	name: "Illusory One",
@@ -56,92 +61,46 @@ function dateString(date) {
     return pad(date.getUTCHours())+'h'+ pad(date.getUTCMinutes())+'m'+ pad(date.getUTCSeconds() +'s');
 }
 
-var server = http.createServer(function(req, res) {
-	var path = url.parse(req.url).pathname,
-		rs,
-		uptime,
-		memUsed;  
+function sendStatus(res) {
+	var memUsed,
+		uptime;
 
-	console.log("* HTTP request: "+ path);
+	memUsed = process.memoryUsage();				
+	memUsed = Math.floor((memUsed.heapTotal / 1000000) * 100) / 100;
+	console.log(memUsed +'MB used.');
 
-	switch (path) {
-		case '/favicon.ico':
-				/* TODO: add favicon */
-			break;
-		/*case '/css/reset.css':
-				res.writeHead(200, { 'Content-Type': 'text/css' });
-				rs = fs.createReadStream(__dirname + '/css/reset.css');
-				sys.pump(rs, res);
-			break;*/
-		case '/css/style.css':
-				res.writeHead(200, { 'Content-Type': 'text/css' });
-				rs = fs.createReadStream(__dirname + '/css/style.css');
-				sys.pump(rs, res);
-			break;
-		case '/js/jquery-latest.min.js':	//use text/js? if < IE 8
-				res.writeHead(200, { 'Content-Type': 'application/javascript' });
-				rs = fs.createReadStream(__dirname + '/js/jquery-latest.min.js');
-				sys.pump(rs, res);
-			break;
-		case '/js/wander.js':
-				res.writeHead(200, { 'Content-Type': 'application/javascript' });
-				rs = fs.createReadStream(__dirname + '/js/wander.js');
-				sys.pump(rs, res);
-			break;
-		case '/js/Map.js':
-				res.writeHead(200, { 'Content-Type': 'application/javascript' });
-				rs = fs.createReadStream(__dirname + '/js/Map.js');
-				sys.pump(rs, res);
-			break;
-		case '/status':
-				memUsed = process.memoryUsage();				
-				memUsed = Math.floor((memUsed.heapTotal / 1000000) * 100) / 100;
-				console.log(memUsed +'MB used.');
-				
-				res.writeHead(200, { 'Content-Type' : 'text/plain' });				
-				res.write('Server info:\n');
-				res.write('\t'+ serverInfo.name +'\n\t' + serverInfo.ip +':'+ serverInfo.port +'\n');
-				res.write('\t'+ serverInfo.url +'\n\n\t'+ serverInfo.desc +'\n\n');
-				
-				res.write('Admin: '+ serverInfo.admin +' ('+ serverInfo.email +')\n\n');
+	res.writeHead(200, { 'Content-Type' : 'text/plain' });				
+	res.write('Server info:\n');
+	res.write('\t'+ serverInfo.name +'\n\t' + serverInfo.ip +':'+ serverInfo.port +'\n');
+	res.write('\t'+ serverInfo.url +'\n\n\t'+ serverInfo.desc +'\n\n');
 
-				res.write('Players: '+ totPlayers +'/'+ serverConfig.maxPlayers +'\n\n');
-				if (totPlayers > 0) {
-					res.write('Player list:\n'+ playerList() +'\n');
-				} 
-				
-				uptime = new Date(Date.now() - serverInfo.startedAt); //TODO: use process.uptime?
-				res.end('Uptime: '+ dateString(uptime) +'\n');
-			break;
-		case '/':
-		case '/index.html':
-				res.writeHead(200, { 'Content-Type': 'text/html' });
-				rs = fs.createReadStream(__dirname + '/index.html');
-				sys.pump(rs, res);
-			break;
-		case '/img/player.png':
-				res.writeHead(200, { 'Content-Type': 'image/png' });
-				rs = fs.createReadStream(__dirname + '/img/player.png');
-				sys.pump(rs, res);
-			break;
-		case '/img/ribbon.png':
-				res.writeHead(200, { 'Content-Type': 'image/png' });
-				rs = fs.createReadStream(__dirname + '/img/ribbon.png');
-				sys.pump(rs, res);
-			break;
-			
-		default:
-			res.writeHead(404, { 'Content-Type': 'text/html' });
-			res.end("<h1>THIS CAN'T BE HAPPENING, YOU CAN'T BE HERE!</h1>");
-			//rs = fs.createReadStream(__dirname + '/404.html');
-			//sys.pump(rs, res);
-		break;
-	}
+	res.write('Admin: '+ serverInfo.admin +' ('+ serverInfo.email +')\n\n');
 
+	res.write('Players: '+ totPlayers +'/'+ serverConfig.maxPlayers +'\n\n');
+	if (totPlayers > 0) {
+		res.write('Player list:\n'+ playerList() +'\n');
+	} 
+
+	uptime = new Date(Date.now() - serverInfo.startedAt); //TODO: use process.uptime?
+	res.end('Uptime: '+ dateString(uptime) +'\n');
+}
+
+/*
+* HTTP Server
+*/
+
+var app = express.createServer(
+		express.logger('short'),
+		express.static(__dirname + '/public'),
+		express.favicon() 
+	);
+
+app.get('/status', function(req, res){
+    sendStatus(res);
 });
 
-server.listen(serverInfo.port);
-//console.log('Server started on Node '+ process.version +', platform '+ process.platform +'.');
+app.listen(serverInfo.port);
+console.log('Server started on Node '+ process.version +', platform '+ process.platform +'.');
 
 /*
 * Socket stuff
@@ -175,7 +134,7 @@ function newPlayer(id, client) {
 	players.push(p);
 
 	client.emit('join', { player: json(p) });
-	io.sockets.send('newPlayer', { player: json(p) });
+	io.sockets.emit('newPlayer', { player: json(p) });
 	
 	console.log('+ newPlayer: '+ json(p));
 	return p;
@@ -243,24 +202,35 @@ function sendGameData(player, data) {
 	});	
 }
 
-var io = require('socket.io').listen(server),
+var io = require('socket.io').listen(app),
 	players = [],
 	totPlayers = 0,
 	currentId = -1,
 	currentPid = -1,
 	json = JSON.stringify;
 	
-io.set('log level', 1);
+io.configure(function(){ 
+	io.enable('browser client etag'); 
+	io.set('log level', 1); 
+	io.set('transports', [ 
+			'websocket',
+			'flashsocket',
+			'htmlfile',
+			'xhr-polling',
+			'jsonp-polling'
+	]); 
+}); 
 
-io.sockets.on('connection', function(client) {
+io.sockets.on('connection', function(client) {	
 	totPlayers++;
 	currentId++;
 	var player = newPlayer(currentId, client);
 	
 	sendPlayerList(client);
 	
-	console.log('NEW ' +json(player));
-	
+	var address = client.handshake.address;
+	console.log('* New connection from ' + address.address + ':' + address.port);	
+	console.log('* NEW ' +json(player));	
 	console.log('* Player connected, total players: '+ totPlayers);
 		
 	client.on('message', function(mess) {		
@@ -275,18 +245,6 @@ io.sockets.on('connection', function(client) {
 		console.log('Arrived: '+ mess);
 					
 		switch (data.type) {
-			case 'setNick':	
-			
-			break;
-			case 'playersList':
-				
-			break;
-			case 'play':
-
-			break;
-			case 'ping':
-			
-			break;
 				
 			default:
 				console.log('[Error] Unknown message type: '+ mess);
@@ -305,7 +263,7 @@ io.sockets.on('connection', function(client) {
 				p.nick = data.nick;
 			}
 		});
-		io.sockets.send('nickChange', { id: player.id, nick: data.nick });
+		io.sockets.emit('nickChange', { id: player.id, nick: data.nick });
 		console.log('Nick set to '+ data.nick);
 		
 		//todo: check doublenick
@@ -334,7 +292,7 @@ io.sockets.on('connection', function(client) {
 				players.splice(0, 1);
 			}
 		});
-		io.sockets.send('quit', { id: player.id });
+		io.sockets.emit('quit', { id: player.id });
 		console.log('sent player quit: '+ player.id );
 		
 		

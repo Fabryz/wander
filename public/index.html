@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Wander game</title>
+    
+    <meta http-equiv="Content-type" content="text/html; charset=UTF-8" />
+    
+    <link type="text/css" rel="stylesheet" href="./css/style.css" media="screen">
+    
+    <script type="text/javascript" src="./js/jquery-latest.min.js"></script>
+    <script type="text/javascript" src="./socket.io/socket.io.js"></script>
+    <script type="text/javascript" src="./js/wander.js"></script>
+    <script type="text/javascript" src="./js/Map.js"></script>
+    
+</head>
+<body>
+	<h1>Wander</h1>
+	<p>Use the arrow keys to wander around and explore.</p>
+	<div id="gameUI">
+		<div id="gameIntro">
+			<h1>Who are you?</h1>
+			<p>Insert your nick and press Play to start</p>
+			<p><input type="text" value="Player" id="playerNick" name="playerNick" maxlength="30"></p>
+			<p><a href="#" id ="play" class="button disconnected">Connecting...</a></p>
+		</div>
+		<div id="gamePlayersList">
+			<h1>Players list</h1>
+			<ul></ul>
+		</div>
+	</div>
+	<p id="fps">XX</p>
+	<canvas id="gameCanvas" width="480" height="480">
+		<p>Looks like your browser does NOT support HTML5 Canvas.</p>
+		<p>Please get a decent one.</p>
+	</canvas>
+	
+	<!-- <h2>Debug</h2> -->
+	<canvas id="debugCanvas" width="500" height="70"></canvas>
+	<div id="debugLog"><ul></ul></div>
+	<!-- <div id="debugButtons">
+		<button id="startAnimation">Start</button>
+		<button id="stopAnimation">Stop</button>
+	</div> -->
+	<p>&copy; 2011 Fabrizio Codello - Follow me on <a href="http://twitter.com/#!/fabryz">Twitter</a>!</p>
+	<a href="https://github.com/Fabryz/wander"><img id="ribbon" src="./img/ribbon.png" alt="Fork me on GitHub"></a>
+</body>
+</html>
