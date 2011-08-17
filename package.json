@@ -1,0 +1,21 @@
+{
+  "name" : "wander",
+  "description" : "An HTML5 canvas multiplayer sandbox game",
+  "version" : "0.3.9",
+  "author" : "Fabrizio Codello",
+  "engines" : {
+    node: '>= 0.4.0'
+  },
+  "dependencies" : {
+    "express" : ">=2.4.3",
+    "socket.io" : ">=0.7.8"
+  },
+  "repository" : {
+    "type":"git",
+    "url":"https://github.com/Fabryz/wander"
+  },
+  "bugs" : {
+    "web" : "https://github.com/Fabryz/wander/issues"
+  },
+  "private": true
+}
