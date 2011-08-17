@@ -1,8 +1,8 @@
 /*
-* Author: Fabrizio Codello
-* Date: 2011/08/13
-* Version: 0.3.9
-* https://github.com/Fabryz/wander
+*  Author: Fabrizio Codello
+*  Name: Wander (working name)
+*  Description: An HTML5 Canvas multiplayer sandbox game
+*  Repo: https://github.com/Fabryz/wander
 *
 */
 
@@ -23,24 +23,6 @@ $(document).ready(function() {
 		debugLog = $("#debugLog ul");
 	
 	var socket;
-		
-	/*startButton.hide();
-	startButton.click(function() {
-		$(this).hide();
-		stopButton.show();
-		
-		check.isPlaying = true;
-		debugMsg('Started');
-		gameLoop();
-	});
-	
-	stopButton.click(function() {
-		$(this).hide();
-		startButton.show();
-		
-		check.isPlaying = false;
-		debugMsg('Stopped');
-	});*/
 	
 	var serverConfig = {	//default config
 		maxPlayers: 8,
@@ -478,7 +460,6 @@ $(document).ready(function() {
 		var coords = mapToVp(0, 0);
 		
 		//debugMsg(json(coords));
-		
 		ctx.strokeRect(coords.x, coords.y, serverConfig.pixelMapWidth, serverConfig.pixelMapHeight);
 	}
 	
@@ -488,7 +469,7 @@ $(document).ready(function() {
 	
 	function drawMap() {
 		drawMapBounds();
-		//world.drawMap(ctx);
+		world.drawMap(ctx);
 	}
 	
 	function gameLoop() {
