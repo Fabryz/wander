@@ -14,16 +14,11 @@ Requirements
 What to do
 ----------
 
-1- Clone the repository with ``git clone git://github.com/Fabryz/wander.git wander``
-
-2- Install dependencies with ``npm install''
-
-3- Start the server with ``node server.js`` or ``nodemon server.js`` if you have it
-
-4- Point your browser to ``YOUR_SERVER_IP:8080``
-
-5- Wander around
-
+1. Clone the repository with ``git clone git://github.com/Fabryz/wander.git wander``
+2. Install dependencies with ``npm install``
+3. Start the server with ``node server.js`` or ``nodemon server.js`` if you have it
+4. Point your browser to ``YOUR_SERVER_IP:8080``
+5. Wander around
 
 Features
 --------
