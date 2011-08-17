@@ -210,7 +210,7 @@ var io = require('socket.io').listen(app),
 	json = JSON.stringify;
 	
 io.configure(function(){ 
-	io.enable('browser client etag'); 
+	//io.enable('browser client etag'); 
 	io.set('log level', 1); 
 	io.set('transports', [ 
 			'websocket',
