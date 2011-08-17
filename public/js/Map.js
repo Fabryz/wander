@@ -6,7 +6,7 @@ var Map = function() {
 	this.name = "Village #001";
 	this.tileset = this.loadTileset();
 	this.map = this.loadMap();
-	//this.images = this.preloadImages();
+	this.images = this.preloadImages();
 }
 
 function Tile(id, name, src, block) {
@@ -69,19 +69,24 @@ Map.prototype.loadMap = function() {
 			 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 			 [0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0],
 			 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]];
-	console.log('Map '+ this.name +' loaded.');
+	console.log('Map "'+ this.name +'" loaded.');
+	
 	return map;
 }
 	
 Map.prototype.preloadImages = function() {
-	var images = [];
+	var images = [],
+		image = '';
 	
 	this.tileset.forEach(function(t) {
-		
-		
-		
+		if (t.src != '') {
+			image = new Image();
+			image.src = t.src;
+		}
+		images.push(image);
 	});
-	
+	console.log('Images preloaded.');
+		
 	return images;
 }
 	
@@ -91,27 +96,10 @@ Map.prototype.drawMap = function(ctx) {	//replace with tilemapwidth and tilewidt
     for(var z = 0; z < layers; z++) {
         for(var y = 0; y < 15; y++) {
             for(var x = 0; x < 15; x++) {
-                //var img = new Image();
-                //var src = this.tileset[this.map[z][y][x]].src;
-                var tile = this.tileset[this.map[z][y][x]];
-                var img = new Image();
-                img.src = tile.src;
-                
-                //console.log(tile);
-                //console.log(img);
-                
                 try {
-                    //if (src !== '') {
-                        //img.src = src;
-                        if (tile.id != 0) {
-                        	//img.onLoad(function() {
-                        		//console.log(x*32 +':'+ y*32);                        		
-                        		ctx.drawImage(tile, x*32, y*32, 32, 32);	//TODO: calculate where VP is on the map, render accordingly
-                        	//});
-                       }
-                    //} //else leave transparent
-                } catch (err) {
-                    //console.log('Error while drawing map: '+ err);
+					ctx.drawImage(this.images[this.map[z][x][y]], x*32, y*32, 32, 32);	//TODO: calculate where VP is on the map, render accordingly
+                } catch(err) {
+                    //console.log('Error while drawing map:'+ err);
                 }
             }
         }
