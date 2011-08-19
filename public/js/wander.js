@@ -6,74 +6,7 @@
 *
 */
 
-$(document).ready(function() {
-	var canvas = $("#gameCanvas");
-	var ctx = canvas.get(0).getContext("2d");
-	
-	var canvasWidth = canvas.width();
-	var canvasHeight = canvas.height();
-	
-	var desiredFPS = 30;
-	
-	var startButton = $("#startAnimation"),
-		stopButton = $("#stopAnimation");
-		
-	var debugCanvas = $("#debugCanvas"),
-		debugCtx = debugCanvas.get(0).getContext("2d"),
-		debugLog = $("#debugLog ul");
-	
-	var socket;
-	
-	var serverConfig = {	//default config
-		maxPlayers: 8,
-		speed: 16,
-		spawnX: 0,
-		spawnY: 0,
-		tileMapWidth: 15,
-		tileMapHeight: 15,
-		tileWidth: 32,
-		tileHeight: 32,
-		pixelMapWidth: this.tileMapWidth * this.tileWidth,
-		pixelMapHeight: this.tileMapHeight * this.tileHeight
-	};
-	
-	function Player() {
-		this.id = -1;
-		this.nick = "";
-		this.x = 0;
-		this.y = 0;
-		this.vX = 0;
-		this.vY = 0;
-		
-		this.alive = true;
-		this.status = "normal";
-		this.lastMove = Date.now();
-		this.hp = 100;
-		this.inventory = [];
-		
-		this.avatar = new Image();
-		this.avatar.src = './img/player.png';
-		this.width = serverConfig.tileWidth;
-		this.height = serverConfig.tileHeight;
-		this.halfWidth = this.width/2;
-		this.halfHeight = this.height/2; 		
-		
-		this.moved = false;
-		this.moveLeft = false;
-		this.moveRight = false;
-		this.moveUp = false;
-		this.moveDown = false;
-		
-		this.toString = function() {
-		    return this.nick +' id: '+ this.id +' x: '+ this.x +' ('+ (this.x+this.width) +') y: '+ this.y +' ('+ (this.y + this.height)+') '+ this.vX +' '+ this.vY;
-		};
-		    
-		/*this.draw = function(c) {
-		    c.drawImage(this.avatar, this.x, this.y, this.width, this.height);
-		    c.fillText(this.nick, this.x + this.halfWidth, this.y - 10);
-		};*/
-	}
-	
+$(document).ready(function() {		
 	var arrowUp = 38,
 		arrowDown = 40,
 		arrowLeft = 37,
@@ -100,18 +33,8 @@ $(document).ready(function() {
 		isPlaying: false
 	};
 	
-	function debugMsg(msg) {
-		var maxAllowed = 25;
-		
-		debugLog.prepend('<li>'+ msg +'</li>');
-		
-		if (debugLog.find('li').size() > maxAllowed) {
-			debugLog.find('li:gt(' + ( maxAllowed-1 ) + ')' ).remove();
-		}
-	}
-	
 	function isReady() {
-		debugMsg(check.isConnected +' '+ check.hasConfig +' '+ check.hasId +' '+ check.hasNick +' '+ check.hasPlayerList);
+		game.debug(check.isConnected +' '+ check.hasConfig +' '+ check.hasId +' '+ check.hasNick +' '+ check.hasPlayerList);
 		return check.isConnected && check.hasConfig && check.hasId && check.hasNick && check.hasPlayerList;
 	}
 	
@@ -124,15 +47,15 @@ $(document).ready(function() {
 			var canvasX = Math.floor(e.pageX - canvasOffset.left);
 			var canvasY = Math.floor(e.pageY - canvasOffset.top);
 			
-			debugCtx.fillText(canvasX +"x"+ canvasY, 400, 15);
+			game.debugCtx.fillText(canvasX +"x"+ canvasY, 400, 15);
 			
-			ctx.strokeStyle = "rgb(0, 0, 0)";
-			ctx.lineWidth = 3;
-			ctx.beginPath();
-			ctx.moveTo(player.x + player.halfWidth, player.y + player.halfHeight);
-			ctx.lineTo(canvasX, canvasY);
-			ctx.closePath();
-			ctx.stroke();
+			game.ctx.strokeStyle = "rgb(0, 0, 0)";
+			game.ctx.lineWidth = 3;
+			game.ctx.beginPath();
+			game.ctx.moveTo(player.x + player.halfWidth, player.y + player.halfHeight);
+			game.ctx.lineTo(canvasX, canvasY);
+			game.ctx.closePath();
+			game.ctx.stroke();
 		});
 	}*/
 	
@@ -156,15 +79,15 @@ $(document).ready(function() {
 		
 	function setNick() {
 		if (!check.hasNick) { //TODO: keep gameUI form open till nick is ok
-			debugMsg('Sending nickname');
-			socket.emit('setNick', { nick: player.nick });
+			game.debug('Sending nickname');
+			game.socket.emit('setNick', { nick: player.nick });
 		}
 	}
 	
 	function requestPlayerList() {
 		if (!check.hasPlayerList) {
-			debugMsg('Requesting players list');
-			socket.emit('playersList');
+			game.debug('Requesting players list');
+			game.socket.emit('playersList');
 		}
 	}
 	
@@ -174,7 +97,7 @@ $(document).ready(function() {
 		fps_timer: 0,
 		init: function() {
 			FPS.fps = document.getElementById('fps');
-			debugMsg('FPS inited');
+			game.debug('FPS inited');
 			FPS.fps_timer = setInterval(FPS.updateFPS, 2000);
 		},
 		updateFPS: function() {
@@ -184,20 +107,12 @@ $(document).ready(function() {
 			FPS.fps_count = 0;
 		}
 	};
-	
-	var GAME = {	//test
-		tick_count: 0,
-		tick_timer: 0,
-		init: function() {
-			debugMsg('Tick inited');
-		}
-	}
 			
 	function startGame() {
 		if (isReady() == true) {
-			debugMsg('Ready! Starting...');
+			game.debug('Ready! Starting...');
 			check.isPlaying = true;
-			//canvas.focus();
+			//game.canvas.focus();
 							
 			$(window).keydown(function(e) { //keypress?
 				e.preventDefault();
@@ -250,17 +165,17 @@ $(document).ready(function() {
 			nowMove = (new Date()).getTime();
 			
 			FPS.init();
-			GAME.init();
+			game.initTick();
 			//effe();
 			ping();
 		} else {
 			attempt++;
 			if (attempt <= maxAttempts) {
 				setTimeout(startGame, attemptTime);
-				debugMsg('- - - Not ready, restarting in '+ attemptTime +'ms... (Attempt '+ attempt +')');
+				game.debug('- - - Not ready, restarting in '+ attemptTime +'ms... (Attempt '+ attempt +')');
 			} else {
 				check.isPlaying = false;
-				debugMsg('- - - Unable to start, game stopped.');
+				game.debug('- - - Unable to start, game stopped.');
 			}
 		}
 		
@@ -268,43 +183,38 @@ $(document).ready(function() {
 	}
 		
 	function resizeCanvas() {
-		//width is 90% of the page and a multiple of tileWidth
-		var roughWidth = Math.floor($(window).width() * 0.9);		
-		canvasWidth = Math.floor(roughWidth / serverConfig.tileWidth) * serverConfig.tileWidth;		
-		canvasHeight = 480;
+		//width is 95% of the page and a multiple of tileWidth
+		var roughWidth = Math.floor($(window).width() * 0.95);		
+		game.canvasWidth = Math.floor(roughWidth / game.serverConfig.tileWidth) * game.serverConfig.tileWidth;		
+		game.canvasHeight = 480;
 			
-		$(canvas).attr("width", canvasWidth);
-		$(canvas).attr("height", canvasHeight);
+		$(game.canvas).attr("width", game.canvasWidth);
+		$(game.canvas).attr("height", game.canvasHeight);
 		
-    	ctx.font = "15px Monospace"; //workaround
+		game.vp.resize(game.canvasWidth, game.canvasHeight);
+		
+    	game.ctx.font = "15px Monospace"; //workaround FIXME
 	}
 	
-	var map,
-		tileSet;
+	var game; //main game handle
 	
 	function gameInit() {
+		game = new Game();
+		game.initVars();
+		game.world = new Map(game); //FIXME need to solve this
+		game.vp = new Viewport(game, game.canvasWidth, game.canvasHeight);
+		game.socket = new Socket(game);
+		
 		window.addEventListener("resize", resizeCanvas, false);
 		resizeCanvas();
 		
 		gamePlayersList.hide();
-	
-		//socket = new io.connect(null, {port: window.location.port, rememberTransport: false});
-		socket = new io.connect('http://localhost:8080');
-    	debugMsg('Connecting...');
-
-		ctx.fillStyle = 'rgb(0, 0, 0)';
-    	ctx.font = "15px Monospace";
-		
-		debugCtx.fillStyle = 'rgb(0, 0, 0)';
-    	debugCtx.font = "15px Monospace";
     	
     	//if (check.hasConfig) { //TODO: grab configs before starting
     		player = new Player();
     	//}
-    	
-    	world = new Map();
 		
-		debugMsg('Game inited.');
+		game.debug('Game inited.');
 	}
 	
 	playerNick.focus(function() {
@@ -314,7 +224,7 @@ $(document).ready(function() {
 	});
 	
 	/*
-	//keep for a better client side interaction?
+	//keep for client side prediction
 	function movePlayer(p) {
 		p.vX = 0;
 		p.vY = 0;
@@ -334,46 +244,55 @@ $(document).ready(function() {
 		
 		p.x += p.vX;
 		p.y += p.vY;
-	}*/
+	}
 	
 	function checkBounds(p) {
-		if (p.x + p.width > canvasWidth) {
-			p.x = canvasWidth - p.width;
+		if (p.x + p.width > game.canvasWidth) {
+			p.x = game.canvasWidth - p.width;
 		}
 		if (p.x < 0) {
 			p.x = 0;
 		}
 		
-		if (p.y + p.height > canvasHeight) {
-			p.y = canvasHeight - p.height;
+		if (p.y + p.height > game.canvasHeight) {
+			p.y = game.canvasHeight - p.height;
 		}
 		if (p.y < 0) {
 			p.y = 0;
 		}
 	}
+	*/
 	
 	var lastFps;
 		
 	function calcFps() {
-			var now = (new Date()).getTime();
-			var fps = 1000/(now - lastFps);
-			lastFps = now;
-			
-			return Math.floor(fps);
+		var now = (new Date()).getTime();
+		var fps = 1000/(now - lastFps);
+		lastFps = now;
+		
+		return Math.floor(fps);
 	}
 	
 	function debugStuff() {
-		debugCtx.clearRect(0, 0, 500, 70);
-		debugCtx.fillText(player, 10, 15);
-		debugCtx.fillText(GAME.tick_count, 10, 35);
-		ctx.fillText(calcFps()+ 'fps', canvasWidth - 60, 20);
-		ctx.fillText(showPing()+ 'ms', canvasWidth - 120, 20);
-		ctx.fillText(vpX +':'+ vpY, 10, 20);
+		game.debugCtx.clearRect(0, 0, 500, 70);
+		
+		game.ctx.save();
+		game.ctx.shadowColor = "white";
+		game.ctx.shadowOffsetX = 1;
+		game.ctx.shadowOffsetY = 1;
+		
+		game.debugCtx.fillText(player, 10, 15);
+		game.debugCtx.fillText(game.tick_count, 10, 35);
+		game.ctx.fillText(calcFps()+ 'fps', game.canvasWidth - 60, 20);
+		game.ctx.fillText(showPing()+ 'ms', game.canvasWidth - 120, 20);
+		game.ctx.fillText(game.vp.x +':'+ game.vp.y, 10, 20);
+		
+		game.ctx.restore();
 	}
 	
 	function playerMoved() {
 		player.moved = (player.moveLeft || player.moveRight || player.moveUp || player.moveDown);
-		//debugMsg(player.moved);
+		//game.debug(player.moved);
 		
 		return player.moved;
 	}
@@ -400,87 +319,45 @@ $(document).ready(function() {
 			//send a movement every X ms
 			nowMove = Date.now();
 			if (nowMove - player.lastMove > allowSendEvery) { 
-				//debugMsg('5. '+ (nowMove - player.lastMove));
-				socket.emit('play', { id: player.id, dir: dir });
+				//game.debug('5. '+ (nowMove - player.lastMove));
+				game.socket.emit('play', { id: player.id, dir: dir });
 				
 				player.lastMove = Date.now();
 			}
-			//debugMsg('4. '+nowMove+'-'+player.lastMove+'='+ (nowMove - player.lastMove) +'('+ allowSendEvery +')');
+			//game.debug('4. '+nowMove+'-'+player.lastMove+'='+ (nowMove - player.lastMove) +'('+ allowSendEvery +')');
 		}
 	}
-	
-	var vpX = 0,
-		vpY = 0;
 		
-	function moveViewport(p) {
-		vpX = p.x - (canvasWidth / 2);
-		vpY = p.y - (canvasHeight / 2);
-	}
-		
-	function mapToVp(x, y) {
-		var coords = {};
-		
-		coords.x = x - vpX;
-		coords.y = y - vpY;
-		
-		//debugMsg(x +':'+ y +' -> '+ coords.x +':'+ coords.y);
-		
-		return coords;
-	}
-	
-	function isInsideVp(x, y) {
-		if (((x >= 0) && (x < canvasWidth)) && ((y >= 0) && (y < canvasHeight))) {
-			return true;
-		}
-		
-		return false;
-	}
-	
 	function drawPlayer(p) {	
 		if (p.id == player.id) {
-			ctx.drawImage(p.avatar, canvasWidth / 2, canvasHeight / 2, p.width, p.height);
-			ctx.fillText(p.nick +' - '+ p.moved, canvasWidth / 2 + p.halfWidth,  canvasHeight / 2 - 10);
+			game.ctx.drawImage(p.avatar, game.canvasWidth / 2, game.canvasHeight / 2, p.width, p.height);
+			game.ctx.fillText(p.nick +' - '+ p.moved, game.canvasWidth / 2 + p.halfWidth,  game.canvasHeight / 2 - 10);
 		} else {	//everyone but player
-			var coords = mapToVp(p.x, p.y);
+			var coords = game.vp.mapToVp(p.x, p.y);
 			
-			if (isInsideVp(coords.x, coords.y)) { 
+			if (game.vp.isInside(coords.x, coords.y)) { 
 					//TODO: add outer render range, TILE_SIZE * X on if
-				ctx.drawImage(p.avatar, coords.x, coords.y, p.width, p.height);
-				ctx.fillText(p.nick +' - '+ p.moved, coords.x + p.halfWidth, coords.y - 10);
+				game.ctx.drawImage(p.avatar, coords.x, coords.y, p.width, p.height);
+				game.ctx.fillText(p.nick +' - '+ p.moved, coords.x + p.halfWidth, coords.y - 10);
 			} else {
-				debugMsg(p.id +' is moving out of viewport'); //don't render moving stuff out of viewport
+				game.debug(p.id +' is moving out of viewport'); //don't render moving stuff out of viewport
 			}
 		}
 	}
 	
-	function drawMapBounds() {
-		ctx.strokeStyle = "#CCC";
-		ctx.lineWidth = 8;
-		
-		var coords = mapToVp(0, 0);
-		
-		//debugMsg(json(coords));
-		ctx.strokeRect(coords.x, coords.y, serverConfig.pixelMapWidth, serverConfig.pixelMapHeight);
-	}
-	
-	function drawTiles() {
-	
-	}
-	
 	function drawMap() {
-		drawMapBounds();
-		world.drawMap(ctx);
+		game.world.drawMapBounds();
+		game.world.drawMap();
 	}
 	
 	function gameLoop() {
-		ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+		game.ctx.clearRect(0, 0, game.canvasWidth, game.canvasHeight);
 		
 		if (check.isPlaying) {			
 			sendMovement();						
-			//ctx.fillRect((canvasWidth/2) -1, (canvasHeight/2) -1, 3, 3);
+			//game.ctx.fillRect((game.canvasWidth/2) -1, (game.canvasHeight/2) -1, 3, 3);
 			//checkBounds(player);
-			
-			moveViewport(player);
+			game.vp.centerOn(player);
 			drawMap();
 			drawPlayer(player);	//assume the local copy is more updated		
 			players.forEach(function(p) {
@@ -493,7 +370,7 @@ $(document).ready(function() {
 			
 			lastFps = (new Date()).getTime();
 			FPS.fps_count++; //test
-			GAME.tick_count++;		
+			game.tick_count++;		
 
 			setTimeout(gameLoop, 30); //test! - 1000/desired_fps
 		}
@@ -505,8 +382,8 @@ $(document).ready(function() {
 	function ping() {
 		if (check.isPlaying) {
 			pingTimeout = setTimeout(function() {
-				socket.emit('ping', { id: player.id });
-				//debugMsg('Ping?');
+				game.socket.emit('ping', { id: player.id });
+				//game.debug('Ping?');
 				ping();
 			}, 5000);
 		}
@@ -544,7 +421,7 @@ $(document).ready(function() {
 				} else {
 					efpies.splice(0, 1);
 				}
-				debugMsg(fps);
+				game.debug(fps);
 				
 				effe();
 			}, 1000);
@@ -591,16 +468,16 @@ $(document).ready(function() {
 		p.y += p.vY;
 	}*/
 	    
-    socket.on('connect', function() {
+    game.socket.on('connect', function() {
     
 		playButton.click(function() { //move below?
-			debugMsg('Clicked Play');
+			game.debug('Clicked Play');
 
 			if (check.isConnected) {
 				if (playerNick.val() != '') {
 					player.nick = playerNick.val();
 				}
-				debugMsg('Player name set: '+ player.nick);
+				game.debug('Player name set: '+ player.nick);
 
 				gameIntro.fadeOut();
 		
@@ -608,7 +485,7 @@ $(document).ready(function() {
 				//requestPlayerList();
 				startGame();	//start the game only if connected
 			} else {
-				debugMsg('You cannot play until you are connected to the server.');
+				game.debug('You cannot play until you are connected to the server.');
 				//set a timer to autorestart?
 			}
 		});
@@ -616,19 +493,19 @@ $(document).ready(function() {
     	check.isConnected = true;
     	playButton.removeClass("disconnected");
     	playButton.html('Play');
-		debugMsg('* Connected to the server.');
+		game.debug('* Connected to the server.');
 	});
 			
-	socket.on('disconnect', function() {
+	game.socket.on('disconnect', function() {
 		check.isConnected = false;
 		check.isReady = false; //?
 		check.isPlaying = false;
 		playButton.addClass("disconnected");
 		clearTimeout(pingTimeout);
-		debugMsg('* Disconnected from the server.');
+		game.debug('* Disconnected from the server.');
 	});
 	
-	socket.on('pong', function(data) {
+	game.socket.on('pong', function(data) {
 		//var data = JSON.parse(mess);
 		
 		var ping = Date.now() - data.time;
@@ -638,35 +515,35 @@ $(document).ready(function() {
 			pings.splice(0, 1);
 		}
 
-		//debugMsg('Pong! '+ ping +'ms');
+		//game.debug('Pong! '+ ping +'ms');
 	});
 	
-	socket.on('info', function(data) {
+	game.socket.on('info', function(data) {
 		//var data = JSON.parse(mess);
 		
-		debugMsg(data.msg);	
+		game.debug(data.msg);	
 	});
 	
-	socket.on('config', function(data) {
+	game.socket.on('config', function(data) {
 		//var data = JSON.parse(mess);
 		var config = JSON.parse(data.config);
 						
-		serverConfig.maxPlayers = config.maxPlayers;
-		serverConfig.speed = config.speed;
-		serverConfig.spawnX = config.spawnX;
-		serverConfig.spawnY = config.spawnY;
-		serverConfig.tileMapWidth = config.tileMapWidth;
-		serverConfig.tileMapHeight = config.tileMapHeight;
-		serverConfig.tileWidth = config.tileWidth;
-		serverConfig.tileHeight = config.tileHeight;
-		serverConfig.pixelMapWidth = serverConfig.tileMapWidth * serverConfig.tileWidth,
-		serverConfig.pixelMapHeight = serverConfig.tileMapHeight * serverConfig.tileHeight;
+		game.serverConfig.maxPlayers = config.maxPlayers;
+		game.serverConfig.speed = config.speed;
+		game.serverConfig.spawnX = config.spawnX;
+		game.serverConfig.spawnY = config.spawnY;
+		game.serverConfig.tileMapWidth = config.tileMapWidth;
+		game.serverConfig.tileMapHeight = config.tileMapHeight;
+		game.serverConfig.tileWidth = config.tileWidth;
+		game.serverConfig.tileHeight = config.tileHeight;
+		game.serverConfig.pixelMapWidth = game.serverConfig.tileMapWidth * game.serverConfig.tileWidth,
+		game.serverConfig.pixelMapHeight = game.serverConfig.tileMapHeight * game.serverConfig.tileHeight;
 		
-		debugMsg('Server config received.');
+		game.debug('Server config received.');
 		check.hasConfig = true;	
 	});
 	
-	socket.on('play', function(data) {
+	game.socket.on('play', function(data) {
 		//var data = JSON.parse(mess);
 		
 		players.forEach(function(p) {
@@ -677,12 +554,12 @@ $(document).ready(function() {
 					player.x = data.x;
 					player.y = data.y;
 				}
-				debugMsg('player ' + p.id +' moved to '+ p.x +':'+ p.y);
+				game.debug('player ' + p.id +' moved to '+ p.x +':'+ p.y);
 			}
 		});
 	});
 	
-	socket.on('join', function(data) {
+	game.socket.on('join', function(data) {
 		//var data = JSON.parse(mess);
 		var tmpPlayer = JSON.parse(data.player);
 						
@@ -692,10 +569,10 @@ $(document).ready(function() {
 		player.y = tmpPlayer.y;
 		
 		check.hasId = true;
-		debugMsg('Received current player id: '+ player.id);
+		game.debug('Received current player id: '+ player.id);
 	});
 	
-	socket.on('quit', function(data) {	//TODO: FIXME
+	game.socket.on('quit', function(data) {	//TODO: FIXME
 		//var data = JSON.parse(mess);
 			
 		players.forEach(function(p) {
@@ -704,22 +581,22 @@ $(document).ready(function() {
 			}
 		});
 		
-		debugMsg('Player quitted, '+ p.nick +' (id '+ data.id +')');
+		game.debug('Player quitted, '+ p.nick +' (id '+ data.id +')');
 	});
 	
-	socket.on('nickRes', function(data) {
+	game.socket.on('nickRes', function(data) {
 		//var data = JSON.parse(mess);
 			
 		if (data.res == 'ok') {
 			check.hasNick = true;
-			debugMsg('Nick confirmed.');
+			game.debug('Nick confirmed.');
 		} else { //TODO: reopen input form
 			check.hasNick = false;
-			debugMsg('Nick not usable.');
+			game.debug('Nick not usable.');
 		}
 	});
 	
-	socket.on('nickChange', function(data) {
+	game.socket.on('nickChange', function(data) {
 		//var data = JSON.parse(mess);
 		var oldNick = '';
 						
@@ -729,10 +606,10 @@ $(document).ready(function() {
 				p.nick = data.nick;
 			}
 		});
-		debugMsg(oldNick +' changed nick to '+ data.nick);
+		game.debug(oldNick +' changed nick to '+ data.nick);
 	});
 	
-	socket.on('newPlayer', function(data) {
+	game.socket.on('newPlayer', function(data) {
 		//var data = JSON.parse(mess);
 		
 		var tmpPlayer = JSON.parse(data.player);
@@ -746,25 +623,25 @@ $(document).ready(function() {
 		if (newPlayer.id != player.id) {
 			//players[tmpPlayer.id] = tmpPlayer;
 			players.push(newPlayer);
-			debugMsg('New player joined: '+ json(newPlayer));
+			game.debug('New player joined: '+ json(newPlayer));
 		} else { //current player
 			//players.push(tmpPlayer); test * * *
-			debugMsg('You have joined the server. '+ json(newPlayer));	
+			game.debug('You have joined the server. '+ json(newPlayer));	
 		}
 	});
 	
-	socket.on('playersList', function(data) {
+	game.socket.on('playersList', function(data) {
 		//var data = JSON.parse(mess);
 		
 		//check for empty list?
-		debugMsg('Receiving initial players list...');				
+		game.debug('Receiving initial players list...');				
 		players = []; //prepare for new list
 		var playerList = JSON.parse(data.list);
 	
-		debugMsg('Received: '+ data.list );
+		game.debug('Received: '+ data.list );
 	
 		/*playerList.forEach(function(p) {
-			debugMsg('INSIDE FOREACH');				
+			game.debug('INSIDE FOREACH');				
 			var tmpPlayer = JSON.parse(p);
 
 			//tmpPlayer.id = data.id;
@@ -773,7 +650,7 @@ $(document).ready(function() {
 			//tmpPlayer.y = data.y;
 
 			players.push(tmpPlayer);
-			debugMsg('Added player '+ tmpPlayer.nick +' to list');				
+			game.debug('Added player '+ tmpPlayer.nick +' to list');				
 		});
 		for(var i = 0; i < playerList.length; i++) {
 			var tmpPlayer = playerList[i];
@@ -783,7 +660,7 @@ $(document).ready(function() {
 		
 		players = [];
 		playerList.forEach(function(p) {
-			debugMsg('Adding player '+ p.nick +' (id '+ p.id +') to list');				
+			game.debug('Adding player '+ p.nick +' (id '+ p.id +') to list');				
 			var tmpPlayer = new Player();
 			tmpPlayer.id = p.id;
 			tmpPlayer.nick = p.nick;
@@ -793,50 +670,19 @@ $(document).ready(function() {
 			players.push(tmpPlayer);
 		});
 
-		debugMsg('Player list received.');
+		game.debug('Player list received.');
 		check.hasPlayerList = true;		
 	});
 			
-	socket.on('message', function(data) {
+	game.socket.on('message', function(data) {
 		//var data = JSON.parse(mess);
 		
-		debugMsg('Message arrived: '+ data);		
+		game.debug('Message arrived: '+ data);		
 		
-		switch (data.type) {
-				case 'pong':
-						
-					break;
-				case 'info':
-						
-					break;
-				case 'config':
-						
-					break;
-				case 'play':
-						
-					break;
-				case 'join':
-						
-					break;
-				case 'quit': //TODO: FIXME
-						
-					break;
-				case 'nickRes':
-						
-					break;
-				case 'nickChange':
-						
-					break;
-				case 'newPlayer':
-						
-					break;
-				case 'playersList': 
-					
-				break;
-					
-				default:
-					debugMsg('[Error] Unknown message type: '+ json(data) +'.');
-				break;
+		switch (data.type) {					
+			default:
+				game.debug('[Error] Unknown message type: '+ json(data) +'.');
+			break;
 		}
 		
 	});
