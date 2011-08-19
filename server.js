@@ -31,8 +31,8 @@ var serverInfo = {
 var serverConfig = {
 	maxPlayers: 16,
 	speed: 16,
-	spawnX: 50,
-	spawnY: 50,
+	spawnX: 128,
+	spawnY: 128,
 	tileMapWidth: 30,
 	tileMapHeight: 30,
 	tileWidth: 32,
