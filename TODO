@@ -1,10 +1,22 @@
+Update package.json on new version
+
+FIX freeze after another player joins
+map must be shared also for the server, for collisions
+Make a simple map editor
+
+Find out why canvas goes white past 14651 ticks
+->crashes when window is unfocused
+
 not working with Firefox
 use socket.io ids
 try to reuse socket.io data structure to stora players?
 check broadcast to all / all but current socket
+random map generation
+minimap
+increase tile size from 32 to >48?
 
 find what causes the laggy movements
-fix drawMap
+use volatile on Socket.io
 
 fix efpies
 fix player quit on page refresh, don't allow 2x clients of same player
