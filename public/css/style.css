@@ -36,7 +36,7 @@ p {
 
 #gameUI {
 	position: absolute;
-	width: 800px;
+	width: 95%;
 	height: 480px; /* change according to canvas height */
 	margin-top: 1em;
 }
@@ -100,7 +100,8 @@ p {
 
 #gameCanvas {
 	background-color: #FFF;
-	margin: 1em 0;
+	display: block;
+	margin: 1em auto;
 }
 
 #debugCanvas {
