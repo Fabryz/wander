@@ -1,16 +1,21 @@
 var Game = function() {
 	//this.world = new Map(this);
 	this.serverConfig = this.loadServerConfig();
+	this.check = this.initCheck();
+	this.player = {};
+	this.players = [];
 	this.debugMode = true;
 };
 
 Game.prototype.debug = function(msg) {
-	var maxAllowed = 25;
+	if (this.debugMode) {
+		var maxLinesAllowed = 25;
 
-	this.debugLog.prepend('<li>'+ msg +'</li>');
+		this.debugLog.prepend('<li>'+ msg +'</li>');
 
-	if (this.debugLog.find('li').size() > maxAllowed) {
-		this.debugLog.find('li:gt(' + ( maxAllowed-1 ) + ')' ).remove();
+		if (this.debugLog.find('li').size() > maxLinesAllowed) {
+			this.debugLog.find('li:gt(' + ( maxLinesAllowed-1 ) + ')' ).remove();
+		}
 	}
 };
 
@@ -62,4 +67,39 @@ Game.prototype.loadServerConfig = function() {
 		pixelMapWidth: this.tileMapWidth * this.tileWidth,
 		pixelMapHeight: this.tileMapHeight * this.tileHeight
 	};
+};
+
+Game.prototype.debugStuff = function() {
+	this.debugCtx.clearRect(0, 0, 500, 70);
+	
+	this.ctx.save();
+	this.ctx.shadowColor = "white";
+	this.ctx.shadowOffsetX = 1;
+	this.ctx.shadowOffsetY = 1;
+	
+	this.debugCtx.fillText(this.player, 10, 15);
+	this.debugCtx.fillText(this.tick_count, 10, 35);
+	this.debugCtx.fillText('vp '+ this.vp.x +':'+ this.vp.y, 10, this.debugCanvas.height() - 10);
+	
+	this.ctx.fillText(/*calcFps() +*/'fps', this.canvasWidth - 60, 20);
+	this.ctx.fillText(/*showPing() +*/'ms', this.canvasWidth - 120, 20);
+	this.ctx.restore();
+};
+
+Game.prototype.initCheck = function() {
+	//boolean var for every phase of the connection
+	return {
+		isConnected: false,
+		hasConfig: false,
+		hasId: false,
+		hasNick: false,
+		hasPlayerList: false,
+		//isReady: false,
+		isPlaying: false
+	};
+};
+
+Game.prototype.isReady = function() {
+	this.debug('Check: '+ this.check.isConnected +' '+ this.check.hasConfig +' '+ this.check.hasId +' '+ this.check.hasNick +' '+ this.check.hasPlayerList);
+	return this.check.isConnected && this.check.hasConfig && this.check.hasId && this.check.hasNick && this.check.hasPlayerList;
 };
