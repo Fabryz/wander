@@ -14,7 +14,7 @@ var Player = function() {
 	
 	this.avatar = new Image();
 	this.avatar.src = './img/player.png';
-	//this.width = serverConfig.tileWidth; FIXME
+	//this.width = serverConfig.tileWidth; FIXME or hardcode?
 	//this.height = serverConfig.tileHeight;
 	this.width = 32;
 	this.height = 32;
@@ -34,5 +34,6 @@ var Player = function() {
 };
 
 Player.prototype.toString = function() {
-	return this.nick +' id: '+ this.id +' x: '+ this.x +' ('+ (this.x+this.width) +') y: '+ this.y +' ('+ (this.y + this.height)+') '+ this.vX +' '+ this.vY;
+	//return this.nick +' id: '+ this.id +' x: '+ this.x +' ('+ (this.x+this.width) +') y: '+ this.y +' ('+ (this.y + this.height)+') '+ this.vX +' '+ this.vY;
+	return this.nick +' '+ this.x +':'+ this.y +' ('+ Math.floor(this.x / 32) +':'+ Math.floor(this.y / 32) +')';
 };
