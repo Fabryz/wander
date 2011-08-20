@@ -12,8 +12,8 @@ Viewport.prototype.centerOn = function(obj) {
 	this.y = obj.y - (this.height / 2);
 };
 
-Viewport.prototype.isInside = function(ex, epsi) { //FIXME map2coso su canvaswidth e bla
-	if (((ex >= 0) && (ex < this.width)) && ((epsi >= 0) && (epsi < this.height))) {
+Viewport.prototype.isInside = function(x, y) { //FIXME map2stuff on canvaswidth 
+	if (((x >= 0) && (x < this.width)) && ((y >= 0) && (y < this.height))) {
 		return true;
 	}
 	
@@ -23,6 +23,4 @@ Viewport.prototype.isInside = function(ex, epsi) { //FIXME map2coso su canvaswid
 Viewport.prototype.resize = function(width, height) {
 	this.width = width;
 	this.height = height;
-}
-
-
+};
