@@ -60,6 +60,7 @@ p {
 #gamePlayersList {
 	width: 90%;
 	margin-top: 20px;
+	display: none;
 }
 
 #gamePlayersList ul {
