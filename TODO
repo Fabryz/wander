@@ -1,13 +1,14 @@
 Update package.json on new version
 
+share Player class between client and server
 FIX freeze after another player joins
 map must be shared also for the server, for collisions
-Make a simple map editor
-
 Find out why canvas goes white past 14651 ticks
 ->crashes when window is unfocused
 
-not working with Firefox
+don't render map outside viewport (+-range square)
+Make a simple map editor
+game not so working with Firefox
 use socket.io ids
 try to reuse socket.io data structure to stora players?
 check broadcast to all / all but current socket
@@ -44,6 +45,7 @@ fix more players than connected clients, playerlist incoherence
 fix false start attempt1
 add timestamp on server logs
 develop anon stat system (screen/canvas size, OS, browser used...)
+try to integrate resizeCanvas and gameInit on Game class
 
 hash player ids to avoid client hacks
 refresh newnick on players client
@@ -51,7 +53,7 @@ fix joining problem (server started, browser opened, client not connected)
 keep player stuff for max TOT mins after disconnection, reload on reconnect
 fix random disconnections
 validate messages (check msg from client, p.id existing?...)
-check all comments for todos
+check all comments for TODO and FIXME
 add days to status uptime
 
 add changelog
@@ -62,7 +64,7 @@ check for doublenick
 onLoad for images
 player registration (via Twitter auth or use internal db)
 ?strict socket movement only for who's not the player
-use NowJS / BiSON / Connect / Express
+use NowJS / BiSON
 readd map data structure and map rendering stuff
 minify/obfuscate client code
 
