@@ -1,5 +1,4 @@
 var Game = function() {
-	//this.world = new Map(this);
 	this.serverConfig = this.loadServerConfig();
 	this.check = this.initCheck();
 	this.player = {};
@@ -94,8 +93,8 @@ Game.prototype.initCheck = function() {
 		hasId: false,
 		hasNick: false,
 		hasPlayerList: false,
-		//isReady: false,
-		isPlaying: false
+		isPlaying: false,
+		hasQuitted: false,
 	};
 };
 
