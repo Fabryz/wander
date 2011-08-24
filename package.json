@@ -1,7 +1,11 @@
 {
   "name" : "wander",
   "description" : "An HTML5 canvas multiplayer sandbox game",
-  "version" : "0.4.0",
+  "version" : "0.4.1",
+  "scripts": {
+    "start": "server.js"
+  },
+  "subdomain": "wander",
   "author" : "Fabrizio Codello",
   "engines" : {
     "node" : ">= 0.4.0"
