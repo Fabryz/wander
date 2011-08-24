@@ -100,7 +100,7 @@ p {
 }
 
 #gameCanvas {
-	background-color: #FFF;
+	background: url('../img/grass.png') 0 0 repeat;
 	display: block;
 	margin: 1em auto;
 }
