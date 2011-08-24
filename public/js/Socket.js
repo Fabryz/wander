@@ -1,6 +1,6 @@
-var Socket = function(game) {
-	//this.socket = new io.connect(null, {port: window.location.port, rememberTransport: false});
+var Socket = function(game) {	
 	this.socket = new io.connect('http://localhost');
+	//this.socket = new io.connect('http://wander.nodejitsu.com/');
 	game.debug('Connecting...');
 	
 	return this.socket;
