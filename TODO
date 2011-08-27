@@ -3,7 +3,7 @@ Update package.json on new version
 Map2VP on viewport
 render player below trees
 interval or timeout on fps
-move ping to server
+improve server players data structure to avoid foreach and use players[id]
 
 share Player class between client and server
 map must be shared also for the server, for collisions
@@ -15,12 +15,9 @@ add days to status uptime
 don't render map outside viewport (+-range square)
 Make a simple map editor
 game not so working with Firefox
-use socket.io ids
-try to reuse socket.io data structure to stora players?
 check broadcast to all / all but current socket
 random map generation
 minimap
-increase tile size from 32 to >48?
 
 find what causes the laggy movements
 use volatile on Socket.io
