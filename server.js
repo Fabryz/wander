@@ -14,7 +14,7 @@ var serverInfo = {
 	desc: "Test server #001",
 	ip: "localhost",
 	port: 8080,
-	url: "www.serverURL.com",
+	url: "http://www.serverURL.com",
 	admin: "Fabryz",
 	email: "admin@server.com", //TODO: obfuscate?
 	startedAt: Date.now()
@@ -34,59 +34,19 @@ var serverConfig = {
 serverConfig.pixelMapWidth = serverConfig.tileMapWidth * serverConfig.tileWidth;
 serverConfig.pixelMapHeight = serverConfig.tileMapHeight * serverConfig.tileHeight;
 
-function playerList() {
-	var list = '',
-		i = 0;
-	
-	players.forEach(function(p) {
-		i++;
-		list += '#'+ i +' '+ json(p)+'\n';
-	});
-	
-	console.log('/status Player list: \n'+ list);
-	
-	return list;
-}
+/*
+* HTTP Server
+*/
 
 function dateString(date) {
     function pad(n) {
         return (n<10? '0'+n : n);
     }
     
-    return (pad(date.getUTCHours())+'h'+ pad(date.getUTCMinutes())+'m'+ pad(date.getUTCSeconds()) +'s');
+    var date = pad(date.getUTCHours())+'h'+ pad(date.getUTCMinutes())+'m'+ pad(date.getUTCSeconds()) +'s';
+    
+    return date;
 }
-
-function sendServerStatus(res) { //TODO make this an HTML page
-	var memUsed,
-		uptime,
-		version = JSON.parse(fs.readFileSync(__dirname +'/package.json', 'utf8')).version;
-
-	res.writeHead(200, { 'Content-Type' : 'text/plain' });		
-	res.write('Wander v'+ version +'\n\n');		
-	res.write('Server info:\n');
-	res.write('\t'+ serverInfo.name +'\n\t' + serverInfo.ip +':'+ serverInfo.port +'\n');
-	res.write('\t'+ serverInfo.url +'\n\n\t'+ serverInfo.desc +'\n\n');
-
-	res.write('Admin: '+ serverInfo.admin +' ('+ serverInfo.email +')\n\n');
-
-	res.write('Players: '+ totPlayers +'/'+ serverConfig.maxPlayers +'\n\n');
-	if (totPlayers > 0) {
-		res.write('Player list:\n'+ playerList() +'\n');
-	} 
-
-	uptime = new Date(Date.now() - serverInfo.startedAt); //TODO: use process.uptime? need Node >v0.5
-	res.write('Uptime: '+ dateString(uptime) +'\n');
-	
-	memUsed = process.memoryUsage();				
-	memUsed = Math.floor((memUsed.heapTotal / 1000000) * 100) / 100; //bytes to MB, round decimal
-	res.end('Memory: '+ memUsed +'MB used.\n');
-	
-	console.log('Memory: '+ memUsed +'MB used, Uptime: '+ dateString(uptime) +', total players: '+ totPlayers);
-}
-
-/*
-* HTTP Server
-*/
 
 var app = express.createServer(
 		express.logger('short'),
@@ -94,8 +54,21 @@ var app = express.createServer(
 		express.favicon() 
 	);
 
+app.set('view engine', 'jade');
+app.set('view options', { layout: false });
+
 app.get('/status', function(req, res){
-    sendServerStatus(res);
+	var memUsed = 0,
+		uptime = 0,
+		version = JSON.parse(fs.readFileSync(__dirname +'/package.json', 'utf8')).version;
+	
+	uptime = new Date(Date.now() - serverInfo.startedAt); //TODO: use process.uptime? need Node >v0.5
+	uptime = dateString(uptime);	
+	memUsed = process.memoryUsage();				
+	memUsed = Math.floor((memUsed.heapTotal / 1000000) * 100) / 100; //bytes to MB, round decimal
+	
+    res.render('status', { version: version, serverInfo: serverInfo, players: players, maxPlayers: serverConfig.maxPlayers, memUsed: memUsed, uptime: uptime });
+    console.log('Memory: '+ memUsed +'MB used, Uptime: '+ uptime +', total players: '+ totPlayers);
 });
 
 app.listen(serverInfo.port);
@@ -106,7 +79,7 @@ serverInfo.port = app.address().port; //actual server port
 console.log('Server started at '+ serverInfo.ip +':'+ serverInfo.port +' with Node '+ process.version +', platform '+ process.platform +'.');
 
 /*
-* Socket stuff
+* Web Sockets
 */
 	
 //player template test
@@ -321,7 +294,4 @@ var pingInterval = setInterval(function() {
 	return avgPing;
 }*/
 
-//do average
-//clear timeout?
-
-
+//process.on('uncaughtException', function (err) { console.err(err ? err.stack || err : err); });
