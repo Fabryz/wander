@@ -1,4 +1,5 @@
-Update package.json on new version
+# Update package.json on new version
+# dev2production socket, debug false
 
 Map2VP on viewport
 render player below trees
@@ -55,7 +56,7 @@ check for doublenick
 player registration (via Twitter auth or use internal db)
 ?strict socket movement only for who's not the player
 use NowJS / BiSON / Motion.js (client prediction)
-minify/obfuscate client code
+minify/obfuscate client code, UglifyJS
 
 +browser compatibility Chrome, FF, IE... (add reset.css)
 ?move only on mod TILE_WIDTH, animation
