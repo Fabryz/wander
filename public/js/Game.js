@@ -81,7 +81,7 @@ Game.prototype.debugStuff = function() {
 	this.debugCtx.fillText('vp '+ this.vp.x +':'+ this.vp.y, 10, this.debugCanvas.height() - 10);
 	
 	this.ctx.fillText(/*calcFps() +*/'fps', this.canvasWidth - 60, 20);
-	this.ctx.fillText(/*showPing() +*/'ms', this.canvasWidth - 120, 20);
+	this.ctx.fillText(this.player.ping +'ms', this.canvasWidth - 120, 20);
 	this.ctx.restore();
 };
 

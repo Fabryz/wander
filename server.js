@@ -194,9 +194,11 @@ function sendGameData(client, data) {
 var io = require('socket.io').listen(app),
 	players = [],
 	totPlayers = 0,
-	json = JSON.stringify;
+	json = JSON.stringify,
+	pings = [];
 	
 io.configure(function(){ 
+	//io.enable('browser client minification');
 	//io.enable('browser client etag'); 
 	io.set('log level', 1); 
 	io.set('transports', [ 
@@ -255,9 +257,19 @@ io.sockets.on('connection', function(client) {
 		sendGameData(client, data);
 	});
 	
-	client.on('ping', function(data) {	
-		//console.log('Ping from '+ data.id);	
-		client.emit('pong', { time: Date.now() });
+	client.on('pong', function(data) {		
+		pings[client.id] = { ping: (Date.now() - pings[client.id].time) };
+		
+		players.forEach(function(p) {
+			if (p.id == client.id) {
+				p.ping = pings[client.id].ping;
+			}
+		});
+		
+		console.log('Pong! '+ client.id +' '+ pings[client.id].ping +'ms');
+		
+		//broadcast confirmed player ping
+		io.sockets.emit('pingupdate', { id: client.id, ping: pings[client.id].ping });
 	});
 
 	client.on('disconnect', function() {
@@ -277,3 +289,39 @@ io.sockets.on('connection', function(client) {
 		console.log('- Player '+ quitter.nick +' ('+ client.id +') disconnected, total players: '+ totPlayers);
 	});
 });
+
+/*
+* Ping
+*/
+
+// ping is intended as server -> client -> server time	
+var pingInterval = setInterval(function() {
+	
+	if (players.length > 0) {
+		players.forEach(function (p) {
+			if (p.id) {
+				pings[p.id] = { time: Date.now(), ping: 0};
+				io.sockets.sockets[p.id].emit('ping');
+				console.log('Ping? '+ p.id);
+			}
+		});
+	}
+}, 5000);
+
+/*function showPing() {
+	var avgPing = 0;
+	
+	if (pings.length > 0) {
+		pings.forEach(function(p) {
+			avgPing += p;
+		});
+		avgPing = Math.floor(avgPing / pings.length);
+	}
+	
+	return avgPing;
+}*/
+
+//do average
+//clear timeout?
+
+

@@ -118,7 +118,6 @@ $(document).ready(function() {
 			game.fps.timer = setInterval(function() { game.fps.update(); }, 2000); //FIXME damn you setInterval
 			game.initTick();
 			//effe(); FIXME works better than fps.js
-			ping();
 			gameLoop();
 		} else {
 			attempt++;
@@ -302,32 +301,6 @@ $(document).ready(function() {
 		}
 	}
 	
-	var pingTimeout,
-		pings = [];
-	
-	function ping() {
-		if (game.check.isPlaying) {
-			pingTimeout = setTimeout(function() {
-				game.socket.emit('ping', { id: game.player.id });
-				//game.debug('Ping?');
-				ping();
-			}, 5000);
-		}
-	}
-	
-	function showPing() {
-		var avgPing = 0;
-		
-		if (pings.length > 0) {
-			pings.forEach(function(p) {
-				avgPing += p;
-			});
-			avgPing = Math.floor(avgPing / pings.length);
-		}
-		
-		return avgPing;
-	}
-	
 	/*var efpiesTimeout,
 		efpies = [];
 		
@@ -399,7 +372,7 @@ $(document).ready(function() {
 	}*/
 	    
     game.socket.on('connect', function() {
-    	if (!game.check.hasQuitted) {
+    	if (!game.check.hasQuitted) { //TODO improve hasQuitted usage
 		   	game.check.isConnected = true;
 			playButton.removeClass("disconnected");
 			playButton.html('Play');
@@ -415,19 +388,24 @@ $(document).ready(function() {
 		game.check.isPlaying = false;
 		game.check.hasQuitted = true;
 		playButton.addClass("disconnected");
-		clearTimeout(pingTimeout);
 		game.debug('* Disconnected from the server.');
 	});
 	
-	game.socket.on('pong', function(data) {
-		var ping = Date.now() - data.time;
-		if (pings.length <= 5) {
-			pings.push(ping);
-		} else {
-			pings.splice(0, 1);
-		}
-
-		//game.debug('Pong! '+ ping +'ms');
+	game.socket.on('ping', function(data) {
+		game.socket.emit('pong', { time: Date.now() });
+		//game.debug('Ping? Pong!');
+	});
+	
+	game.socket.on('pingupdate', function(data) {
+		game.players.forEach(function(p) {
+			if (p.id == data.id) {
+				p.ping = data.ping;
+				if (p.id == game.player.id) {
+					game.player.ping = data.ping;
+				}
+			}
+		});
+		game.debug('pingupdate');
 	});
 	
 	game.socket.on('info', function(data) {
@@ -481,7 +459,6 @@ $(document).ready(function() {
 			i = 0;
 	
 		game.players.forEach(function(p) {
-			game.debug('current p '+ p.nick +' '+ p.id);
 			if (p.id == data.id) {
 				quitter = new Player();
 				quitter = p;
