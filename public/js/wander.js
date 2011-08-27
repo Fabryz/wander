@@ -405,7 +405,6 @@ $(document).ready(function() {
 				}
 			}
 		});
-		game.debug('pingupdate');
 	});
 	
 	game.socket.on('info', function(data) {
