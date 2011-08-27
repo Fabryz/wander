@@ -108,8 +108,11 @@ p {
 #debugCanvas {
 	background-color: #FFF;
 	position: absolute;
-	top: 10px;
-	left: 50%;
+	top: 0;
+	right: 0;
+	filter: alpha(opacity=75);
+    -moz-opacity: 0.75;
+    opacity: 0.75;
 }
 
 #debugLog {
@@ -132,18 +135,6 @@ p {
 	list-style-type: none;
 }
 
-#debugButtons {
-	margin: 1em 0;
-}
-
-#debugButtons button {
-	padding: 1em;
-}
-
-#debugButtons button:hover {
-	cursor: pointer;
-}
-
 #ribbon {
 	position: absolute;
 	top: 0;
@@ -151,9 +142,25 @@ p {
 	border: 0;
 }
 
-#startAnimation,
-#stopAnimation {
-	position: fixed;
-    bottom: 0;
-    right: 0;
+/*
+* Status
+*/
+
+dl {
+	font-size: 1.5em;
+}
+
+dt {
+	font-weight: bold;
+	margin-bottom: .5em;
+}
+
+dd,
+#status-players {
+	margin-left: 1.5em;
+	margin-bottom: 1em;
+}
+
+#status-players {
+	list-style-position: inside;
 }
