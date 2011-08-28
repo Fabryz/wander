@@ -48,14 +48,15 @@ function dateString(date) {
     return date;
 }
 
-var app = express.createServer(
-		express.logger('short'),
-		express.static(__dirname + '/public'),
-		express.favicon() 
-	);
+var app = express.createServer();
+
+app.use(express.logger('short'));
+app.use(express.static(__dirname + '/public'));
+app.use(express.favicon());
 
 app.set('view engine', 'jade');
 app.set('view options', { layout: false });
+app.set('views', __dirname + '/views');
 
 app.get('/status', function(req, res){
 	var memUsed = 0,
