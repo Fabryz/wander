@@ -12,7 +12,8 @@ $(document).ready(function() {
 		arrowLeft = 37,
 		arrowRight = 39,
 		keyTab = 9,
-		keySpace = 32;
+		keySpace = 32,
+		keyEnter = 13;
 		
 	var gameUI = $("#gameUI"),
 		gameIntro = $("#gameIntro"),
@@ -146,7 +147,7 @@ $(document).ready(function() {
     	game.ctx.font = "15px Monospace"; //workaround FIXME
 	}
 	
-	function playButtonClick() { //move below?
+	function sendNickname() {
 		game.debug('Clicked Play');
 
 		if (game.check.isConnected) {
@@ -180,7 +181,12 @@ $(document).ready(function() {
 		game.player = new Player(); //FIXME received server configs? (hardcoded stuff)
 		
 		$(window).resize(resizeCanvas);
-		playButton.bind('click', playButtonClick);
+		playButton.bind('click', sendNickname);
+		playerNick.bind('keypress', function(e) {
+										if (e.keyCode == keyEnter) {
+											sendNickname();
+										}
+									});
 		resizeCanvas();
 		
 		game.debug('Game inited.');
