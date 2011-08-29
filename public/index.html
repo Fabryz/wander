@@ -26,7 +26,7 @@
 		<div id="gameIntro">
 			<h1>Who are you?</h1>
 			<p>Insert your nick and press Play to start</p>
-			<p><input type="text" value="Player" id="playerNick" name="playerNick" maxlength="30"></p>
+			<p><input type="text" value="Player" id="playerNick" name="playerNick" maxlength="30" /></p>
 			<p><a href="#" id ="play" class="button disconnected">Connecting...</a></p>
 		</div>
 		<div id="gamePlayersList">
@@ -39,7 +39,9 @@
 		<p>Looks like your browser does NOT support HTML5 Canvas.</p>
 		<p>Please get a decent one.</p>
 	</canvas>
-	<p>&copy;2011 Fabrizio Codello - Follow me on <a href="http://twitter.com/#!/fabryz">Twitter</a>!</p>
+	<div id="chatLog"><ul></ul></div>
+	<input type="text" value="" id="chatMsg" name="chatMsg" maxlength="255" />
+	<p id="footer">&copy;2011 Fabrizio Codello - Follow me on <a href="http://twitter.com/#!/fabryz">Twitter</a>!</p>
 	<a href="https://github.com/Fabryz/wander"><img id="ribbon" src="./img/ribbon.png" alt="Fork me on GitHub"></a>
 </body>
 </html>
