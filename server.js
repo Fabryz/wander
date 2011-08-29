@@ -240,10 +240,15 @@ io.sockets.on('connection', function(client) {
 			}
 		});
 		
-		console.log('Pong! '+ client.id +' '+ pings[client.id].ping +'ms');
+		//console.log('Pong! '+ client.id +' '+ pings[client.id].ping +'ms'); log filler
 		
 		//broadcast confirmed player ping
 		io.sockets.emit('pingupdate', { id: client.id, ping: pings[client.id].ping });
+	});
+	
+	client.on('chatMsg', function(data) {		
+		//console.log(data);
+		io.sockets.emit('chatMsg', { id: data.id, msg: data.msg });
 	});
 
 	client.on('disconnect', function() {
@@ -276,7 +281,7 @@ var pingInterval = setInterval(function() {
 			if (p.id) {
 				pings[p.id] = { time: Date.now(), ping: 0};
 				io.sockets.sockets[p.id].emit('ping');
-				console.log('Ping? '+ p.id);
+				//console.log('Ping? '+ p.id); log filler
 			}
 		});
 	}
