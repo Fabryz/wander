@@ -13,13 +13,20 @@ $(document).ready(function() {
 		arrowRight = 39,
 		keyTab = 9,
 		keySpace = 32,
-		keyEnter = 13;
+		keyEnter = 13,
+		keyW = 87,
+		keyS = 83,
+		keyA = 65,
+		keyD = 68,
+		keyBackslash = 220;
 		
 	var gameUI = $("#gameUI"),
 		gameIntro = $("#gameIntro"),
 		gamePlayersList = $("#gamePlayersList"),
 		playerNick = $("#playerNick"),
-		playButton = $("#play");
+		playButton = $("#play"),
+		chatLog = $("#chatLog"),
+		chatMsg = $("#chatMsg");
 		
 	var json = JSON.stringify;
 			
@@ -65,8 +72,8 @@ $(document).ready(function() {
 			game.check.isPlaying = true;
 			//game.canvas.focus();
 							
-			$(window).keydown(function(e) { //keypress?
-				e.preventDefault();
+			$(window).keydown(function(e) { //keypress? FIXME switch?
+				//e.preventDefault();
 				var keyCode = e.keyCode;
 			
 				if (keyCode == arrowLeft) {
@@ -81,17 +88,17 @@ $(document).ready(function() {
 				
 				if (keyCode == keyTab) { //TODO: fix animation loop
 					showPlayersList();
-				} 
+				}
 			});
 			
 			$(window).keypress(function(e) {
-				e.preventDefault();
+				//e.preventDefault();
 				var keyCode = e.keyCode;
 			
 			});
 
 			$(window).keyup(function(e) {
-				e.preventDefault();
+				//e.preventDefault();
 				var keyCode = e.keyCode;
 
 				if (keyCode == arrowLeft) {
@@ -111,13 +118,36 @@ $(document).ready(function() {
 					//gamePlayersList.stop().fadeOut('fast');
 					gamePlayersList.hide();
 				} 
+				if (keyCode == keyBackslash) {
+					$("#debugLog").toggle();
+					game.debugCanvas.toggle();
+				}
+				if (keyCode == keyEnter) {
+					if (game.check.isPlaying) {
+						chatMsg.focus();
+					}
+				}
 			});
+			
+			chatMsg.bind('keypress', function(e) {//FIXME test
+										if (e.keyCode == keyEnter) {
+										
+											var msg = chatMsg.val();
+											if (msg != '') {
+												chatMsg.val('');
+												game.socket.emit('chatMsg', { id: game.player.id, msg: msg });
+											}
+										}
+									});
 			
 			nowMove = (new Date()).getTime();
 			
 			game.fps.init('fps');
 			game.fps.timer = setInterval(function() { game.fps.update(); }, 2000); //FIXME damn you setInterval
 			game.initTick();
+			
+			chatMsg.attr('disabled', false);
+			
 			//effe(); FIXME works better than fps.js
 			gameLoop();
 		} else {
@@ -136,8 +166,11 @@ $(document).ready(function() {
 		//width is 95% of the page and a multiple of tileWidth
 		var roughWidth = Math.floor($(window).width() * 0.95);		
 		var roughHeight = Math.floor($(window).height() * 0.95) - 110; //- debugcanvas + padding
-		game.canvasWidth = Math.floor(roughWidth / game.serverConfig.tileWidth) * game.serverConfig.tileWidth;
-		game.canvasHeight = Math.floor(roughHeight / game.serverConfig.tileHeight) * game.serverConfig.tileHeight;
+		var newWidth = Math.floor(roughWidth / game.serverConfig.tileWidth) * game.serverConfig.tileWidth;
+		var newHeight = Math.floor(roughHeight / game.serverConfig.tileHeight) * game.serverConfig.tileHeight;
+		
+		game.canvasWidth = newWidth;
+		game.canvasHeight = newHeight;
 			
 		game.canvas.attr("width", game.canvasWidth);
 		game.canvas.attr("height", game.canvasHeight);
@@ -145,6 +178,8 @@ $(document).ready(function() {
 		game.vp.resize(game.canvasWidth, game.canvasHeight);
 		
     	game.ctx.font = "15px Monospace"; //workaround FIXME
+    	
+    	chatMsg.width(newWidth - 14); // - (2 * css border + 2 * padding)
 	}
 	
 	function sendNickname() {
@@ -181,22 +216,24 @@ $(document).ready(function() {
 		game.player = new Player(); //FIXME received server configs? (hardcoded stuff)
 		
 		$(window).resize(resizeCanvas);
+		resizeCanvas();
+		
 		playButton.bind('click', sendNickname);
 		playerNick.bind('keypress', function(e) {
-										if (e.keyCode == keyEnter) {
-											sendNickname();
-										}
-									});
-		resizeCanvas();
+			if (e.keyCode == keyEnter) {
+				sendNickname();
+			}
+		});
+		playerNick.focus(function() {
+			if (this.value == this.defaultValue) {
+				this.select();
+			}
+		});	
+		playerNick.focus();
+		chatMsg.attr('disabled', true);
 		
 		game.debug('Game inited.');
 	}
-	
-	playerNick.focus(function() {
-		if (this.value == this.defaultValue) {
-		    this.select();
-		}
-	});
 	
 	/*
 	//keep for client side prediction
@@ -355,6 +392,13 @@ $(document).ready(function() {
 	/* 
 	* Multiplayer stuff	
 	*/
+	
+	function chatMessage(msg) {
+		$('#chatLog ul').append('<li>'+ msg +'</li>');
+		$('#chatLog').prop('scrollTop', $('#chatLog').prop('scrollHeight'));
+		
+		//chatLog.scrollTop = chatLog.scrollHeight;
+	}
 	
 	/*function movePlayerSocket(p, dir) {
 		p.vX = 0;
@@ -526,6 +570,19 @@ $(document).ready(function() {
 
 		game.debug('Player list received: '+ data.list.length +' players.');
 		game.check.hasPlayerList = true;		
+	});
+	
+	game.socket.on('chatMsg', function(data) {	
+		var sender;
+		
+		game.players.forEach(function(p) {
+			if (p.id == data.id) {
+				sender = new Player();
+				sender = p;
+			}
+		});
+				
+		chatMessage(sender.nick +': '+ data.msg);	
 	});
 			
 	game.socket.on('message', function(data) { //forever alone
