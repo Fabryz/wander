@@ -34,6 +34,9 @@ Game.prototype.initVars = function() {
 	this.debugCanvas.after('<div id="debugLog"><ul></ul></div>');
 	this.debugLog = $("#debugLog ul");
 	
+	this.debugCanvasWidth = this.debugCanvas.width();
+	this.debugCanvasHeight = this.debugCanvas.height();
+	
 	this.debugCtx = this.debugCanvas.get(0).getContext("2d");	
 	this.debugCtx.fillStyle = 'rgb(0, 0, 0)';
 	this.debugCtx.font = "15px Monospace";
@@ -42,7 +45,6 @@ Game.prototype.initVars = function() {
 		this.debugCanvas.hide();
 		$("#debugLog").hide();
 	}
-	
 	
 	this.debug('Vars inited.');
 };
@@ -69,20 +71,14 @@ Game.prototype.loadServerConfig = function() {
 };
 
 Game.prototype.debugStuff = function() {
-	this.debugCtx.clearRect(0, 0, 500, 70);
-	
-	this.ctx.save();
-	this.ctx.shadowColor = "white";
-	this.ctx.shadowOffsetX = 1;
-	this.ctx.shadowOffsetY = 1;
+	this.debugCtx.clearRect(0, 0, this.debugCanvasWidth, this.debugCanvasHeight);
 	
 	this.debugCtx.fillText(this.player, 10, 15);
-	this.debugCtx.fillText(this.tick_count, 10, 35);
-	this.debugCtx.fillText('vp '+ this.vp.x +':'+ this.vp.y, 10, this.debugCanvas.height() - 10);
+	this.debugCtx.fillText('vp '+ this.vp.x +':'+ this.vp.y, 10, 37);
+	this.debugCtx.fillText(this.tick_count, 130, 37);
 	
-	this.ctx.fillText(/*calcFps() +*/'fps', this.canvasWidth - 60, 20);
-	this.ctx.fillText(this.player.ping +'ms', this.canvasWidth - 120, 20);
-	this.ctx.restore();
+	this.debugCtx.fillText(this.player.ping +'ms', 10, this.debugCanvasHeight - 10);
+	this.debugCtx.fillText(/*calcFps() +*/'XXfps', 100, this.debugCanvasHeight - 10);
 };
 
 Game.prototype.initCheck = function() {
