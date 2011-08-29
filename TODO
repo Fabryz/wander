@@ -1,10 +1,13 @@
 # Update package.json on new version
-# dev2production socket, debug false
+# dev2production: socket, debug false, memUsage
 
 Map2VP on viewport
 render player below trees
 interval or timeout on fps
 improve server players data structure to avoid foreach and use players[id]
+server time (day/night swap?)
+fix backslash stuff on debug false
+finish chatLog and preventdefault
 
 share Player class between client and server
 map must be shared also for the server, for collisions
