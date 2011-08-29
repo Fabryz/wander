@@ -103,6 +103,7 @@ p {
 	background: url('../img/grass.png') 0 0 repeat;
 	display: block;
 	margin: 1em auto;
+	margin-bottom: 0;
 }
 
 #debugCanvas {
@@ -113,6 +114,7 @@ p {
 	filter: alpha(opacity=75);
     -moz-opacity: 0.75;
     opacity: 0.75;
+    z-index: 999;
 }
 
 #debugLog {
@@ -129,10 +131,40 @@ p {
     filter: alpha(opacity=75);
     -moz-opacity: 0.75;
     opacity: 0.75; 
+    z-index: 999;
 }
 
 #debugLog ul {
 	list-style-type: none;
+}
+
+#chatLog {
+	background-color: rgba(254, 254, 254, 0.5);
+	color: #333;
+	font-size: 1.5em;
+	padding: 1em;
+	position: absolute;
+	right: 0;
+	width: 25%;
+	height: 200px;
+	overflow: auto;
+	margin-top: -230px;
+}
+
+#chatLog ul {
+	list-style-type: none;
+}
+
+#chatMsg {
+	display: block;
+	margin: 0 auto;
+	font-size: 1.5em;
+	border: 2px solid #CCC;
+	padding: 5px;
+}
+
+#footer {
+	margin-top: 1em;
 }
 
 #ribbon {
