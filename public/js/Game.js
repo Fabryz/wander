@@ -3,19 +3,21 @@ var Game = function() {
 	this.check = this.initCheck();
 	this.player = {};
 	this.players = [];
-	this.debugMode = true;
 };
 
 Game.prototype.debug = function(msg) {
-	if (this.debugMode) {
-		var maxLinesAllowed = 25;
+	var maxLinesAllowed = 25;
 
-		this.debugLog.prepend('<li>'+ msg +'</li>');
+	this.debugLog.prepend('<li>'+ msg +'</li>');
 
-		if (this.debugLog.find('li').size() > maxLinesAllowed) {
-			this.debugLog.find('li:gt(' + ( maxLinesAllowed-1 ) + ')' ).remove();
-		}
+	if (this.debugLog.find('li').size() > maxLinesAllowed) {
+		this.debugLog.find('li:gt(' + ( maxLinesAllowed-1 ) + ')' ).remove();
 	}
+};
+
+Game.prototype.chatMessage = function(msg) {
+	$('#chatLog ul').append('<li>'+ msg +'</li>');
+	$('#chatLog').prop('scrollTop', $('#chatLog').prop('scrollHeight'));
 };
 
 Game.prototype.initVars = function() {
@@ -41,10 +43,8 @@ Game.prototype.initVars = function() {
 	this.debugCtx.fillStyle = 'rgb(0, 0, 0)';
 	this.debugCtx.font = "15px Monospace";
 	
-	if (!this.debugMode) {
-		this.debugCanvas.hide();
-		$("#debugLog").hide();
-	}
+	this.debugCanvas.hide();
+	$("#debugLog").hide();
 	
 	this.debug('Vars inited.');
 };
@@ -78,7 +78,7 @@ Game.prototype.debugStuff = function() {
 	this.debugCtx.fillText(this.tick_count, 130, 37);
 	
 	this.debugCtx.fillText(this.player.ping +'ms', 10, this.debugCanvasHeight - 10);
-	this.debugCtx.fillText(/*calcFps() +*/'XXfps', 100, this.debugCanvasHeight - 10);
+	this.debugCtx.fillText(this.fps.lastFps +'fps', 100, this.debugCanvasHeight - 10);
 };
 
 Game.prototype.initCheck = function() {
