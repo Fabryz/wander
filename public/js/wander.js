@@ -74,41 +74,49 @@ $(document).ready(function() {
 							
 			$(window).keydown(function(e) { //keypress? FIXME switch?
 				//e.preventDefault();
+				
 				var keyCode = e.keyCode;
-			
-				if (keyCode == arrowLeft) {
-					game.player.moveLeft = true;
-				} else if (keyCode == arrowRight) {
-					game.player.moveRight = true;
-				} else if (keyCode == arrowUp) {
-					game.player.moveUp = true;
-				} else if (keyCode == arrowDown) {
-					game.player.moveDown = true;
+				
+				if (!game.player.isChatting) {
+					if (keyCode == arrowLeft) {
+						game.player.moveLeft = true;
+					} else if (keyCode == arrowRight) {
+						game.player.moveRight = true;
+					} else if (keyCode == arrowUp) {
+						game.player.moveUp = true;
+					} else if (keyCode == arrowDown) {
+						game.player.moveDown = true;
+					}
 				}
 				
 				if (keyCode == keyTab) { //TODO: fix animation loop
+					e.preventDefault();
 					showPlayersList();
 				}
 			});
 			
 			$(window).keypress(function(e) {
 				//e.preventDefault();
+				
 				var keyCode = e.keyCode;
 			
 			});
 
 			$(window).keyup(function(e) {
 				//e.preventDefault();
+				
 				var keyCode = e.keyCode;
-
-				if (keyCode == arrowLeft) {
-					game.player.moveLeft = false;
-				} else if (keyCode == arrowRight) {
-					game.player.moveRight = false;
-				} else if (keyCode == arrowUp) {
-					game.player.moveUp = false;
-				} else if (keyCode == arrowDown) {
-					game.player.moveDown = false;
+				
+				if (!game.player.isChatting) {
+					if (keyCode == arrowLeft) {
+						game.player.moveLeft = false;
+					} else if (keyCode == arrowRight) {
+						game.player.moveRight = false;
+					} else if (keyCode == arrowUp) {
+						game.player.moveUp = false;
+					} else if (keyCode == arrowDown) {
+						game.player.moveDown = false;
+					}
 				}
 			
 				game.player.vX = 0; //FIXME useless?
@@ -231,6 +239,13 @@ $(document).ready(function() {
 		});	
 		playerNick.focus();
 		chatMsg.attr('disabled', true);
+		
+		chatMsg.focus(function() {
+			game.player.isChatting = true;
+		});	
+		chatMsg.blur(function() {
+			game.player.isChatting = false;
+		});	
 		
 		game.debug('Game inited.');
 	}
@@ -393,13 +408,6 @@ $(document).ready(function() {
 	* Multiplayer stuff	
 	*/
 	
-	function chatMessage(msg) {
-		$('#chatLog ul').append('<li>'+ msg +'</li>');
-		$('#chatLog').prop('scrollTop', $('#chatLog').prop('scrollHeight'));
-		
-		//chatLog.scrollTop = chatLog.scrollHeight;
-	}
-	
 	/*function movePlayerSocket(p, dir) {
 		p.vX = 0;
 		p.vY = 0;
@@ -439,6 +447,7 @@ $(document).ready(function() {
 		game.check.hasQuitted = true;
 		playButton.addClass("disconnected");
 		game.debug('* Disconnected from the server.');
+		game.chatMessage('* You have been disconnected from the server.');	
 	});
 	
 	game.socket.on('ping', function(data) {
@@ -458,7 +467,8 @@ $(document).ready(function() {
 	});
 	
 	game.socket.on('info', function(data) {
-		game.debug(data.msg);	
+		game.debug(data.msg);
+		game.chatMessage('# '+ data.msg);	
 	});
 	
 	game.socket.on('config', function(data) {						
@@ -499,8 +509,7 @@ $(document).ready(function() {
 		
 		game.check.hasId = true;
 		game.debug('Received current player id: '+ game.player.id);
-		game.debug('You have joined the server. '); //TODO print to chat/default game output
-		//console.log(game.player);
+		game.debug('You have joined the server. ');
 	});
 	
 	game.socket.on('quit', function(data) {
@@ -517,6 +526,7 @@ $(document).ready(function() {
 		});
 		
 		game.debug('Player quitted: '+ quitter.nick +' (id '+ quitter.id +')');
+		game.chatMessage('< '+ quitter.nick +' has left the server.');
 	});
 	
 	game.socket.on('nickRes', function(data) {		
@@ -539,6 +549,7 @@ $(document).ready(function() {
 			}
 		});
 		game.debug(oldNick +' changed nick to '+ data.nick);
+		game.chatMessage('* '+ oldNick +' changed nick to '+ data.nick +'.');	
 	});
 	
 	game.socket.on('newPlayer', function(data) {	
@@ -550,7 +561,7 @@ $(document).ready(function() {
 	
 		game.players.push(newPlayer);
 		game.debug('New player joined: '+ newPlayer.nick);
-		console.log(newPlayer);
+		game.chatMessage('> '+ newPlayer.nick +' has joined the server.');	
 	});
 	
 	game.socket.on('list', function(data) {				
@@ -582,7 +593,7 @@ $(document).ready(function() {
 			}
 		});
 				
-		chatMessage(sender.nick +': '+ data.msg);	
+		game.chatMessage(sender.nick +': '+ data.msg);	
 	});
 			
 	game.socket.on('message', function(data) { //forever alone
