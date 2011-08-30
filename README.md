@@ -32,6 +32,16 @@ Features
 * Nothing much for now, will add a chat system soon
 * Suggest me how to improve it
 
+Play it!
+--------
+
+On each new version I (try to) test deploy the game on my two repos:
+
+* [http://wander.nodejitsu.com/](http://wander.nodejitsu.com/)
+* [http://wander.nodester.com/](http://wander.nodester.com/)
+
+Give them a look and remember it's all work in progress.
+
 License
 -------
 
