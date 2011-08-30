@@ -20,8 +20,9 @@
     
 </head>
 <body>
-	<h1>Wander</h1>
-	<p>Use the arrow keys to wander around and explore, tab for player list. <a href="./status" title="See the server status">Server status</a>.</p>
+	<h1 id="game-title">Wander</h1>
+	<p id="game-desc">Use the arrow keys to wander around and explore, tab for player list. <a href="./status" title="See the server status">Server status</a>.</p>
+	<div class="clear"></div>
 	<div id="gameUI">
 		<div id="gameIntro">
 			<h1>Who are you?</h1>
@@ -34,7 +35,6 @@
 			<ul></ul>
 		</div>
 	</div>
-	<p id="fps">XX</p>
 	<canvas id="gameCanvas" width="480" height="480">
 		<p>Looks like your browser does NOT support HTML5 Canvas.</p>
 		<p>Please get a decent one.</p>
