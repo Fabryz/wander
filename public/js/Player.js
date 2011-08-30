@@ -1,20 +1,25 @@
-var Player = function() {
-	this.id = -1;
-	this.nick = "Unnamed";
-	this.x = 0;
-	this.y = 0;
+(function(exports) {
+
+var Player = function(id, x, y) {
+	this.id = id || -1;
+	this.nick = 'Guest'+ this.id;
+	this.x = x || 0;
+	this.y = y || 0;
 	this.vX = 0;
 	this.vY = 0;
 	
 	this.alive = true;
-	this.status = "normal";
+	this.status = 'normal';
+	this.isChatting = false;
 	this.lastMove = Date.now();
 	this.hp = 100;
 	this.inventory = [];
 	this.ping = 0;
 	
-	this.avatar = new Image();
-	this.avatar.src = './img/player.png';
+	/*this.avatar = new Image();
+	this.avatar.src = './img/player.png';*/
+	this.avatar = './img/player.png';
+	
 	//this.width = serverConfig.tileWidth; FIXME or hardcode?
 	//this.height = serverConfig.tileHeight;
 	this.width = 48;
@@ -27,11 +32,6 @@ var Player = function() {
 	this.moveRight = false;
 	this.moveUp = false;
 	this.moveDown = false;
-	    
-	/*this.draw = function(c) {
-	    c.drawImage(this.avatar, this.x, this.y, this.width, this.height);
-	    c.fillText(this.nick, this.x + this.halfWidth, this.y - 10);
-	};*/
 };
 
 Player.prototype.toString = function() {
@@ -43,7 +43,10 @@ Player.prototype.draw = function(game) {
 	var coords = game.world.mapToVp(this.x, this.y);
 	
 	if (game.vp.isInside(coords.x, coords.y)) { //TODO: add outer render range, TILE_SIZE * X on if
-		game.ctx.drawImage(this.avatar, coords.x, coords.y, this.width, this.height);
+		var avatar = new Image();	//FIXME really create a new image every loop?
+		avatar.src = this.avatar;
+		
+		game.ctx.drawImage(avatar, coords.x, coords.y, this.width, this.height);
 		game.ctx.fillText(this.nick +' - '+ this.moved, coords.x + this.halfWidth, coords.y - 10);
 	} else {
 		//game.debug(this.id +' is moving out of viewport'); //don't render moving stuff out of viewport
@@ -55,3 +58,6 @@ Player.prototype.hasMoved = function() {
 		
 	return this.moved;
 };
+
+exports.Player = Player;
+})(typeof global === "undefined" ? window : exports);

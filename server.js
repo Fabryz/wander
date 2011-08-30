@@ -3,7 +3,8 @@ var http = require('http'),
     fs   = require('fs'),
     url  = require('url'),
     util = require('util'),
-    express = require('express');
+    express = require('express'),
+    Player = require('./public/js/Player.js').Player;
     
 /*
 * Game configs
@@ -83,18 +84,18 @@ console.log('Server started at '+ serverInfo.ip +':'+ serverInfo.port +' with No
 * Web Sockets
 */
 	
-//player template test
+/*//player template test
 function Player(id) {
 	this.id = id;
 	this.nick = 'Guest'+ id;
 	this.x = serverConfig.spawnX * serverConfig.tileWidth;
 	this.y = serverConfig.spawnY * serverConfig.tileHeight;
 	this.ping = 0;
-}
+}*/
 
 function sendServerInfo(client) {
-	client.emit('info', { msg: '# Welcome to "'+ serverInfo.name +'" server! ('+ serverInfo.ip +':'+ serverInfo.port +')' });
-	client.emit('info', { msg: '# There are now '+ totPlayers +' players online.' });
+	client.emit('info', { msg: 'Welcome to "'+ serverInfo.name +'" server!' });
+	client.emit('info', { msg: 'There are '+ totPlayers +' players online.' });
 }
 
 function sendServerConfig(client) {
@@ -106,7 +107,7 @@ function newPlayer(client) {
 	sendServerInfo(client);
 	sendServerConfig(client);
 	
-	p = new Player(client.id);	
+	p = new Player(client.id, serverConfig.spawnX * serverConfig.tileWidth, serverConfig.spawnY * serverConfig.tileHeight);
 	players.push(p);
 	
 	client.set('id', client.id, function () {
