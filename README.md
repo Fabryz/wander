@@ -30,7 +30,7 @@ Features
 * Use the arrow keys to wander around the map, tab to see the player list
 * Lag like hell
 * Nothing much for now, will add a chat system soon
-* Suggest me how to improve it
+* [Suggest me how to improve it!](https://fundry.com/project/158-wander)
 
 Play it!
 --------
@@ -41,6 +41,13 @@ On each new version I (try to) test deploy the game on my two repos:
 * [http://wander.nodester.com/](http://wander.nodester.com/)
 
 Give them a look and remember it's all work in progress.
+
+Flattr it!
+----------
+
+I'm developing this game after work, during the evening/night. Want to support me and donate something? Everything will go on dev books, or barley coffee =)
+
+[![Flattr this git repo](http://api.flattr.com/button/flattr-badge-large.png)](https://flattr.com/submit/auto?user_id=Fabryz&url=https://github.com/Fabryz/wander&title=Wander&language=en_GB&tags=github&category=software)
 
 License
 -------
