@@ -3,10 +3,15 @@ html
 	head
 		title="Server status - Wander game"
 		meta(http-equiv='Content-type', content='text/html; charset=UTF-8')
-		link(type='text/css', rel='stylesheet', href='./css/style.css', media='screen')		
+		link(type='text/css', rel='stylesheet', href='./css/style.css', media='screen')	
+		
+		script(type='text/javascript', src='./js/jquery-latest.min.js')
+		script(type='text/javascript', src='./socket.io/socket.io.js')
+		script(type='text/javascript', src='./js/Socket.js')
+		script(type='text/javascript', src='./js/status.js')
 	body
-		h1 Server status
-		#wrapper
+		#wrapper-status
+			h1 Server status
 			dl
 				dt Version
 				dd Wander v#{version}
@@ -17,17 +22,20 @@ html
 				dt IP:port
 				dd #{serverInfo.ip}:#{serverInfo.port}
 				dt Info URL
-				dd: a(href=serverInfo.url) serverInfo.url
+				dd: a(href='serverInfo.url') serverInfo.url
 				dt Slots
-				dd #{players.length}/#{maxPlayers}
-				- if (players.length > 0)
+				dd
+					span#status-slots#{players.length}
+					/#{maxPlayers}
 					ol#status-players
-						-players.forEach(function(p) {
-						li #{p.nick} #{p.ping}ms
-						-})
+						- if (players.length > 0)
+							-players.forEach(function(p) {
+								li #{p.nick} #{p.ping}ms
+							-})
 				dt Admin
 				dd #{serverInfo.admin} &lt;#{serverInfo.email}&gt;
 				dt Memory used
-				dd #{memUsed}MB
+				dd#status-memUsed #{memUsed}
 				dt Uptime
-				dd #{uptime}
+				dd#status-uptime #{uptime}
+			p#footer &copy;2011 Fabrizio Codello
