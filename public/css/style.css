@@ -6,11 +6,8 @@
 body {
     background-color: #001022;
     color: #FFF;
-    font-family: Georgia, "Lucida Sans", monospace, serif;
+    font-family: "Lucida Sans", monospace, serif;
     font-size: 62.5%;
-    margin: 10px;
-    padding: 0;
-    overflow: hidden;
 }
 
 .clear {
@@ -29,6 +26,7 @@ h1 {
     font-size: 3.2em;
     font-weight: bold;
     margin-bottom: .5em;
+    font-family: Georgia, serif;
 }
 
 h2 {
@@ -37,6 +35,15 @@ h2 {
 
 p {
 	font-size: 1.5em;
+}
+
+/*
+* Index
+*/
+
+#wrapper-index {
+	margin: 10px;
+    padding: 0;
 }
 
 #game-title,
@@ -159,11 +166,13 @@ p {
 	font-size: 1.5em;
 	padding: 1em;
 	position: absolute;
-	right: 0;
 	width: 30%;
 	height: 200px;
 	overflow: auto;
 	margin-top: -230px;
+	-webkit-border-top-left-radius: 10px;
+	-moz-border-radius-topleft: 10px;
+	border-top-left-radius: 10px;
 }
 
 #chatLog ul {
@@ -193,6 +202,11 @@ p {
 * Status
 */
 
+#wrapper-status {
+    margin: 10px;
+    padding: 0;
+}
+
 dl {
 	font-size: 1.5em;
 }
@@ -202,12 +216,12 @@ dt {
 	margin-bottom: .5em;
 }
 
-dd,
-#status-players {
+dd {
 	margin-left: 1.5em;
 	margin-bottom: 1em;
 }
 
 #status-players {
 	list-style-position: inside;
+	margin: 1em 0 1em 1.5em;
 }
