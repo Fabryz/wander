@@ -130,9 +130,14 @@ $(document).ready(function() {
 					$("#debugLog").toggle();
 					game.debugCanvas.toggle();
 				}
-				if (keyCode == keyEnter) {
+				if (keyCode == keyEnter) {  //on keyEnter if chatMsg has focus -> blur, if not -> give focus
 					if (game.check.isPlaying) {
-						chatMsg.focus();
+						var focused = $("#chatMsg:focus");
+						if (focused != null && focused.length > 0) {
+							chatMsg.blur();
+						} else {
+							chatMsg.focus();
+						}
 					}
 				}
 			});
@@ -188,6 +193,7 @@ $(document).ready(function() {
     	game.ctx.font = "15px Monospace"; //workaround FIXME
     	
     	chatMsg.width(newWidth - 14); // - (2 * css border + 2 * padding)
+    	chatLog.offset({ left: (game.canvas.offset().left + game.canvasWidth - chatLog.outerWidth()) });
 	}
 	
 	function sendNickname() {
