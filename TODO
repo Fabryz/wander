@@ -1,22 +1,27 @@
 # Update package.json on new version
-# dev2production: socket, debug false, add Analytics before deploying
+# dev2production: socket add Analytics before deploying
 
-use websockets on status page to update data in realtime
+tranform forEach in for
+sound on player join?
+chat channels, global, local (in a X range)
+try to remove the map matrix from Map.js
+do something with mapLoader on root
 Map2VP on viewport
 render player below trees
 interval or timeout on fps
 improve server players data structure to avoid foreach and use players[id]
 server time (day/night swap?)
-fix backslash stuff on debug false
-finish chatLog and preventdefault focus/blur
-if chat focus and empty message + enter = canvas focus
+don't send the whole map, just viewport + range
+x-forwarded stuff on express logs
+plater status observer/playing -> if he's lurking /status
+do checkBounds also clientside to save bandwidth
+chat message width, cut or remove scroll horiz
+don't render tiles below another tile
 
-share Player class between client and server
-map must be shared also for the server, for collisions
 Find out why canvas goes white past 14651 ticks
 ->crashes when window is unfocused
 try to integrate resizeCanvas and gameInit on Game class
-add days to status uptime
+pad/phone support?
 
 don't render map outside viewport (+-range square)
 Make a simple map editor
@@ -42,13 +47,11 @@ disconnect/standby client after X pings with no answer
 memory leaks
 add screenshot button
 
-fix more players than connected clients, playerlist incoherence
 fix false start attempt1
 add timestamp on server logs
 develop anon stat system (screen/canvas size, OS, browser used...)
 
 hash player ids to avoid client hacks
-refresh newnick on players client
 fix joining problem (server started, browser opened, client not connected)
 keep player stuff for max TOT mins after disconnection, reload on reconnect -> need auth before this
 validate messages (check msg from client, p.id existing?...)
