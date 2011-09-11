@@ -20,28 +20,30 @@
     
 </head>
 <body>
-	<h1 id="game-title">Wander</h1>
-	<p id="game-desc">Use the arrow keys to wander around and explore, tab for player list. <a href="./status" title="See the server status">Server status</a>.</p>
-	<div class="clear"></div>
-	<div id="gameUI">
-		<div id="gameIntro">
-			<h1>Who are you?</h1>
-			<p>Insert your nick and press Play to start</p>
-			<p><input type="text" value="Player" id="playerNick" name="playerNick" maxlength="30" /></p>
-			<p><a href="#" id ="play" class="button disconnected">Connecting...</a></p>
+	<div id="wrapper-index">
+		<h1 id="game-title">Wander</h1>
+		<p id="game-desc">Use the arrow keys to wander around and explore, tab for player list. <a href="./status" title="Open the server status page in another tab" target="_blank">Server status</a>.</p>
+		<div class="clear"></div>
+		<div id="gameUI">
+			<div id="gameIntro">
+				<h1>Who are you?</h1>
+				<p>Insert your nick and press Play to start</p>
+				<p><input type="text" value="Player" id="playerNick" name="playerNick" maxlength="30" /></p>
+				<p><a href="#" id ="play" class="button disconnected">Connecting...</a></p>
+			</div>
+			<div id="gamePlayersList">
+				<h1>Players list</h1>
+				<ul></ul>
+			</div>
 		</div>
-		<div id="gamePlayersList">
-			<h1>Players list</h1>
-			<ul></ul>
-		</div>
+		<canvas id="gameCanvas" width="480" height="480">
+			<p>Looks like your browser does NOT support HTML5 Canvas.</p>
+			<p>Please get a decent one.</p>
+		</canvas>
+		<div id="chatLog"><ul></ul></div>
+		<input type="text" value="" id="chatMsg" name="chatMsg" maxlength="255" />
+		<p id="footer">&copy;2011 Fabrizio Codello - Follow me on <a href="http://twitter.com/#!/fabryz">Twitter</a>!</p>
+		<a href="https://github.com/Fabryz/wander" title="Fork me on GitHub" target="_blank"><img id="ribbon" src="./img/ribbon.png" alt="Fork me on GitHub"></a>
 	</div>
-	<canvas id="gameCanvas" width="480" height="480">
-		<p>Looks like your browser does NOT support HTML5 Canvas.</p>
-		<p>Please get a decent one.</p>
-	</canvas>
-	<div id="chatLog"><ul></ul></div>
-	<input type="text" value="" id="chatMsg" name="chatMsg" maxlength="255" />
-	<p id="footer">&copy;2011 Fabrizio Codello - Follow me on <a href="http://twitter.com/#!/fabryz">Twitter</a>!</p>
-	<a href="https://github.com/Fabryz/wander"><img id="ribbon" src="./img/ribbon.png" alt="Fork me on GitHub"></a>
 </body>
 </html>
