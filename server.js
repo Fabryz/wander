@@ -4,11 +4,17 @@ var http = require('http'),
     url  = require('url'),
     util = require('util'),
     express = require('express'),
-    Player = require('./public/js/Player.js').Player;
+    Player = require('./public/js/Player.js').Player,
+    loadMap = require('./public/js/Map.js').loadMap,
+    loadTileset = require('./public/js/Map.js').loadTileset,
+    Tile = require('./public/js/Tile.js').Tile;
     
 /*
 * Game configs
 */
+
+var tileset = loadTileset(),
+	map = loadMap();
     
 var serverInfo = {
 	name: "Illusory One",
@@ -24,11 +30,11 @@ var serverInfo = {
 //TODO Array with multiple spawns
 var serverConfig = {
 	maxPlayers: 32,
-	speed: 16,
+	speed: 48, //FIXME test 16
 	spawnX: 3,	
 	spawnY: 3,
-	tileMapWidth: 30,
-	tileMapHeight: 30,
+	tileMapWidth: map[0].length,
+	tileMapHeight: map[0][0].length,
 	tileWidth: 48,
 	tileHeight: 48,
 };
@@ -44,14 +50,31 @@ function dateString(date) {
         return (n<10? '0'+n : n);
     }
     
-    var date = pad(date.getUTCHours())+'h'+ pad(date.getUTCMinutes())+'m'+ pad(date.getUTCSeconds()) +'s';
+    var date = Math.floor(date.getTime()/86400000) +'d '+ pad(date.getUTCHours())+ 'h '+ pad(date.getUTCMinutes())+ 'm ' +pad(date.getUTCSeconds()) +'s';
     
     return date;
 }
 
+function getVersion() {
+	return JSON.parse(fs.readFileSync(__dirname +'/package.json', 'utf8')).version;
+}
+
+function getUptime() {
+	var uptime = new Date(Date.now() - serverInfo.startedAt); //TODO: use process.uptime? need Node >v0.5
+
+	return dateString(uptime);
+}
+
+function getMemUsed() {
+	var memUsed = process.memoryUsage();	
+	memUsed = Math.floor((memUsed.heapTotal / 1000000) * 100) / 100; //bytes to MB, round decimal
+	
+	return memUsed +'MB';
+}
+
 var app = express.createServer();
 
-app.use(express.logger('short'));
+app.use(express.logger(':remote-addr - :method :url HTTP/:http-version :status :res[content-length] - :response-time ms'));
 app.use(express.static(__dirname + '/public'));
 app.use(express.favicon());
 
@@ -60,17 +83,12 @@ app.set('view options', { layout: false });
 app.set('views', __dirname + '/views');
 
 app.get('/status', function(req, res){
-	var memUsed = 0,
-		uptime = 0,
-		version = JSON.parse(fs.readFileSync(__dirname +'/package.json', 'utf8')).version;
-	
-	uptime = new Date(Date.now() - serverInfo.startedAt); //TODO: use process.uptime? need Node >v0.5
-	uptime = dateString(uptime);	
-	memUsed = process.memoryUsage();				
-	memUsed = Math.floor((memUsed.heapTotal / 1000000) * 100) / 100; //bytes to MB, round decimal
+	var memUsed = getMemUsed(),
+		uptime = getUptime(),
+		version = getVersion();	
 	
     res.render('status', { version: version, serverInfo: serverInfo, players: players, maxPlayers: serverConfig.maxPlayers, memUsed: memUsed, uptime: uptime });
-    console.log('Memory: '+ memUsed +'MB used, Uptime: '+ uptime +', total players: '+ totPlayers);
+    console.log('Memory: '+ memUsed +' used, Uptime: '+ uptime +', total players: '+ totPlayers);
 });
 
 app.listen(serverInfo.port);
@@ -83,15 +101,6 @@ console.log('Server started at '+ serverInfo.ip +':'+ serverInfo.port +' with No
 /*
 * Web Sockets
 */
-	
-/*//player template test
-function Player(id) {
-	this.id = id;
-	this.nick = 'Guest'+ id;
-	this.x = serverConfig.spawnX * serverConfig.tileWidth;
-	this.y = serverConfig.spawnY * serverConfig.tileHeight;
-	this.ping = 0;
-}*/
 
 function sendServerInfo(client) {
 	client.emit('info', { msg: 'Welcome to "'+ serverInfo.name +'" server!' });
@@ -123,7 +132,7 @@ function sendPlayerList(client) {
 	console.log('* Sent player list to '+ client.id);
 }
 
-function checkBounds(player) {
+function keepInsideMap(player) {
 	if (player.x + serverConfig.tileWidth > serverConfig.pixelMapWidth) { //TODO: player is as large as a map tile?
 		player.x = serverConfig.pixelMapWidth - serverConfig.tileWidth;
 	}
@@ -141,26 +150,94 @@ function checkBounds(player) {
 	return player;
 }
 
-function sendGameData(client, data) {
+function pixelToTileX(x) {
+	return Math.floor(x / serverConfig.tileWidth);
+}
+
+function pixelToTileY(y) {
+	return Math.floor(y / serverConfig.tileHeight);
+}
+
+//returns true if at least one player is on the way
+function isPlayerOnTile(id, x, y) { //FIXME works if width/height = 48
+	var lenght = players.length;
+	for(var i = 0; i < lenght; i++) { 
+		if (players[i].id != id) {
+			//console.log(players[i].x +':'+ players[i].y +' '+ x +':'+ y);
+			//console.log(pixelToTileX(players[i].x) +':'+ pixelToTileY(players[i].y) +' '+ pixelToTileX(x) +':'+ pixelToTileY(y));
+			
+			if ((pixelToTileX(players[i].x) == pixelToTileX(x)) && (pixelToTileY(players[i].y) == pixelToTileY(y))) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+function hasCollisions(player, nextX, nextY, dir) {	
+	//on player X or Y if LEFT or UP
+	//on player X/Y + player width/height if RIGHT or DOWN
+	if (dir == 'r') { //something could not be working FIXME
+		nextX += player.width - 1;
+	} else if (dir == 'd') {
+		nextY += player.height - 1;
+	}
+
+	var xTile = pixelToTileX(player.x), //debug
+		yTile = pixelToTileY(player.y); //debug
+	//console.log(player.x +':'+ player.y +' > '+ nextX +':'+ nextY);
+
+	var xTileNext = pixelToTileX(nextX),
+		yTileNext = pixelToTileY(nextY);		
+	//console.log(xTile +':'+ yTile +' > '+ xTileNext +':'+ yTileNext);
+
+	//FIXME use keepInsideMap? <- transform it on true/false? not -> Send values for client pretiction?
+	if (((xTileNext >= 0) && (xTileNext < serverConfig.tileMapWidth)) &&
+		((yTileNext >= 0) && (yTileNext < serverConfig.tileMapHeight))) {
+
+		var tileId = map[1][yTileNext][xTileNext],
+			tile = new Tile(),
+			tile = tileset[tileId];
+		
+		//console.dir(tile);
+
+		if (tile.walkable === true) {
+			if (isPlayerOnTile(player.id, nextX, nextY) === false) {
+				//console.log('NO COLLISION!');
+				return false;
+			}
+		}
+	}
+	
+	//console.log('YES COLLISION!');
+	return true;
+}
+
+function sendGameData(client, data) { //FIXME
 	/* TODO: Do bounds and anticheat checks*/
 	/* Elaborate next position, send confirmed position to client */
 
 	players.forEach(function(p) {
-		if (p.id == client.id) {
-			if (data.dir == 'l') {
-				p.x += -serverConfig.speed;
-			}
-			if (data.dir == 'r') {
-				p.x += serverConfig.speed;
-			}
-			if (data.dir == 'u') {
-				p.y += -serverConfig.speed;
-			}
-			if (data.dir == 'd') {
-				p.y += serverConfig.speed;
-			}
-			p = checkBounds(p);
+		if (p.id == data.id) {
+			var nextX = p.x,
+				nextY = p.y;
 			
+			if (data.dir == 'l') {
+				nextX += -serverConfig.speed;
+			} else if (data.dir == 'r') {
+				nextX += serverConfig.speed;
+			} else if (data.dir == 'u') {
+				nextY += -serverConfig.speed;
+			} else if (data.dir == 'd') {
+				nextY += serverConfig.speed;
+			}
+			
+			p = keepInsideMap(p);
+			
+			if (!hasCollisions(p, nextX, nextY, data.dir)) { //if no collisions, allow next movement
+				p.x = nextX;
+				p.y = nextY;
+			}
 			io.sockets.emit('play', { id: p.id, x: p.x, y: p.y });
 		}
 	});	
@@ -173,7 +250,7 @@ var io = require('socket.io').listen(app),
 	pings = [];
 	
 io.configure(function(){ 
-	//io.enable('browser client minification');
+	io.enable('browser client minification');
 	//io.enable('browser client etag'); 
 	io.set('log level', 1); 
 	io.set('transports', [ 
@@ -251,6 +328,14 @@ io.sockets.on('connection', function(client) {
 		//console.log(data);
 		io.sockets.emit('chatMsg', { id: data.id, msg: data.msg });
 	});
+	
+	client.on('status', function(data) {		
+		var memUsed = getMemUsed(),
+			uptime = getUptime();	
+		
+		//TODO make a span in jade to avoid passing maxPlayers
+		client.emit('status', { players: players, memUsed: getMemUsed(), uptime: getUptime() });
+	});
 
 	client.on('disconnect', function() {
 		var quitter,
@@ -269,7 +354,7 @@ io.sockets.on('connection', function(client) {
 		console.log('- Player '+ quitter.nick +' ('+ client.id +') disconnected, total players: '+ totPlayers);
 	});
 });
-
+		
 /*
 * Ping
 */
