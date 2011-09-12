@@ -192,7 +192,7 @@ $(document).ready(function() {
 		
     	game.ctx.font = "15px Monospace"; //workaround FIXME
     	
-    	chatMsg.width(newWidth - 14); // - (2 * css border + 2 * padding)
+    	chatMsg.width(newWidth - (chatMsg.outerWidth() - chatMsg.width())); // - (2 * css border + 2 * padding)
     	chatLog.offset({ left: (game.canvas.offset().left + game.canvasWidth - chatLog.outerWidth()) });
 	}
 	
@@ -347,13 +347,6 @@ $(document).ready(function() {
 			
 			game.vp.centerOn(game.player);
 			game.world.drawAll();
-			
-			game.player.draw(game); //assume the local copy is more updated		
-			game.players.forEach(function(p) {
-				if (p.id != game.player.id) {
-					p.draw(game); //FIXME seriously, stop passing the game handle
-		    	}
-			});
 
 			game.debugStuff();
 			
