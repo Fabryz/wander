@@ -52,7 +52,7 @@ p {
 }
 
 #game-desc {
-	margin-top: 2em;
+	margin-top: .5em;
 	margin-left: 1em;
 }
 
@@ -61,6 +61,7 @@ p {
 	width: 95%;
 	height: 480px; /* change according to canvas height */
 	margin-top: 1em;
+	z-index: 999;
 }
 
 #gameIntro,
