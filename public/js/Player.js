@@ -39,6 +39,21 @@ Player.prototype.toString = function() { //FIXME fix 48
 	return this.id +' '+ this.nick +' '+ this.x +':'+ this.y +' ('+ Math.floor(this.x / 48) +':'+ Math.floor(this.y / 48) +') '+ this.ping +'ms';
 };
 
+Player.prototype.drawNick = function(game) {
+	var coords = game.world.mapToVp(this.x, this.y);
+	
+	game.ctx.save();
+	
+	game.ctx.fillStyle = 'rgb(0, 0, 0)';
+	game.ctx.fillText(this.nick, coords.x + this.halfWidth - (this.nick.length * 8 / 2), coords.y - 10 - 1);
+	game.ctx.fillText(this.nick, coords.x + this.halfWidth - (this.nick.length * 8 / 2) - 1 , coords.y - 10 + 1);
+	game.ctx.fillText(this.nick, coords.x + this.halfWidth - (this.nick.length * 8 / 2) + 1 , coords.y - 10 + 1);
+	game.ctx.fillStyle = 'rgb(254, 254, 254)';
+	game.ctx.fillText(this.nick, coords.x + this.halfWidth - (this.nick.length * 8 / 2) , coords.y - 10);
+
+	game.ctx.restore();
+}
+
 Player.prototype.draw = function(game) {
 	var coords = game.world.mapToVp(this.x, this.y);
 	
@@ -47,7 +62,7 @@ Player.prototype.draw = function(game) {
 		avatar.src = this.avatar;
 		
 		game.ctx.drawImage(avatar, coords.x, coords.y, this.width, this.height);
-		game.ctx.fillText(this.nick, coords.x + this.halfWidth, coords.y - 10);
+		//this.drawNick(game);
 	} else {
 		//game.debug(this.id +' is moving out of viewport'); //don't render moving stuff out of viewport
 	}
