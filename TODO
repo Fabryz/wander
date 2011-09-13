@@ -1,6 +1,7 @@
 # Update package.json on new version
 # dev2production: socket add Analytics before deploying
 
+move viewport 1 tile down so player is centered vertically
 fence full -> offset on Tile class, render from tileY - (tileHeight - 48) 
 don't force collision map on layer 1 -> create collision map (ground tile could be not walkable)
 tranform forEach in for
@@ -9,8 +10,9 @@ chat channels, global, local (in a X range)
 try to remove the map matrix from Map.js
 do something with mapLoader on root
 Map2VP on viewport
-render player below trees
+disconnect/standby client after X pings with no answer
 interval or timeout on fps
+
 improve server players data structure to avoid foreach and use players[id]
 server time (day/night swap?)
 don't send the whole map, just viewport + range
@@ -20,33 +22,27 @@ do checkBounds also clientside to save bandwidth
 chat message width, cut or remove scroll horiz
 don't render tiles below another tile
 on frontend: fix local player copy / players, need both? remove player from players?
+->keep local copy on serverside again?
 player nick really needs outer 3x fillText?
 
-Find out why canvas goes white past 14651 ticks
-->crashes when window is unfocused
 try to integrate resizeCanvas and gameInit on Game class
 pad/phone support?
 stop passing game handle on every class
 
 don't render map outside viewport (+-range square)
 Make a simple map editor
-game not so working with Firefox
-check broadcast to all / all but current socket
 random map generation
 minimap
-
-find what causes the laggy movements
-use volatile on Socket.io
+find an use for volatile on Socket.io
 
 fix efpies
-fix player quit on page refresh, don't allow 2x clients of same player
-use a single spritemap instead of individual png image tiles
+don't allow 2x clients of same player
+use a single spritemap instead of individual png image tiles?
 dirty tiles, create draw single tile function (see JSTE)
 
 find out why it doesn't start without firebug opened
 improve movement animation/refresh rate
 check debugcanvas data refresh
-disconnect/standby client after X pings with no answer
 
 ?fix player spawn before Play
 memory leaks
