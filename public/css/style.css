@@ -167,10 +167,10 @@ p {
 	font-size: 1.5em;
 	padding: 1em;
 	position: absolute;
-	width: 30%;
-	height: 200px;
+	width: 40%;
+	height: 125px;
 	overflow: auto;
-	margin-top: -230px;
+	margin-top: -155px;
 	-webkit-border-top-left-radius: 10px;
 	-moz-border-radius-topleft: 10px;
 	border-top-left-radius: 10px;
