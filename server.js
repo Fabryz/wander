@@ -31,7 +31,7 @@ var serverInfo = {
 var serverConfig = {
 	maxPlayers: 32,
 	speed: 48, //FIXME test 16
-	spawnX: 3,	
+	spawnX: 4,	
 	spawnY: 3,
 	tileMapWidth: map[0].length,
 	tileMapHeight: map[0][0].length,
@@ -195,7 +195,7 @@ function hasCollisions(player, nextX, nextY, dir) {
 	if (((xTileNext >= 0) && (xTileNext < serverConfig.tileMapWidth)) &&
 		((yTileNext >= 0) && (yTileNext < serverConfig.tileMapHeight))) {
 
-		var tileId = map[1][yTileNext][xTileNext],
+		var tileId = map[1][yTileNext][xTileNext], //FIXME create an actual collision map
 			tile = new Tile(),
 			tile = tileset[tileId];
 		
@@ -241,6 +241,29 @@ function sendGameData(client, data) { //FIXME
 			io.sockets.emit('play', { id: p.id, x: p.x, y: p.y });
 		}
 	});	
+}
+
+function getPlayerFromId(id) {
+	var length = players.length;
+	for(var i = 0; i < length; i++) { 
+		if (players[i].id == id) {
+			return players[i];
+		}
+	}
+}
+
+//check if nick is already being used
+function isUniqueNick(id, nick) { //TODO reuse on login
+	var length = players.length;
+	for(var i = 0; i < length; i++) { 
+		if (players[i].id != id) {
+			if (players[i].nick == nick) {
+				return false;
+			}
+		}
+	}
+	
+	return true;
 }
 
 var io = require('socket.io').listen(app),
@@ -294,15 +317,18 @@ io.sockets.on('connection', function(client) {
 	client.on('setNick', function(data) {	
 		//TODO: check doublenick FIXME check stuff directly on nickchange and remove nickres
 		
+		var oldNick;
+		
 		players.forEach(function(p) {
 			if (p.id == data.id) {
+				oldNick = p.nick;
 				p.nick = data.nick;
 			}
 		});
 
 		io.sockets.emit('nickChange', { id: data.id, nick: data.nick });
 		client.emit('nickRes', { res: true });	
-		console.log('* '+ data.id +' changed his nick to '+ data.nick);
+		console.log('* '+ oldNick +' ('+ data.id +') changed his nick to '+ data.nick);
 	});
 	
 	client.on('play', function(data) {	
@@ -326,7 +352,50 @@ io.sockets.on('connection', function(client) {
 	
 	client.on('chatMsg', function(data) {		
 		//console.log(data);
-		io.sockets.emit('chatMsg', { id: data.id, msg: data.msg });
+
+		var action = data.msg.split(" ");
+		
+		if (action[0].substring(0, 1) != '/') { //normal chat
+			io.sockets.emit('chatMsg', { id: data.id, msg: data.msg });
+		} else { //action message
+			switch (action[0]) {
+				case '/nick':
+						if ((typeof action[1] != "undefined") && (action[1] != '')) {
+							if (isUniqueNick(data.id, action[1])) { 
+								var p = getPlayerFromId(data.id),
+									oldNick = p.nick,
+									newNick = action[1],
+									length = players.length;
+								
+								for(var i = 0; i < length; i++) { 
+									if (players[i].id == data.id) {
+										players[i].nick = newNick;
+									}
+								}
+					
+								io.sockets.emit('nickChange', { id: data.id, nick: newNick });
+								console.log('* '+ oldNick +' ('+ data.id +') changed his nick to '+ newNick);
+							} else {
+								client.emit('chatAction', { msg: 'That nick is already being used.' });
+							}
+						} else {
+							client.emit('chatAction', { msg: 'Wat.' });
+						}
+					break;
+				case '/uptime':	//emit chataction		
+						client.emit('chatAction', { msg: 'This server has been up for: '+ getUptime() +'.' });
+					break;
+				case '/help':
+						client.emit('chatAction', { msg: 'Wander help section:' });
+						client.emit('chatAction', { msg: 'Use "/nick newnick" to change your nickname to newnick.' });
+						client.emit('chatAction', { msg: 'Use "/uptime" to see the server uptime.' });
+					break;
+			
+				default:
+					client.emit('chatAction', { msg: 'Command not available.' });
+				break;
+			}
+		}
 	});
 	
 	client.on('status', function(data) {		

@@ -545,6 +545,9 @@ $(document).ready(function() {
 			if (p.id == data.id) {
 				oldNick = p.nick;
 				p.nick = data.nick;
+				if (game.player.id == data.id) {
+					game.player.nick = data.nick;
+				}
 			}
 		});
 		game.debug(oldNick +' changed nick to '+ data.nick);
@@ -592,7 +595,11 @@ $(document).ready(function() {
 			}
 		});
 				
-		game.chatMessage(sender.nick +': '+ data.msg);	
+		game.chatMessage('<strong>'+ sender.nick +'</strong>: '+ data.msg);	
+	});
+	
+	game.socket.on('chatAction', function(data) {		
+		game.chatMessage('* <em>'+ data.msg +'</em>');	
 	});
 			
 	game.socket.on('message', function(data) { //forever alone
