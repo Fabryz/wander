@@ -132,8 +132,9 @@ function sendPlayerList(client) {
 	console.log('* Sent player list to '+ client.id);
 }
 
-function keepInsideMap(player) {
-	if (player.x + serverConfig.tileWidth > serverConfig.pixelMapWidth) { //TODO: player is as large as a map tile?
+//TODO: player is as large as a map tile?
+/*function keepInsideMap(player) {
+	if (player.x + serverConfig.tileWidth > serverConfig.pixelMapWidth) { 
 		player.x = serverConfig.pixelMapWidth - serverConfig.tileWidth;
 	}
 	if (player.x < 0) {
@@ -148,6 +149,31 @@ function keepInsideMap(player) {
 	}
 	
 	return player;
+}*/
+
+//keepInsideMap returning booleans
+//it uses serverConfig tile size by default
+//use (x, y, 1, 1) for a point FIXME
+function isInsideMap(x, y, width, height) { 
+	var width = width || serverConfig.tileWidth,
+		height = height || serverConfig.tileHeight;
+		
+	//console.log(x +':'+ y +' '+ width +'x'+ height);
+
+	if (((x >= 0) && ((x + width - 1) < serverConfig.pixelMapWidth)) &&
+		((y >= 0) && ((y + height - 1) < serverConfig.pixelMapHeight))) {
+		return true;
+	} else {	
+		return false;
+	}
+}
+
+function tileToPixelX(x) {
+	return (x * serverConfig.tileWidth);
+}
+
+function tileToPixelY(y) {
+	return (y * serverConfig.tileHeight);
 }
 
 function pixelToTileX(x) {
@@ -175,26 +201,15 @@ function isPlayerOnTile(id, x, y) { //FIXME works if width/height = 48
 }
 
 function hasCollisions(player, nextX, nextY, dir) {	
-	//on player X or Y if LEFT or UP
-	//on player X/Y + player width/height if RIGHT or DOWN
-	if (dir == 'r') { //something could not be working FIXME
-		nextX += player.width - 1;
-	} else if (dir == 'd') {
-		nextY += player.height - 1;
-	}
-
-	var xTile = pixelToTileX(player.x), //debug
-		yTile = pixelToTileY(player.y); //debug
-	//console.log(player.x +':'+ player.y +' > '+ nextX +':'+ nextY);
-
+	//var xTile = pixelToTileX(player.x), //debug
+	//	yTile = pixelToTileY(player.y); //debug
 	var xTileNext = pixelToTileX(nextX),
-		yTileNext = pixelToTileY(nextY);		
+		yTileNext = pixelToTileY(nextY);	
+		
+	//console.log(player.x +':'+ player.y +' > '+ nextX +':'+ nextY);		
 	//console.log(xTile +':'+ yTile +' > '+ xTileNext +':'+ yTileNext);
 
-	//FIXME use keepInsideMap? <- transform it on true/false? not -> Send values for client pretiction?
-	if (((xTileNext >= 0) && (xTileNext < serverConfig.tileMapWidth)) &&
-		((yTileNext >= 0) && (yTileNext < serverConfig.tileMapHeight))) {
-
+	if (isInsideMap(nextX, nextY)) {
 		var tileId = map[1][yTileNext][xTileNext], //FIXME create an actual collision map
 			tile = new Tile(),
 			tile = tileset[tileId];
@@ -213,32 +228,67 @@ function hasCollisions(player, nextX, nextY, dir) {
 	return true;
 }
 
-function sendGameData(client, data) { //FIXME
-	/* TODO: Do bounds and anticheat checks*/
-	/* Elaborate next position, send confirmed position to client */
+function getTileFromId(id) {
+	var length = tileset.length;
+	for(var i = 0; i < length; i++) {
+		if (tileset[i].id == id) {
+			//console.log(tileset[i]);
+			return tileset[i];
+		}
+	}
+	
+	return false;
+}
+
+//coords: x, y layer: z
+function getTileFromCoords(x, y, z) {
+	return getTileFromId(map[z][y][x]);
+}
+
+// Elaborate next position, send confirmed position to client 
+function sendGameData(client, data) { //TODO: Do bounds and anticheat checks
+	var nextX,
+		nextY,
+		oldX,
+		oldY;
 
 	players.forEach(function(p) {
 		if (p.id == data.id) {
-			var nextX = p.x,
-				nextY = p.y;
+			oldX = p.x;
+			oldY = p.y;
 			
 			if (data.dir == 'l') {
-				nextX += -serverConfig.speed;
+				nextX = oldX - serverConfig.speed;
+				nextY = oldY;
 			} else if (data.dir == 'r') {
-				nextX += serverConfig.speed;
+				nextX = oldX + serverConfig.speed;
+				nextY = oldY;
 			} else if (data.dir == 'u') {
-				nextY += -serverConfig.speed;
+				nextX = oldX;
+				nextY = oldY - serverConfig.speed;
 			} else if (data.dir == 'd') {
-				nextY += serverConfig.speed;
+				nextX = oldX;
+				nextY = oldY + serverConfig.speed;
 			}
-			
-			p = keepInsideMap(p);
 			
 			if (!hasCollisions(p, nextX, nextY, data.dir)) { //if no collisions, allow next movement
-				p.x = nextX;
-				p.y = nextY;
+				//TODO make external control function
+								
+				var tileNo = 43,
+					tile = getTileFromCoords(pixelToTileX(nextX), pixelToTileY(nextY), 0);
+
+				if (tile.id == tileNo) { //above teleport tile?
+					nextX = tileToPixelX(tile.extra.tx);
+					nextY = tileToPixelY(tile.extra.ty);
+				}
+			} else { //TODO don't send? Send for client prediction?
+				nextX = oldX;
+				nextY = oldY;
 			}
-			io.sockets.emit('play', { id: p.id, x: p.x, y: p.y });
+
+			p.x = nextX;
+			p.y = nextY;
+			io.sockets.emit('play', { id: p.id, x: nextX, y: nextY });
 		}
 	});	
 }
