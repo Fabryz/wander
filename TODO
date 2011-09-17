@@ -1,6 +1,8 @@
 # Update package.json on new version
 # dev2production: socket add Analytics before deploying
 
+258 server
+fix enter not-so-working on focus/blur
 move viewport 1 tile down so player is centered vertically
 fence full -> offset on Tile class, render from tileY - (tileHeight - 48) 
 don't force collision map on layer 1 -> create collision map (ground tile could be not walkable)
