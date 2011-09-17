@@ -160,6 +160,7 @@ $(document).ready(function() {
 			game.initTick();
 			
 			chatMsg.attr('disabled', false);
+			$('#bgm-ambient1').get(0).play(); //test
 			
 			//effe(); FIXME works better than fps.js
 			gameLoop();
@@ -563,7 +564,9 @@ $(document).ready(function() {
 	
 		game.players.push(newPlayer);
 		game.debug('New player joined: '+ newPlayer.nick);
-		game.chatMessage('> '+ newPlayer.nick +' has joined the server.');	
+		game.chatMessage('> '+ newPlayer.nick +' has joined the server.');
+		
+		$("#sfx-newPlayer").get(0).play();
 	});
 	
 	game.socket.on('list', function(data) {				

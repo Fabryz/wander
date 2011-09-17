@@ -43,6 +43,16 @@ Game.prototype.initVars = function() {
 	this.debugCtx.fillStyle = 'rgb(0, 0, 0)';
 	this.debugCtx.font = "15px Monospace";
 	
+	//FIXME testing audio
+	this.audio = [];
+	this.audio.push('<audio id="bgm-ambient1" preload loop><source src="./audio/ambient1.ogg" /></audio>');
+	this.audio.push('<audio id="sfx-newPlayer" preload><source src="./audio/newPlayer.ogg" /></audio>');
+	
+	var audioLength = this.audio.length;
+	for(var i = 0; i < audioLength; i++) {
+		this.canvas.after(this.audio[i]);
+	}
+
 	this.debugCanvas.hide();
 	$("#debugLog").hide();
 	
