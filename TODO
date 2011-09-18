@@ -1,7 +1,24 @@
-# Update package.json on new version
-# dev2production: socket add Analytics before deploying
+# dev2production todos: package.json version, analytics
 
-258 server
+update to node v0.4.12 stable
+
+new gosquare code
+jade footer layout for analytics
+put version near title
+modify drawmap for canvas minimap
+preload only NEEDED images
+make tileset class? <- preload images, add draw tile directly inside Tile class
+^ then use tile.draw on drawMap
+know what audio is being played -> stop on disconnect
+
+express cache expiration for img/audio files -> check chrome inspector audits
+use actual HTML5 tags
+audio volume, headphones/speakers
+walking on wood sound?
+special areas sound? inside a house
+
+make loading screen with progress bar
+create a decent audio class
 fix enter not-so-working on focus/blur
 move viewport 1 tile down so player is centered vertically
 fence full -> offset on Tile class, render from tileY - (tileHeight - 48) 
@@ -34,7 +51,6 @@ stop passing game handle on every class
 don't render map outside viewport (+-range square)
 Make a simple map editor
 random map generation
-minimap
 find an use for volatile on Socket.io
 
 fix efpies
