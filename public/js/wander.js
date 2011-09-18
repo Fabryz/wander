@@ -1,7 +1,7 @@
 /*
 *  Author: Fabrizio Codello
 *  Name: Wander (working name)
-*  Description: An HTML5 Canvas multiplayer sandbox game
+*  Description: An HTML5 Canvas + Node.js multiplayer sandbox game
 *  Repo: https://github.com/Fabryz/wander
 *
 */
@@ -157,7 +157,7 @@ $(document).ready(function() {
 			
 			game.fps.init('fps');
 			game.fps.timer = setInterval(function() { game.fps.update(); }, 2000); //FIXME damn you setInterval
-			game.initTick();
+			//game.initTick();
 			
 			chatMsg.attr('disabled', false);
 			$('#bgm-ambient1').get(0).play(); //test
@@ -177,24 +177,21 @@ $(document).ready(function() {
 	}
 		
 	function resizeCanvas() {
-		//width is 95% of the page and a multiple of tileWidth
-		var roughWidth = Math.floor($(window).width() * 0.95);		
-		var roughHeight = Math.floor($(window).height() * 0.95) - 110; //- debugcanvas + padding
+		//width is 100% of the page and a multiple of tileWidth (sliding a bit outside window)
+		var roughWidth = Math.floor($(window).width()) + game.serverConfig.tileWidth;		
+		var roughHeight = Math.floor($(window).height()) - 25 + game.serverConfig.tileHeight; // - 25 chatMsg height
 		var newWidth = Math.floor(roughWidth / game.serverConfig.tileWidth) * game.serverConfig.tileWidth;
 		var newHeight = Math.floor(roughHeight / game.serverConfig.tileHeight) * game.serverConfig.tileHeight;
 		
 		game.canvasWidth = newWidth;
 		game.canvasHeight = newHeight;
-			
-		game.canvas.attr("width", game.canvasWidth);
-		game.canvas.attr("height", game.canvasHeight);
+		game.canvas.attr({ width: newWidth, height: newHeight });
 		
-		game.vp.resize(game.canvasWidth, game.canvasHeight);
+		game.vp.resize(newWidth, newHeight);
 		
     	game.ctx.font = "15px Monospace"; //workaround FIXME
     	
-    	chatMsg.width(newWidth - (chatMsg.outerWidth() - chatMsg.width())); // - (2 * css border + 2 * padding)
-    	chatLog.offset({ left: (game.canvas.offset().left + game.canvasWidth - chatLog.outerWidth()) });
+    	chatMsg.width((roughWidth - game.serverConfig.tileWidth) - (chatMsg.outerWidth() - chatMsg.width())); // - (2 * css border + 2 * padding)
 	}
 	
 	function sendNickname() {
@@ -342,18 +339,16 @@ $(document).ready(function() {
 		game.ctx.clearRect(0, 0, game.canvasWidth, game.canvasHeight);
 		
 		if (game.check.isPlaying) {			
-			sendMovement();						
-			//game.ctx.fillRect((game.canvasWidth/2) -1, (game.canvasHeight/2) -1, 3, 3);
-			//checkBounds(game.player);
-			
-			game.vp.centerOn(game.player);
+			sendMovement();
+
+			game.vp.centerOn(game.player.x, game.player.y);
 			game.world.drawAll();
 
 			game.debugStuff();
 			
 			//lastFps = (new Date()).getTime();
 			game.fps.count++;
-			game.tick_count++;
+			//game.tick_count++;
 
 			setTimeout(gameLoop, 30); //test! - 1000/desired_fps
 		}
@@ -468,7 +463,7 @@ $(document).ready(function() {
 	
 	game.socket.on('info', function(data) {
 		game.debug(data.msg);
-		game.chatMessage('# '+ data.msg);	
+		game.chatMessage('<strong># '+ data.msg +'</strong>');	
 	});
 	
 	game.socket.on('config', function(data) {						

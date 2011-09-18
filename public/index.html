@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
+	<meta http-equiv="Content-type" content="text/html; charset=UTF-8" />
+	
     <title>Wander game</title>
-    
-    <meta http-equiv="Content-type" content="text/html; charset=UTF-8" />
-    
+	<meta name="description" content="An HTML5 Canvas + Node.js + WebSockets + JQuery 2D multiplayer sandbox game." />
+	<meta name="keywords" content="node.js game, websockets game, html5 canvas game, multiplayer node.js game" />
+
     <link type="text/css" rel="stylesheet" href="./css/style.css" media="screen">
-    
+
     <script type="text/javascript" src="./js/jquery-latest.min.js"></script>
     <script type="text/javascript" src="./socket.io/socket.io.js"></script>
     <script type="text/javascript" src="./js/Socket.js"></script>
@@ -17,14 +19,21 @@
     <script type="text/javascript" src="./js/Viewport.js"></script>
     <script type="text/javascript" src="./js/Game.js"></script>
     <script type="text/javascript" src="./js/wander.js"></script>
-    
 </head>
 <body>
 	<div id="wrapper-index">
-		<h1 id="game-title">Wander</h1>
-		<p id="game-desc">Use the arrow keys to move around, tab for player list, enter to chat. <a href="./status" title="Open the server status page in another tab" target="_blank">Server status</a>.<br/>
-		Everything is work in progress. <a href="https://github.com/Fabryz/wander/issues" title="Open the issues page in another tab" target="_blank">Report bugs</a>.</p>
-		<div class="clear"></div>
+		<div id="header">
+			<h1 id="game-title">Wander</h1>
+			<p id="game-desc">Use the arrow keys to move around, tab for player list, enter to chat. <a href="./status" title="Open the server status page in another tab" target="_blank">Server status</a>. <a href="https://github.com/Fabryz/wander/issues" title="Open the issues page in another tab" target="_blank">Report bugs</a>.<br/>
+			&copy;2011 Fabrizio Codello - Follow me on <a href="http://twitter.com/#!/fabryz" title="My Twitter page">Twitter</a>!</p>
+			<div class="clear"></div>
+		</div>
+		<canvas id="gameCanvas" width="480" height="480">
+			<p>Looks like your browser does NOT support HTML5 Canvas.</p>
+			<p>Please <a href="http://www.google.com/chrome" title="Download Google Chrome">get a decent one</a>.</p>
+		</canvas>
+		<div id="chatLog"><ul></ul></div>
+		<input type="text" value="" id="chatMsg" name="chatMsg" maxlength="255" />
 		<div id="gameUI">
 			<div id="gameIntro">
 				<h1>Who are you?</h1>
@@ -37,13 +46,6 @@
 				<ul></ul>
 			</div>
 		</div>
-		<canvas id="gameCanvas" width="480" height="480">
-			<p>Looks like your browser does NOT support HTML5 Canvas.</p>
-			<p>Please get a decent one.</p>
-		</canvas>
-		<div id="chatLog"><ul></ul></div>
-		<input type="text" value="" id="chatMsg" name="chatMsg" maxlength="255" />
-		<p id="footer">&copy;2011 Fabrizio Codello - Follow me on <a href="http://twitter.com/#!/fabryz">Twitter</a>!</p>
 		<a href="https://github.com/Fabryz/wander" title="Fork me on GitHub" target="_blank"><img id="ribbon" src="./img/ribbon.png" alt="Fork me on GitHub"></a>
 	</div>
 </body>
