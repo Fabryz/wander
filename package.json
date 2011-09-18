@@ -1,7 +1,7 @@
 {
   "name" : "wander",
-  "description" : "An HTML5 canvas multiplayer sandbox game",
-  "version" : "0.4.5",
+  "description" : "An HTML5 Canvas + Node.js + WebSockets multiplayer game",
+  "version" : "0.4.6",
   "scripts": {
     "start": "server.js"
   },
