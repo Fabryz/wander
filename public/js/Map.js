@@ -177,28 +177,44 @@ Map.prototype.drawMap = function() {
 	        	var coords = this.mapToVp(0, 0),
 	        		drawX = coords.x + x * this.game.serverConfig.tileWidth,
 	        		drawY = coords.y + y * this.game.serverConfig.tileHeight,
-	        		width = this.game.serverConfig.tileWidth,
-	        		height = this.game.serverConfig.tileHeight;
+	        		isInside = this.game.vp.isInside(drawX, drawY);
+	        		/*isUborder = this.game.vp.isInside(drawX, drawY + 48),
+	        		isDborder = this.game.vp.isInside(drawX, drawY - 48);*/
+	        	
+	        	// ^ isInside: depending on window width/height the first row/col could be cut
+	        	// away from rendering, so render one more row/col for safety
+	        	// 1 left up 2 down right
+	        	
+	        	//render only tiles inside current viewport + 1x border all around
+	        	if (isInside) {
+					var tileId = this.map[z][y][x],
+						width = this.game.serverConfig.tileWidth,
+			    		height = this.game.serverConfig.tileHeight;
+					
+					if (tileId != 0) { //if not blank
+					    try {
+							this.game.ctx.drawImage(this.images[tileId], drawX, drawY, width, height);
+				
+							//> DEBUG
+							/*this.game.ctx.save();					
+							this.game.ctx.fillStyle = 'red';
+				
+							var walkable = this.tileset[this.map[z][y][x]].walkable;
+							this.game.ctx.fillText(x +':'+ y, drawX, drawY + 10);
+				
+							if (!walkable) {
+								this.game.ctx.fillStyle = 'blue';
+								this.game.ctx.fillText(walkable, drawX, drawY + 25);
+							}
 
-	            try {
-					this.game.ctx.drawImage(this.images[this.map[z][y][x]], drawX, drawY, width, height);
-				
-					//> DEBUG
-					/*this.game.ctx.save();					
-					this.game.ctx.fillStyle = 'red';
-				
-					var walkable = this.tileset[this.map[z][y][x]].walkable;
-					this.game.ctx.fillText(x +':'+ y, drawX, drawY + 10);
-				
-					if (!walkable) {
-						this.game.ctx.fillStyle = 'blue';
-						this.game.ctx.fillText(walkable, drawX, drawY + 25);
-					}
-
-					this.game.ctx.restore();*/
-					//< DEBUG
-	            } catch(err) {
-	                //this.game.debug('Error while drawing map:'+ err); // FIXME
+							this.game.ctx.restore();*/
+							//< DEBUG
+					    } catch(err) {
+					        this.game.debug('Error while drawing map['+ z +']['+ y +']['+ x +']: '+ err);
+					        console.log(err);
+					    	this.game.check.isPlaying = false; //force the game to stop
+					    }
+			        }
 	            }
 	        }
 	    }
