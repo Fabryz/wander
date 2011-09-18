@@ -43,7 +43,7 @@ Game.prototype.initVars = function() {
 	this.debugCtx.fillStyle = 'rgb(0, 0, 0)';
 	this.debugCtx.font = "15px Monospace";
 	
-	//FIXME testing audio
+	/* FIXME testing audio */
 	this.audio = [];
 	this.audio.push('<audio id="bgm-ambient1" preload loop><source src="./audio/ambient1.ogg" /></audio>');
 	this.audio.push('<audio id="sfx-newPlayer" preload><source src="./audio/newPlayer.ogg" /></audio>');
@@ -52,18 +52,16 @@ Game.prototype.initVars = function() {
 	for(var i = 0; i < audioLength; i++) {
 		this.canvas.after(this.audio[i]);
 	}
-
-	this.debugCanvas.hide();
-	$("#debugLog").hide();
+	/*                     */
 	
 	this.debug('Vars inited.');
 };
 
-Game.prototype.initTick = function() {
+/*Game.prototype.initTick = function() {
 	this.tick_count = 0;
 	this.timer = 9000;
 	this.debug('Tick Inited.');
-};
+};*/
 
 Game.prototype.loadServerConfig = function() {
 	return {	//default config
@@ -85,7 +83,7 @@ Game.prototype.debugStuff = function() {
 	
 	this.debugCtx.fillText(this.player, 10, 15);
 	this.debugCtx.fillText('vp '+ this.vp.x +':'+ this.vp.y, 10, 37);
-	this.debugCtx.fillText(this.tick_count, 130, 37);
+	//this.debugCtx.fillText(this.tick_count, 200, 37);
 	
 	this.debugCtx.fillText(this.player.ping +'ms', 10, this.debugCanvasHeight - 10);
 	this.debugCtx.fillText(this.fps.lastFps +'fps', 100, this.debugCanvasHeight - 10);
