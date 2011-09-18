@@ -16,12 +16,7 @@ var Player = function(id, x, y) {
 	this.inventory = [];
 	this.ping = 0;
 	
-	/*this.avatar = new Image();
-	this.avatar.src = './img/player.png';*/
-	this.avatar = './img/player.png';
-	
-	//this.width = serverConfig.tileWidth; FIXME or hardcode?
-	//this.height = serverConfig.tileHeight;
+	this.avatar = './img/player.png';	
 	this.width = 48;
 	this.height = 48;
 	this.halfWidth = this.width/2;
@@ -35,11 +30,10 @@ var Player = function(id, x, y) {
 };
 
 Player.prototype.toString = function() { //FIXME fix 48
-	//return this.nick +' id: '+ this.id +' x: '+ this.x +' ('+ (this.x+this.width) +') y: '+ this.y +' ('+ (this.y + this.height)+') '+ this.vX +' '+ this.vY;
-	return this.id +' '+ this.nick +' '+ this.x +':'+ this.y +' ('+ Math.floor(this.x / 48) +':'+ Math.floor(this.y / 48) +') '+ this.ping +'ms';
+	return /*this.id +' '+ */this.nick +' '+ this.x +':'+ this.y +' ('+ Math.floor(this.x / 48) +':'+ Math.floor(this.y / 48) +') '+ this.ping +'ms';
 };
 
-Player.prototype.drawNick = function(game) {
+Player.prototype.drawNick = function(game) {  //FIXME improve this
 	var coords = game.world.mapToVp(this.x, this.y);
 	
 	game.ctx.save();
@@ -57,12 +51,13 @@ Player.prototype.drawNick = function(game) {
 Player.prototype.draw = function(game) {
 	var coords = game.world.mapToVp(this.x, this.y);
 	
-	if (game.vp.isInside(coords.x, coords.y)) { //TODO: add outer render range, TILE_SIZE * X on if
-		var avatar = new Image();	//FIXME really create a new image every loop?
-		avatar.src = this.avatar;
+	if (game.vp.isInside(coords.x, coords.y)) {
+		if (!this.avatarImg) {
+			this.avatarImg = new Image();
+			this.avatarImg.src = this.avatar;
+		}
 		
-		game.ctx.drawImage(avatar, coords.x, coords.y, this.width, this.height);
-		//this.drawNick(game);
+		game.ctx.drawImage(this.avatarImg, coords.x, coords.y, this.width, this.height);
 	} else {
 		//game.debug(this.id +' is moving out of viewport'); //don't render moving stuff out of viewport
 	}
