@@ -4,6 +4,7 @@ var http = require('http'),
     url  = require('url'),
     util = require('util'),
     express = require('express'),
+    minj = require('minj'),
     Player = require('./public/js/Player.js').Player,
     loadMap = require('./public/js/Map.js').loadMap,
     loadTileset = require('./public/js/Map.js').loadTileset,
@@ -36,7 +37,7 @@ var serverConfig = {
 	tileMapWidth: map[0].length,
 	tileMapHeight: map[0][0].length,
 	tileWidth: 48,
-	tileHeight: 48,
+	tileHeight: 48
 };
 serverConfig.pixelMapWidth = serverConfig.tileMapWidth * serverConfig.tileWidth;
 serverConfig.pixelMapHeight = serverConfig.tileMapHeight * serverConfig.tileHeight;
@@ -75,6 +76,7 @@ function getMemUsed() {
 var app = express.createServer();
 
 app.use(express.logger(':remote-addr - :method :url HTTP/:http-version :status :res[content-length] - :response-time ms'));
+app.use(minj.middleware({ src: __dirname + '/public/js' }));
 app.use(express.static(__dirname + '/public'));
 app.use(express.favicon());
 
@@ -82,7 +84,7 @@ app.set('view engine', 'jade');
 app.set('view options', { layout: false });
 app.set('views', __dirname + '/views');
 
-app.get('/status', function(req, res){
+app.get('/status', function(req, res) {
 	var memUsed = getMemUsed(),
 		uptime = getUptime(),
 		version = getVersion();	

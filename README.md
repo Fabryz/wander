@@ -14,6 +14,7 @@ Modules:
 * [Socket.io](http://socket.io/)
 * [Express](http://expressjs.com/)
 * [Jade](http://jade-lang.com/)
+* [minj](https://github.com/bengourley/minj)
 
 Installation
 ----------
