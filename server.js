@@ -4,7 +4,6 @@ var http = require('http'),
     url  = require('url'),
     util = require('util'),
     express = require('express'),
-    minj = require('minj'),
     Player = require('./public/js/Player.js').Player,
     loadMap = require('./public/js/Map.js').loadMap,
     loadTileset = require('./public/js/Map.js').loadTileset,
@@ -76,7 +75,6 @@ function getMemUsed() {
 var app = express.createServer();
 
 app.use(express.logger(':remote-addr - :method :url HTTP/:http-version :status :res[content-length] - :response-time ms'));
-app.use(minj.middleware({ src: __dirname + '/public/js' }));
 app.use(express.static(__dirname + '/public'));
 app.use(express.favicon());
 
