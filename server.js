@@ -6,14 +6,14 @@ var http = require('http'),
     express = require('express'),
     Player = require('./public/js/Player.js').Player,
     loadMap = require('./public/js/Map.js').loadMap,
-    loadTileset = require('./public/js/Map.js').loadTileset,
+    Tileset = require('./public/js/Tileset.js').loadTileset,
     Tile = require('./public/js/Tile.js').Tile;
     
 /*
 * Game configs
 */
 
-var tileset = loadTileset(),
+var tileset = new Tileset(),
 	map = loadMap();
     
 var serverInfo = {
@@ -82,12 +82,24 @@ app.set('view engine', 'jade');
 app.set('view options', { layout: false });
 app.set('views', __dirname + '/views');
 
+/*app.get('/', function(req, res) {
+	var version = getVersion();
+
+	res.render('index', { version: version });
+});
+
+app.get('/index.html', function(req, res) { //FIXME really need this? route
+	var version = getVersion();
+
+	res.render('index', { version: version });
+});*/
+
 app.get('/status', function(req, res) {
 	var memUsed = getMemUsed(),
 		uptime = getUptime(),
 		version = getVersion();	
 	
-    res.render('status', { version: version, serverInfo: serverInfo, players: players, maxPlayers: serverConfig.maxPlayers, memUsed: memUsed, uptime: uptime });
+    res.render('status', { version: version, serverInfo: serverInfo, players: players, maxPlayers: serverConfig.maxPlayers, memUsed: memUsed, uptime: uptime, lurkers: statusLurkers });
     console.log('Memory: '+ memUsed +' used, Uptime: '+ uptime +', total players: '+ totPlayers);
 });
 
@@ -186,8 +198,8 @@ function pixelToTileY(y) {
 
 //returns true if at least one player is on the way
 function isPlayerOnTile(id, x, y) { //FIXME works if width/height = 48
-	var lenght = players.length;
-	for(var i = 0; i < lenght; i++) { 
+	var length = players.length;
+	for(var i = 0; i < length; i++) { 
 		if (players[i].id != id) {
 			//console.log(players[i].x +':'+ players[i].y +' '+ x +':'+ y);
 			//console.log(pixelToTileX(players[i].x) +':'+ pixelToTileY(players[i].y) +' '+ pixelToTileX(x) +':'+ pixelToTileY(y));
@@ -288,7 +300,7 @@ function sendGameData(client, data) { //TODO: Do bounds and anticheat checks
 
 			p.x = nextX;
 			p.y = nextY;
-			io.sockets.emit('play', { id: p.id, x: nextX, y: nextY });
+			game.emit('play', { id: p.id, x: nextX, y: nextY });
 		}
 	});	
 }
@@ -319,6 +331,7 @@ function isUniqueNick(id, nick) { //TODO reuse on login
 var io = require('socket.io').listen(app),
 	players = [],
 	totPlayers = 0,
+	statusLurkers = 0,
 	json = JSON.stringify,
 	pings = [];
 	
@@ -332,10 +345,13 @@ io.configure(function(){
 			'htmlfile',
 			'xhr-polling',
 			'jsonp-polling'
-	]); 
+	]);
 }); 
 
-io.sockets.on('connection', function(client) {	
+
+var game = io
+	.of('/game')
+	.on('connection', function(client) {	
 	var address = client.handshake.address;
 	console.log('+ New connection from ' + address.address);
 		
@@ -349,8 +365,7 @@ io.sockets.on('connection', function(client) {
 		try {
             var data = JSON.parse(mess);
         } catch (err) {
-            //console.log("skip: " + sys.inspect(err));
-            console.log('[Error] Malformed JSON');
+            console.log('[Error] Malformed JSON: '+ err);
             return; 
         }
 		
@@ -376,7 +391,7 @@ io.sockets.on('connection', function(client) {
 			}
 		});
 
-		io.sockets.emit('nickChange', { id: data.id, nick: data.nick });
+		game.emit('nickChange', { id: data.id, nick: data.nick });
 		client.emit('nickRes', { res: true });	
 		console.log('* '+ oldNick +' ('+ data.id +') changed his nick to '+ data.nick);
 	});
@@ -387,17 +402,17 @@ io.sockets.on('connection', function(client) {
 	
 	client.on('pong', function(data) {		
 		pings[client.id] = { ping: (Date.now() - pings[client.id].time) };
-		
+
 		players.forEach(function(p) {
 			if (p.id == client.id) {
 				p.ping = pings[client.id].ping;
 			}
 		});
-		
+
 		//console.log('Pong! '+ client.id +' '+ pings[client.id].ping +'ms'); log filler
-		
+
 		//broadcast confirmed player ping
-		io.sockets.emit('pingupdate', { id: client.id, ping: pings[client.id].ping });
+		game.emit('pingupdate', { id: client.id, ping: pings[client.id].ping });
 	});
 	
 	client.on('chatMsg', function(data) {		
@@ -406,8 +421,8 @@ io.sockets.on('connection', function(client) {
 		var action = data.msg.split(" ");
 		
 		if (action[0].substring(0, 1) != '/') { //normal chat
-			io.sockets.emit('chatMsg', { id: data.id, msg: data.msg });
-		} else { //action message
+			game.emit('chatMsg', { id: data.id, msg: data.msg });
+		} else { // Action messages: /command
 			switch (action[0]) {
 				case '/nick':
 						if ((typeof action[1] != "undefined") && (action[1] != '')) {
@@ -423,16 +438,16 @@ io.sockets.on('connection', function(client) {
 									}
 								}
 					
-								io.sockets.emit('nickChange', { id: data.id, nick: newNick });
+								game.emit('nickChange', { id: data.id, nick: newNick });
 								console.log('* '+ oldNick +' ('+ data.id +') changed his nick to '+ newNick);
 							} else {
 								client.emit('chatAction', { msg: 'That nick is already being used.' });
 							}
 						} else {
-							client.emit('chatAction', { msg: 'Wat.' });
+							client.emit('chatAction', { msg: 'You must provide a new nick.' });
 						}
 					break;
-				case '/uptime':	//emit chataction		
+				case '/uptime':
 						client.emit('chatAction', { msg: 'This server has been up for: '+ getUptime() +'.' });
 					break;
 				case '/help':
@@ -446,14 +461,6 @@ io.sockets.on('connection', function(client) {
 				break;
 			}
 		}
-	});
-	
-	client.on('status', function(data) {		
-		var memUsed = getMemUsed(),
-			uptime = getUptime();	
-		
-		//TODO make a span in jade to avoid passing maxPlayers
-		client.emit('status', { players: players, memUsed: getMemUsed(), uptime: getUptime() });
 	});
 
 	client.on('disconnect', function() {
@@ -473,24 +480,47 @@ io.sockets.on('connection', function(client) {
 		console.log('- Player '+ quitter.nick +' ('+ client.id +') disconnected, total players: '+ totPlayers);
 	});
 });
-		
+
+var status = io
+	.of('/status')
+	.on('connection', function(client) {
+
+	statusLurkers++;
+	
+	client.on('disconnect', function() {
+		statusLurkers--;
+	});
+
+	client.on('status', function(data) {		
+		var memUsed = getMemUsed(),
+			uptime = getUptime();	
+	
+		client.emit('status', { players: players, memUsed: getMemUsed(), uptime: getUptime(), lurkers: statusLurkers });
+	});
+});
+
 /*
 * Ping
 */
 
 // ping is intended as server -> client -> server time	
-var pingInterval = setInterval(function() {
+var pingEvery = 5000;
 	
+function pingClients() {	
 	if (players.length > 0) {
-		players.forEach(function (p) {
+		players.forEach(function(p) {
 			if (p.id) {
-				pings[p.id] = { time: Date.now(), ping: 0};
-				io.sockets.sockets[p.id].emit('ping');
-				//console.log('Ping? '+ p.id); log filler
+				pings[p.id] = { time: Date.now(), ping: 0 };
+				//console.log('Ping? '+ p.id); log filler	
+				game.sockets[p.id].emit('ping');
 			}
 		});
 	}
-}, 5000);
+
+	setTimeout(pingClients, pingEvery);
+}
+
+pingClients();
 
 /*function showPing() {
 	var avgPing = 0;
