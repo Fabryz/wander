@@ -6,7 +6,7 @@
 body {
     background-color: #001022;
     color: #FFF;
-    font-family: monospace, serif;
+    font-family: "Lucida Console", monospace, serif;
     font-size: 62.5%;
 	overflow: hidden;
 }
@@ -31,6 +31,7 @@ h1 {
 }
 
 h2 {
+	font-size: 2.3em;
 	margin-bottom: .5em;
 }
 
@@ -69,7 +70,6 @@ p {
 }
 
 #game-title {
-	width: 112px;
 	margin-top: 10px;
 	margin-left: 5px;
 }
@@ -240,21 +240,38 @@ p {
     padding: 0;
 }
 
-dl {
+#status-info,
+#status-players {
+	float: left;
+	width: 400px;
+}
+
+#wrapper-status p,
+#status-info dl,
+#status-list {
 	font-size: 1.5em;
 }
 
-dt {
+#status-info dt {
 	font-weight: bold;
 	margin-bottom: .5em;
 }
 
-dd {
+#status-info dd {
 	margin-left: 1.5em;
 	margin-bottom: 1em;
 }
 
-#status-players {
+#status-list {
 	list-style-position: inside;
 	margin: 1em 0 1em 1.5em;
+	width: 400px;
+	height: 480px;
+	overflow: auto;
+}
+
+#wrapper-status #footer {
+	position: absolute;
+	bottom: 10px;
+	left: 10px;
 }

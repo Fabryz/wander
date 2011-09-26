@@ -12,30 +12,39 @@ html
 	body
 		#wrapper-status
 			h1 Server status
-			dl
-				dt Version
-				dd Wander v#{version}
-				dt Name
-				dd #{serverInfo.name}
-				dt Description
-				dd #{serverInfo.desc}
-				dt IP:port
-				dd #{serverInfo.ip}:#{serverInfo.port}
-				dt Info URL
-				dd: a(href='serverInfo.url') serverInfo.url
-				dt Slots
-				dd
+			#status-info
+				h2 Info
+				dl
+					dt Version
+					dd Wander v#{version}
+					dt Name
+					dd #{serverInfo.name}
+					dt Description
+					dd #{serverInfo.desc}
+					dt IP:port
+					dd #{serverInfo.ip}:#{serverInfo.port}
+					dt Info URL
+					dd: a(href='serverInfo.url') serverInfo.url
+					dt Admin
+					dd #{serverInfo.admin} &lt;#{serverInfo.email}&gt;
+					dt Memory used
+					dd#status-memUsed #{memUsed}
+					dt Uptime
+					dd#status-uptime #{uptime}
+			#status-players
+				h2 Players
+				p
 					span#status-slots#{players.length}
-					/#{maxPlayers}
-					ol#status-players
-						- if (players.length > 0)
-							-players.forEach(function(p) {
-								li #{p.nick} #{p.ping}ms
-							-})
-				dt Admin
-				dd #{serverInfo.admin} &lt;#{serverInfo.email}&gt;
-				dt Memory used
-				dd#status-memUsed #{memUsed}
-				dt Uptime
-				dd#status-uptime #{uptime}
-			p#footer &copy;2011 Fabrizio Codello
+					/#{maxPlayers} +
+					span#status-lurkers#{lurkers}
+					|  lurking this page
+				- if (players.length > 0)
+					ol#status-list
+						-players.forEach(function(p) {
+							li #{p.nick} #{p.ping}ms
+						-})
+			.clear
+			p#footer &copy;2011 Fabrizio Codello - Follow me on 
+				a(href='http://twitter.com/#!/fabryz', title='My Twitter page') Twitter
+				!
+		//include includes/analytics
