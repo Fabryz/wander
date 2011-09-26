@@ -1,25 +1,30 @@
-var Fps = function(game) {
-	this.game = game; 
-	this.fps = 0;
+var Fps = function(game, time) {
+	this.game = game;
+	this.time = time;
+	this.fps = null;
 	this.count = 0;
-	this.timer = 0;
+	this.timer = null;
 	this.lastFps = 0;
 };
 
 Fps.prototype.init = function(handle) {
 	this.fps = document.getElementById(handle);
 	this.game.debug('Fps inited.');
-	//this.timer = setInterval(this.update, 2000);
+	this.startTimer();
 };
 	
 Fps.prototype.update = function() {
 	/*if (this.fps) {
 		this.fps.innerHTML = (this.count / 2) + 'fps';
 	}*/
-	this.lastFps = this.count / 2;
+	this.lastFps = this.count / (this.time / 1000);
 	this.count = 0;
 };
 
-Fps.prototype.initTimer = function() {
-
+Fps.prototype.startTimer = function() {
+	var that = this;
+	this.timer = setTimeout(function() {
+		that.update();
+		that.startTimer();
+	}, this.time); 
 };
