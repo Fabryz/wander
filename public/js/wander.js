@@ -6,7 +6,9 @@
 *
 */
 
-$(document).ready(function() {		
+$(document).ready(function() {
+	var game; //main game handle
+		
 	var arrowUp = 38,
 		arrowDown = 40,
 		arrowLeft = 37,
@@ -156,7 +158,6 @@ $(document).ready(function() {
 			nowMove = (new Date()).getTime();
 			
 			game.fps.init('fps');
-			game.fps.timer = setInterval(function() { game.fps.update(); }, 2000); //FIXME damn you setInterval
 			//game.initTick();
 			
 			chatMsg.attr('disabled', false);
@@ -216,15 +217,13 @@ $(document).ready(function() {
 		}
 	}
 	
-	var game; //main game handle
-	
 	function gameInit() {
 		game = new Game();
 		game.initVars();
 		game.world = new Map(game); //FIXME need to solve this
 		game.vp = new Viewport(game, game.canvasWidth, game.canvasHeight);
 		game.socket = new Socket(game);
-		game.fps = new Fps(game);
+		game.fps = new Fps(game, 2000);
 		game.player = new Player(); //FIXME received server configs? (hardcoded stuff)
 		
 		$(window).resize(resizeCanvas);
@@ -294,16 +293,6 @@ $(document).ready(function() {
 	}
 	*/
 	
-	var lastFps;
-		
-	function calcFps() {
-		var now = (new Date()).getTime();
-		var fps = 1000/(now - lastFps);
-		lastFps = now;
-		
-		return Math.floor(fps);
-	}
-	
 	var nowMove,
 		allowSendEvery = 50; //TODO: tune this, 1/16s
 	
@@ -336,7 +325,7 @@ $(document).ready(function() {
 	}
 	
 	function gameLoop() {
-		game.ctx.clearRect(0, 0, game.canvasWidth, game.canvasHeight);
+		game.world.clearAll();
 		
 		if (game.check.isPlaying) {			
 			sendMovement();
@@ -346,53 +335,13 @@ $(document).ready(function() {
 
 			game.debugStuff();
 			
-			//lastFps = (new Date()).getTime();
 			game.fps.count++;
 			//game.tick_count++;
 
 			setTimeout(gameLoop, 30); //test! - 1000/desired_fps
 		}
 	}
-	
-	/*var efpiesTimeout,
-		efpies = [];
-		
-		//testing two kind of fps calculations
-	
-	function effe() {
-		if (game.check.isPlaying) {
-			efpiesTimeout = setTimeout(function() {
-				var now = (new Date()).getTime();
-				var fps = Math.floor(1000/(now - lastFps));
-				lastFps = now;
-				
-				if (efpies.length < 5) {
-					if (fps != 'Infinity') {
-						efpies.push(fps);
-					}
-				} else {
-					efpies.splice(0, 1);
-				}
-				game.debug(fps);
-				
-				effe();
-			}, 2000);
-		}
-	}
-		
-	function showEfpies() {
-		var avgEfpies = 0;
-		
-		if (efpies.length > 0) {
-			efpies.forEach(function(e) {
-				avgEfpies += e;
-			});
-			avgEfpies = Math.floor(avgEfpies / efpies.length);
-		}
-		
-		return avgEfpies;
-	}*/
-	
+
 	/*
 	* Everything starts here
 	*/
@@ -402,27 +351,6 @@ $(document).ready(function() {
 	/* 
 	* Multiplayer stuff	
 	*/
-	
-	/*function movePlayerSocket(p, dir) {
-		p.vX = 0;
-		p.vY = 0;
-		
-		if (dir == 'l') {
-			p.vX = -speed;
-		}
-		if (dir == 'r') {
-			p.vX = speed;
-		}
-		if (dir == 'u') {
-			p.vY = -speed;
-		}
-		if (dir == 'd') {
-			p.vY = speed;
-		}
-		
-		p.x += p.vX;
-		p.y += p.vY;
-	}*/
 	    
     game.socket.on('connect', function() {
     	if (!game.check.hasQuitted) { //TODO improve hasQuitted usage
@@ -454,7 +382,7 @@ $(document).ready(function() {
 		game.players.forEach(function(p) {
 			if (p.id == data.id) {
 				p.ping = data.ping;
-				if (p.id == game.player.id) {
+				if (game.player.id == data.id) {
 					game.player.ping = data.ping;
 				}
 			}
@@ -487,7 +415,7 @@ $(document).ready(function() {
 			if (p.id == data.id) {
 				p.x = data.x;
 				p.y = data.y;
-				if (p.id == game.player.id) {
+				if (game.player.id == data.id) {
 					game.player.x = data.x;
 					game.player.y = data.y;
 				}
