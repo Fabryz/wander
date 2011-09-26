@@ -1,21 +1,34 @@
 # dev2production todos: package.json version, analytics
 
-update to node v0.4.12 stable
+use hash array instead of scrolling it every time
+503 and tmpplayer stuff
 
-new gosquare code
-jade footer layout for analytics
-put version near title
+fix ChatMsg messing something if being pressed between play/render
+keep a look if clients get disconnected on /status
+^ find out why clients get disconnected after X mins
+put tileToPixel, isplayerOnTile etc on a shared class
+
+clear/redraw single dirty tiles
+client prediction pdf
+jade footer layout for analytics -> push empty then gitignore
+^ put version near title
 modify drawmap for canvas minimap
-preload only NEEDED images
+
+try using socket.io acknowledgements
 make tileset class? <- preload images, add draw tile directly inside Tile class
+^ preload only NEEDED images
 ^ then use tile.draw on drawMap
 know what audio is being played -> stop on disconnect
 
 express cache expiration for img/audio files -> check chrome inspector audits
+^ minify/obfuscate client code, UglifyJS
+^ see nodejs modules page
 use actual HTML5 tags
 audio volume, headphones/speakers
 walking on wood sound?
 special areas sound? inside a house
+try node-validator
+tweak message bandwidth (use 'p' instead of 'player' and EVENT_LOGIN constants instead of strings)
 
 make loading screen with progress bar
 create a decent audio class
@@ -61,9 +74,6 @@ dirty tiles, create draw single tile function (see JSTE)
 find out why it doesn't start without firebug opened
 improve movement animation/refresh rate
 check debugcanvas data refresh
-
-?fix player spawn before Play
-memory leaks
 add screenshot button
 
 fix false start attempt1
@@ -83,11 +93,7 @@ check for doublenick
 player registration (via Twitter auth or use internal db)
 ?strict socket movement only for who's not the player
 use NowJS / BiSON / Motion.js (client prediction)
-minify/obfuscate client code, UglifyJS
 
 +browser compatibility Chrome, FF, IE... (add reset.css)
-?move only on mod TILE_WIDTH, animation
-optimize drawmap: render only viewable
-*collision with walls
 check clear canvas on player
 dirty tiles to re-render
