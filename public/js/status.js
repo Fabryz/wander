@@ -1,9 +1,10 @@
 $(document).ready(function() {	
-	var socket = new Socket(),
+	var socket = new Socket(null, 'status'),
 		interval;
 	
 	var statusSlots = $('#status-slots'),
-		statusPlayers = $('#status-players'),
+		statusLurkers = $('#status-lurkers'),
+		statusPlayers = $('#status-list'),
 		statusMemUsed = $('#status-memUsed'),
 		statusUptime = $('#status-uptime');
 		    
@@ -19,6 +20,7 @@ $(document).ready(function() {
 	
 	socket.on('status', function(data) {
 		statusSlots.html(data.players.length);
+		statusLurkers.html(data.lurkers);
 
 		if (data.players.length > 0) {
 			statusPlayers.html('');
