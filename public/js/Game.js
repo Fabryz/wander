@@ -103,6 +103,10 @@ Game.prototype.initCheck = function() {
 };
 
 Game.prototype.isReady = function() {
-	this.debug('Check: '+ this.check.isConnected +' '+ this.check.hasConfig +' '+ this.check.hasId +' '+ this.check.hasNick +' '+ this.check.hasPlayerList);
+	this.debug('Check: '+ this.check.isConnected
+			+' '+ this.check.hasConfig
+			+' '+ this.check.hasId
+			+' '+ this.check.hasNick
+			+' '+ this.check.hasPlayerList);
 	return this.check.isConnected && this.check.hasConfig && this.check.hasId && this.check.hasNick && this.check.hasPlayerList;
 };
