@@ -154,7 +154,7 @@ p {
 }
 
 #gameCanvas {
-	background: url('../img/grass.png') 0 0 repeat;
+	background: url('../img/tiles/grass.png') 0 0 repeat;
 	display: block;
 	position: absolute;
 	top: 0;
