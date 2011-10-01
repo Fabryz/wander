@@ -8,10 +8,5 @@ var Tile = function(id, name, src, walkable, extra) {
 	this.extra = extra || undefined;
 };
 
-Tile.prototype.preLoad = function () {  //preload images client side
-	this.image = new Image();
-	this.image.src = this.src;
-};
-
 exports.Tile = Tile;
 })(typeof global === "undefined" ? window : exports);
