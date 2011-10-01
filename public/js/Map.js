@@ -73,15 +73,15 @@ Map.prototype.loadMap = function() {  //shared between client/server
 			 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 			 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 			 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-			 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 27, 28, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-			 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 29, 30, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-			 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 31, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-			 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 33, 34, 0, 27, 28, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-			 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 29, 30, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-			 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 27, 28, 0, 0, 31, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-			 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 29, 30, 0, 0, 33, 34, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-			 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 31, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-			 [0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 33, 34, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0],
+			 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+			 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+			 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+			 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 44, 45, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+			 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+			 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+			 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 44, 45, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+			 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+			 [0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 44, 45, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0],
 			 [0, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 0],
 			 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]];
 
@@ -96,12 +96,9 @@ Map.prototype.clearTile = function(x, y) {
 	this.game.ctx.clearRect(x * this.game.serverConfig.tileWidth, y * this.game.serverConfig.tileHeight, this.game.serverConfig.tileWidth, this.game.serverConfig.tileHeight);
 };
 
-Map.prototype.drawTile = function(tileId, tileX, tileY) {
-	var width = this.game.serverConfig.tileWidth,
-		height = this.game.serverConfig.tileHeight;
-			    		
+Map.prototype.drawTile = function(tileId, tileX, tileY, tileWidth, tileHeight) {	    		
 	try {
-    	 this.game.ctx.drawImage(this.ts.images[tileId], tileX, tileY, width, height);
+    	 this.game.ctx.drawImage(this.ts.images[tileId], tileX, tileY, tileWidth, tileHeight);
 
 		//> DEBUG
 		/*this.game.ctx.save();					
@@ -119,7 +116,7 @@ Map.prototype.drawTile = function(tileId, tileX, tileY) {
 		//< DEBUG
     } catch(err) {
         this.game.debug('Error while drawing tile ['+ tileX +']['+ tileY +']: '+ err);
-        console.log(err);
+        console.log('Error while drawing tile ['+ tileX +']['+ tileY +']: '+ err);
     	this.game.check.isPlaying = false; //force the game to stop
     }
 };
@@ -135,38 +132,30 @@ Map.prototype.drawMap = function() {
 	        	var coords = this.mapToVp(0, 0),
 	        		drawX = coords.x + x * this.game.serverConfig.tileWidth,
 	        		drawY = coords.y + y * this.game.serverConfig.tileHeight,
-	        		isInside = this.game.vp.isInside(drawX, drawY);
-	        		/*isUborder = this.game.vp.isInside(drawX, drawY + 48),
-	        		isDborder = this.game.vp.isInside(drawX, drawY - 48);*/
+	        		isInside = this.game.vp.isInside(drawX, drawY),
+	        		width = this.game.serverConfig.tileWidth,
+					height = this.game.serverConfig.tileHeight;
 	        	
-	        	// ^ isInside: depending on window width/height the first row/col could be cut
-	        	// away from rendering, so render one more row/col for safety
-	        	// 1 left up 2 down right
-	        	
-	        	//render only tiles inside current viewport + 1x border all around
+	        	// render only tiles inside current viewport + border all around
+	        	// depending on window width/height the first row/col could be cut
+	        	// away from rendering, so render (at least) 1 more row/col for safety
 	        	if (isInside) {
 					var tileId = this.map[z][y][x];
 					
 					if (tileId != 0) { //if not blank
-					
-						/*var tile = this.ts.tileset[tileId];
+						var tile = this.ts.tileset[tileId];
 						
-
-
-						if (tile.extras != undefined) { //TODO reassign also X vars
-							console.log('undecoso');
-							if (tile.extras.multi != undefined ) {
-								console.log('HURPDURP');
-					    		drawY = drawY - 48;
-					    		height = 96;
+						//render tiles with height > default tile height
+						if (typeof tile.extra !== 'undefined') { //TODO reassign also X vars //edit: what?
+							if (typeof tile.extra.multi !== 'undefined') {
+								var tileHeight =  this.ts.images[tileId].height;
+								
+					    		drawY = drawY - (tileHeight - height);
+					    		height = tileHeight; 
 					    	}
 					    }
-					    
-					    console.log(tile);
-						this.game.check.isPlaying = false;*/
-					
-					
-					    this.drawTile(tileId, drawX, drawY);
+
+					    this.drawTile(tileId, drawX, drawY, width, height);
 			        }
 	            }
 	        }
