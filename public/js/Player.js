@@ -8,7 +8,7 @@ var Player = function(id, x, y) {
 	this.vX = 0;
 	this.vY = 0;
 	
-	this.alive = true;
+	this.isAlive = true;
 	this.status = 'normal';
 	this.isChatting = false;
 	this.lastMove = Date.now();
@@ -16,7 +16,7 @@ var Player = function(id, x, y) {
 	this.inventory = [];
 	this.ping = 0;
 	
-	this.avatar = './img/player.png';	
+	this.avatar = './img/players/player.png';	
 	this.width = 48;
 	this.height = 48;
 	this.halfWidth = this.width/2;
