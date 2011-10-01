@@ -1,7 +1,11 @@
 # dev2production todos: package.json version, analytics
 
 use hash array instead of scrolling it every time
-503 and tmpplayer stuff
+about tile.extra width: like for trees, need to make the adjacent tile not walkable
+^check if right side is out of map?
+^render left/right side independently? <- so every sprite has arbitrary height, but should fit
+^inside default tile width
+remove multi: true and just check if tile image height > default tile height?
 
 fix ChatMsg messing something if being pressed between play/render
 keep a look if clients get disconnected on /status
