@@ -240,16 +240,8 @@ function hasCollisions(player, nextX, nextY, dir) {
 	return true;
 }
 
-function getTileFromId(id) {
-	var length = tileset.length;
-	for(var i = 0; i < length; i++) {
-		if (tileset[i].id == id) {
-			//console.log(tileset[i]);
-			return tileset[i];
-		}
-	}
-	
-	return false;
+function getTileFromId(id) {	
+	return tileset[id];
 }
 
 //coords: x, y layer: z
@@ -264,10 +256,11 @@ function sendGameData(client, data) { //TODO: Do bounds and anticheat checks
 		oldX,
 		oldY;
 
-	players.forEach(function(p) {
-		if (p.id == data.id) {
-			oldX = p.x;
-			oldY = p.y;
+	var length = players.length;
+	for(var i = 0; i < length; i++) {
+		if (players[i].id == data.id) {
+			oldX = players[i].x;
+			oldY = players[i].y;
 			
 			if (data.dir == 'l') {
 				nextX = oldX - serverConfig.speed;
@@ -283,7 +276,7 @@ function sendGameData(client, data) { //TODO: Do bounds and anticheat checks
 				nextY = oldY + serverConfig.speed;
 			}
 			
-			if (!hasCollisions(p, nextX, nextY, data.dir)) { //if no collisions, allow next movement
+			if (!hasCollisions(players[i], nextX, nextY, data.dir)) { //if no collisions, allow next movement
 				//TODO make external control function
 								
 				var tileNo = 43,
@@ -298,11 +291,12 @@ function sendGameData(client, data) { //TODO: Do bounds and anticheat checks
 				nextY = oldY;
 			}
 
-			p.x = nextX;
-			p.y = nextY;
-			game.emit('play', { id: p.id, x: nextX, y: nextY });
+			players[i].x = nextX;
+			players[i].y = nextY;
+			game.emit('play', { id: players[i].id, x: nextX, y: nextY });
+			break;
 		}
-	});	
+	}	
 }
 
 function getPlayerFromId(id) {
@@ -384,12 +378,14 @@ var game = io
 		
 		var oldNick;
 		
-		players.forEach(function(p) {
-			if (p.id == data.id) {
-				oldNick = p.nick;
-				p.nick = data.nick;
+		var length = players.length;
+		for(var i = 0; i < length; i++) {
+			if (players[i].id == data.id) {
+				oldNick = players[i].nick;
+				players[i].nick = data.nick;
+				break;
 			}
-		});
+		}
 
 		game.emit('nickChange', { id: data.id, nick: data.nick });
 		client.emit('nickRes', { res: true });	
@@ -403,11 +399,13 @@ var game = io
 	client.on('pong', function(data) {		
 		pings[client.id] = { ping: (Date.now() - pings[client.id].time) };
 
-		players.forEach(function(p) {
-			if (p.id == client.id) {
-				p.ping = pings[client.id].ping;
+		var length = players.length;
+		for(var i = 0; i < length; i++) {
+			if (players[i].id == client.id) {
+				players[i].ping = pings[client.id].ping;
+				break;
 			}
-		});
+		}
 
 		//console.log('Pong! '+ client.id +' '+ pings[client.id].ping +'ms'); log filler
 
@@ -464,17 +462,17 @@ var game = io
 	});
 
 	client.on('disconnect', function() {
-		var quitter,
-			i = 0;
+		var quitter;
 		
-		players.forEach(function(p) {
-			if (p.id == client.id) {
-				quitter = new Player(p.id);
-				quitter = p;
+		var length = players.length;
+		for(var i = 0; i < length; i++) {
+			if (players[i].id == client.id) {
+				quitter = new Player(players[i].id);
+				quitter = players[i];
 				players.splice(i, 1);
+				break;
 			}
-			i++;
-		});
+		}
 		client.broadcast.emit('quit', { id: client.id });
 		totPlayers--;
 		console.log('- Player '+ quitter.nick +' ('+ client.id +') disconnected, total players: '+ totPlayers);
@@ -506,15 +504,14 @@ var status = io
 // ping is intended as server -> client -> server time	
 var pingEvery = 5000;
 	
-function pingClients() {	
-	if (players.length > 0) {
-		players.forEach(function(p) {
-			if (p.id) {
-				pings[p.id] = { time: Date.now(), ping: 0 };
-				//console.log('Ping? '+ p.id); log filler	
-				game.sockets[p.id].emit('ping');
-			}
-		});
+function pingClients() {
+	var length = players.length;
+	for(var i = 0; i < length; i++) {
+		if (players[i].id) {
+			pings[players[i].id] = { time: Date.now(), ping: 0 };
+			//console.log('Ping? '+ players[i].id); log filler	
+			game.sockets[players[i].id].emit('ping');
+		}
 	}
 
 	setTimeout(pingClients, pingEvery);
@@ -525,12 +522,11 @@ pingClients();
 /*function showPing() {
 	var avgPing = 0;
 	
-	if (pings.length > 0) {
-		pings.forEach(function(p) {
-			avgPing += p;
-		});
-		avgPing = Math.floor(avgPing / pings.length);
+	var length = pings.length;
+	for(var i = 0; i < length; i++) {
+		avgPing += pings[i];
 	}
+	avgPing = Math.floor(avgPing / pings.length);
 	
 	return avgPing;
 }*/
