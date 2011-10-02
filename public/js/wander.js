@@ -225,6 +225,14 @@ $(document).ready(function() {
 		}
 	}
 	
+	function updatePlayerInfo() {
+		$("#playerInfo #pi-nick").html(game.player.nick);
+		$("#playerInfo #pi-HP").html(game.player.HP +'%');
+		$("#playerInfo #pi-status").html(game.player.status);
+		$("#playerInfo #pi-position").html(Math.floor(game.player.x / game.serverConfig.tileWidth) +':'+ Math.floor(game.player.y / game.serverConfig.tileHeight));
+		$("#playerInfo #pi-ping").html(game.player.ping +'ms');
+	}
+	
 	function gameInit() {
 		game = new Game();
 		game.initVars();
@@ -278,6 +286,10 @@ $(document).ready(function() {
 		
 		cmdInfo.click(function() {
 			$("#playerInfo").toggle();
+			
+			if ($("#playerInfo").is(":visible")) {
+				updatePlayerInfo();				
+			}
 		});
 		
 		cmdInv.click(function() {
@@ -350,11 +362,18 @@ $(document).ready(function() {
 			nowMove = Date.now();
 			if ((nowMove - game.player.lastMove) > allowSendEvery) { 
 				//game.debug('5. '+ (nowMove - game.player.lastMove));
+				
 				game.socket.emit('play', { id: game.player.id, dir: dir });
 				
 				game.player.lastMove = Date.now();
 			}
 			//game.debug('4. '+nowMove+'-'+game.player.lastMove+'='+ (nowMove - game.player.lastMove) +'('+ allowSendEvery +')');
+		}
+	}
+	
+	function refreshGUI() { //TODO update opened windows, mouse hovered obj...
+		if ($("#playerInfo").is(":visible")) {
+			updatePlayerInfo();				
 		}
 	}
 	
@@ -364,9 +383,10 @@ $(document).ready(function() {
 		if (game.check.isPlaying) {			
 			sendMovement();
 
-			game.vp.centerOn(game.player.x, game.player.y);
+			game.vp.centerOn(game.player.x + 24, game.player.y + 24); //FIXME manually centering
 			game.world.drawAll();
 
+			refreshGUI();
 			game.debugStuff();
 			
 			game.fps.count++;
