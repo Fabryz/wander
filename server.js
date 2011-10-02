@@ -222,7 +222,7 @@ function hasCollisions(player, nextX, nextY, dir) {
 	//console.log(xTile +':'+ yTile +' > '+ xTileNext +':'+ yTileNext);
 
 	if (isInsideMap(nextX, nextY)) {
-		var tileId = map[1][yTileNext][xTileNext], //FIXME create an actual collision map
+		var tileId = map[2][yTileNext][xTileNext], //FIXME create an actual collision map
 			tile = new Tile(),
 			tile = tileset[tileId];
 		
