@@ -44,6 +44,7 @@ Tileset.prototype.loadTileset = function() {
 	ts[43] = new Tile(43, 'Teleport', 'teleport.png', true, { tx: 15, ty: 9 });
 	ts[44] = new Tile(44, 'Tree 1 L', 'tree1_left.png', false, { multi: true });
 	ts[45] = new Tile(45, 'Tree 1 R', 'tree1_right.png', false, { multi: true });
+	ts[46] = new Tile(46, 'Scroll', 'scroll.png', true, { pickupable: true });
 	
 	if (this.game) {
 		this.game.debug('Tileset loaded.');
