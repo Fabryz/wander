@@ -45,6 +45,9 @@ Tileset.prototype.loadTileset = function() {
 	ts[44] = new Tile(44, 'Tree 1 L', 'tree1_left.png', false, { multi: true });
 	ts[45] = new Tile(45, 'Tree 1 R', 'tree1_right.png', false, { multi: true });
 	ts[46] = new Tile(46, 'Scroll', 'scroll.png', true, { pickupable: true });
+	ts[47] = new Tile(47, 'Chicken dish', 'chicken_dish.png', true, { pickupable: true });
+	ts[48] = new Tile(48, 'Book', 'book_closed.png', true, { pickupable: true });
+	ts[49] = new Tile(49, 'Money', 'money.png', true, { pickupable: true });
 	
 	if (this.game) {
 		this.game.debug('Tileset loaded.');
