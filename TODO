@@ -1,10 +1,18 @@
 # dev2production todos: package.json version, analytics
 
+Mess with JQuery UI, remove unused stuff to save space
+resize GUI
+make inventory stuff, draggable
+rerender only tiles with players
+fix gameUI/GUI css
+
 use hash array instead of scrolling it every time
 watch unused cells in tileset array
 with independent left/right multitile sprites, tree tops will pop from nowhere
 ^ increase safety render range? increase only south?
 remove multi: true and just check if tile image height > default tile height?
+make multitiles go also south?
+improve Tile with title, description
 
 fix ChatMsg messing something if being pressed between play/render
 keep a look if clients get disconnected on /status
