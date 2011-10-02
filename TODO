@@ -5,6 +5,9 @@ resize GUI
 make inventory stuff, draggable
 rerender only tiles with players
 fix gameUI/GUI css
+keep a look on refreshGUI on gameloop
+add Help, Config, Server info icons on GUI
+open playerinfo/inventory with key
 
 use hash array instead of scrolling it every time
 watch unused cells in tileset array
