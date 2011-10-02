@@ -22,13 +22,15 @@ $(document).ready(function() {
 		keyD = 68,
 		keyBackslash = 220;
 		
-	var gameUI = $("#gameUI"),
+	var GUI = $("#GUI"),
 		gameIntro = $("#gameIntro"),
 		gamePlayersList = $("#gamePlayersList"),
 		playerNick = $("#playerNick"),
 		playButton = $("#play"),
 		chatLog = $("#chatLog"),
-		chatMsg = $("#chatMsg");
+		chatMsg = $("#chatMsg"),
+		cmdInfo = $("#cmd-info"),
+		cmdInv = $("#cmd-inv");
 		
 	var json = JSON.stringify;
 			
@@ -73,6 +75,10 @@ $(document).ready(function() {
 			game.debug('Ready! Starting...');
 			game.check.isPlaying = true;
 			//game.canvas.focus();
+			
+			$("#bottomBar").fadeIn('slow');
+			chatMsg.fadeIn('slow');
+			chatLog.fadeIn('slow');
 							
 			$(window).keydown(function(e) { //keypress? FIXME switch?
 				//e.preventDefault();
@@ -192,7 +198,9 @@ $(document).ready(function() {
 		
     	game.ctx.font = "15px Monospace"; //workaround FIXME
     	
-    	chatMsg.width((roughWidth - game.serverConfig.tileWidth) - (chatMsg.outerWidth() - chatMsg.width())); // - (2 * css border + 2 * padding)
+    	GUI.height($(window).height() - $("#header").outerHeight() - chatMsg.outerHeight() - 3); // - header border
+    	chatMsg.width($(window).width() - (chatMsg.outerWidth() - chatMsg.width())); // - (2 * css border + 2 * padding)
+    	$("#bottomBar").width($(window).width() - chatLog.outerWidth());
 	}
 	
 	function sendNickname() {
@@ -250,6 +258,32 @@ $(document).ready(function() {
 			game.player.isChatting = false;
 		});	
 		
+		$("#inventory").hide();
+		$("#playerInfo").hide();
+		$("#bottomBar").hide();
+		chatMsg.hide();
+		chatLog.hide();
+		
+		$("#inventory").draggable({ handle: "h3", containment: "#GUI", scroll: false, stack: "#GUI div" });
+		$("#playerInfo").draggable({ handle: "h3", containment: "#GUI", scroll: false, stack: "#GUI div" });
+		/*$("#commands").selectable({
+			selected: function(event, ui) {
+				$(ui.selected).siblings().removeClass("ui-selected");
+			}
+		});*/
+		
+		for(var i = 0; i < 16; i++) { //TODO grab max inventory slots from server?
+			$("#inventory #inv").append('<li id="inv-slot-'+ i +'" class="inv-empty"></li>');
+		}
+		
+		cmdInfo.click(function() {
+			$("#playerInfo").toggle();
+		});
+		
+		cmdInv.click(function() {
+			$("#inventory").toggle();
+		});
+		
 		game.debug('Game inited.');
 	}
 	
@@ -294,7 +328,7 @@ $(document).ready(function() {
 	*/
 	
 	var nowMove,
-		allowSendEvery = 50; //TODO: tune this, 1/16s
+		allowSendEvery = 75; //TODO: tune this, 1/16s
 	
 	function sendMovement() {	
 		if (game.player.hasMoved()) { //player moved. Use player.sendupdate?
