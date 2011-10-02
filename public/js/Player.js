@@ -12,7 +12,7 @@ var Player = function(id, x, y) {
 	this.status = 'normal';
 	this.isChatting = false;
 	this.lastMove = Date.now();
-	this.hp = 100;
+	this.HP = 100;
 	this.inventory = [];
 	this.ping = 0;
 	
@@ -36,16 +36,18 @@ Player.prototype.toString = function() { //FIXME fix 48
 Player.prototype.drawNick = function(game) {  //FIXME improve this
 	var coords = game.world.mapToVp(this.x, this.y);
 	
-	game.ctx.save();
+	if (game.vp.isInside(coords.x, coords.y)) {
+		game.ctx.save();
 	
-	game.ctx.fillStyle = 'rgb(0, 0, 0)';
-	game.ctx.fillText(this.nick, coords.x + this.halfWidth - (this.nick.length * 8 / 2), coords.y - 10 - 1);
-	game.ctx.fillText(this.nick, coords.x + this.halfWidth - (this.nick.length * 8 / 2) - 1 , coords.y - 10 + 1);
-	game.ctx.fillText(this.nick, coords.x + this.halfWidth - (this.nick.length * 8 / 2) + 1 , coords.y - 10 + 1);
-	game.ctx.fillStyle = 'rgb(254, 254, 254)';
-	game.ctx.fillText(this.nick, coords.x + this.halfWidth - (this.nick.length * 8 / 2) , coords.y - 10);
+		game.ctx.fillStyle = 'rgb(0, 0, 0)';
+		game.ctx.fillText(this.nick, coords.x + this.halfWidth - (this.nick.length * 4), coords.y - 10 - 1); // * 8 / 2
+		game.ctx.fillText(this.nick, coords.x + this.halfWidth - (this.nick.length * 4) - 1 , coords.y - 10 + 1);
+		game.ctx.fillText(this.nick, coords.x + this.halfWidth - (this.nick.length * 4) + 1 , coords.y - 10 + 1);
+		game.ctx.fillStyle = 'rgb(254, 254, 254)';
+		game.ctx.fillText(this.nick, coords.x + this.halfWidth - (this.nick.length * 4) , coords.y - 10);
 
-	game.ctx.restore();
+		game.ctx.restore();
+	}
 }
 
 Player.prototype.draw = function(game) {
