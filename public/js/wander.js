@@ -141,10 +141,14 @@ $(document).ready(function() {
 					game.debugCanvas.toggle();
 				}
 				if (keyCode == keyC) {
-					togglePlayerStatusWindow();
+					if (!game.player.isChatting) {
+						togglePlayerStatusWindow();
+					}					
 				}
 				if (keyCode == keyI) {
-					toggleInventoryWindow();
+					if (!game.player.isChatting) {
+						toggleInventoryWindow();
+					}
 				}
 				if (keyCode == keyEnter) {  //on keyEnter if chatMsg has focus -> blur, if not -> give focus
 					if (game.check.isPlaying) {
