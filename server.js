@@ -7,14 +7,16 @@ var http = require('http'),
     Player = require('./public/js/Player.js').Player,
     loadMap = require('./public/js/Map.js').loadMap,
     Tileset = require('./public/js/Tileset.js').loadTileset,
-    Tile = require('./public/js/Tile.js').Tile;
+    Tile = require('./public/js/Tile.js').Tile,
+    Protocol = require('./public/js/Protocol.js').Protocol;
     
 /*
 * Game configs
 */
 
 var tileset = new Tileset(),
-	map = loadMap();
+	map = loadMap(),
+	proto = new Protocol();
     
 var serverInfo = {
 	name: "Illusory One",
@@ -115,12 +117,11 @@ console.log('Server started at '+ serverInfo.ip +':'+ serverInfo.port +' with No
 */
 
 function sendServerInfo(client) {
-	client.emit('info', { msg: 'Welcome to "'+ serverInfo.name +'" server!' });
-	client.emit('info', { msg: 'There are '+ totPlayers +' players online.' });
+	client.emit(proto.MSG_SERVERINFO, { serverName: serverInfo.name, totPlayers: totPlayers });
 }
 
 function sendServerConfig(client) {
-	client.emit('config', { config: serverConfig });
+	client.emit(proto.MSG_SERVERCONFIG, { config: serverConfig });
 	console.log('+ Sent server config to '+ client.id);
 }
 	
@@ -132,15 +133,15 @@ function newPlayer(client) {
 	players.push(p);
 	
 	client.set('id', client.id, function () {
-    	client.emit('join', { player: p });
+    	client.emit(proto.MSG_JOIN, { player: p });
     });	
-	client.broadcast.emit('newPlayer', { player: p }); //send event to all BUT not the current client
+	client.broadcast.emit(proto.MSG_NEWPLAYER, { player: p }); //send event to all BUT not the current client
 	
 	console.log('+ New player: '+ p.nick);
 }
 
 function sendPlayerList(client) {
-	client.emit('list', { list: players });
+	client.emit(proto.MSG_PLAYERLIST, { list: players });
 	console.log('* Sent player list to '+ client.id);
 }
 
@@ -293,7 +294,7 @@ function sendGameData(client, data) { //TODO: Do bounds and anticheat checks
 
 			players[i].x = nextX;
 			players[i].y = nextY;
-			game.emit('play', { id: players[i].id, x: nextX, y: nextY });
+			game.emit(proto.MSG_PLAY, { id: players[i].id, x: nextX, y: nextY });
 			break;
 		}
 	}	
@@ -373,7 +374,7 @@ var game = io
 
 	});
 
-	client.on('setNick', function(data) {	
+	client.on(proto.MSG_NICKSET, function(data) {	
 		//TODO: check doublenick FIXME check stuff directly on nickchange and remove nickres
 		
 		var oldNick;
@@ -387,16 +388,16 @@ var game = io
 			}
 		}
 
-		game.emit('nickChange', { id: data.id, nick: data.nick });
-		client.emit('nickRes', { res: true });	
+		game.emit(proto.MSG_NICKCHANGE, { id: data.id, nick: data.nick });
+		client.emit(proto.MSG_NICKRESPONSE, { res: true });	
 		console.log('* '+ oldNick +' ('+ data.id +') changed his nick to '+ data.nick);
 	});
 	
-	client.on('play', function(data) {	
+	client.on(proto.MSG_PLAY, function(data) {	
 		sendGameData(client, data);
 	});
 	
-	client.on('pong', function(data) {		
+	client.on(proto.MSG_PONG, function(data) {		
 		pings[client.id] = { ping: (Date.now() - pings[client.id].time) };
 
 		var length = players.length;
@@ -410,16 +411,16 @@ var game = io
 		//console.log('Pong! '+ client.id +' '+ pings[client.id].ping +'ms'); log filler
 
 		//broadcast confirmed player ping
-		game.emit('pingupdate', { id: client.id, ping: pings[client.id].ping });
+		game.emit(proto.MSG_PINGUPDATE, { id: client.id, ping: pings[client.id].ping });
 	});
 	
-	client.on('chatMsg', function(data) {		
+	client.on(proto.MSG_CHATMSG, function(data) {		
 		//console.log(data);
 
 		var action = data.msg.split(" ");
 		
 		if (action[0].substring(0, 1) != '/') { //normal chat
-			game.emit('chatMsg', { id: data.id, msg: data.msg });
+			game.emit(proto.MSG_CHATMSG, { id: data.id, msg: data.msg });
 		} else { // Action messages: /command
 			switch (action[0]) {
 				case '/nick':
@@ -436,26 +437,26 @@ var game = io
 									}
 								}
 					
-								game.emit('nickChange', { id: data.id, nick: newNick });
+								game.emit(proto.MSG_NICKCHANGE, { id: data.id, nick: newNick });
 								console.log('* '+ oldNick +' ('+ data.id +') changed his nick to '+ newNick);
 							} else {
-								client.emit('chatAction', { msg: 'That nick is already being used.' });
+								client.emit(proto.MSG_CHATACTION, { msg: 'That nick is already being used.' });
 							}
 						} else {
-							client.emit('chatAction', { msg: 'You must provide a new nick.' });
+							client.emit(proto.MSG_CHATACTION, { msg: 'You must provide a new nick.' });
 						}
 					break;
 				case '/uptime':
-						client.emit('chatAction', { msg: 'This server has been up for: '+ getUptime() +'.' });
+						client.emit(proto.MSG_CHATACTION, { msg: 'This server has been up for: '+ getUptime() +'.' });
 					break;
 				case '/help':
-						client.emit('chatAction', { msg: 'Wander help section:' });
-						client.emit('chatAction', { msg: 'Use "/nick newnick" to change your nickname to newnick.' });
-						client.emit('chatAction', { msg: 'Use "/uptime" to see the server uptime.' });
+						client.emit(proto.MSG_CHATACTION, { msg: 'Wander help section:' });
+						client.emit(proto.MSG_CHATACTION, { msg: 'Use "/nick newnick" to change your nickname to newnick.' });
+						client.emit(proto.MSG_CHATACTION, { msg: 'Use "/uptime" to see the server uptime.' });
 					break;
 			
 				default:
-					client.emit('chatAction', { msg: 'Command not available.' });
+					client.emit(proto.MSG_CHATACTION, { msg: 'Command not available.' });
 				break;
 			}
 		}
@@ -473,7 +474,7 @@ var game = io
 				break;
 			}
 		}
-		client.broadcast.emit('quit', { id: client.id });
+		client.broadcast.emit(proto.MSG_QUIT, { id: client.id });
 		totPlayers--;
 		console.log('- Player '+ quitter.nick +' ('+ client.id +') disconnected, total players: '+ totPlayers);
 	});
@@ -489,11 +490,11 @@ var status = io
 		statusLurkers--;
 	});
 
-	client.on('status', function(data) {		
+	client.on(proto.MSG_SERVERSTATUS, function(data) {		
 		var memUsed = getMemUsed(),
 			uptime = getUptime();	
 	
-		client.emit('status', { players: players, memUsed: getMemUsed(), uptime: getUptime(), lurkers: statusLurkers });
+		client.emit(proto.MSG_SERVERSTATUS, { players: players, memUsed: getMemUsed(), uptime: getUptime(), lurkers: statusLurkers });
 	});
 });
 
@@ -510,7 +511,7 @@ function pingClients() {
 		if (players[i].id) {
 			pings[players[i].id] = { time: Date.now(), ping: 0 };
 			//console.log('Ping? '+ players[i].id); log filler	
-			game.sockets[players[i].id].emit('ping');
+			game.sockets[players[i].id].emit(proto.MSG_PING);
 		}
 	}
 

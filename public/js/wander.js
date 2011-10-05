@@ -156,7 +156,7 @@ $(document).ready(function() {
 											var msg = chatMsg.val();
 											if (msg != '') {
 												chatMsg.val('');
-												game.socket.emit('chatMsg', { id: game.player.id, msg: msg });
+												game.socket.emit(game.proto.MSG_CHATMSG, { id: game.player.id, msg: msg });
 											}
 										}
 									});
@@ -216,7 +216,7 @@ $(document).ready(function() {
 	
 			if (!game.check.hasNick) { //TODO: keep gameUI form open till nick is ok
 				game.debug('Sending nickname');
-				game.socket.emit('setNick', { id: game.player.id, nick: game.player.nick });
+				game.socket.emit(game.proto.MSG_NICKSET, { id: game.player.id, nick: game.player.nick });
 			}
 			startGame(); //start the game only if connected
 		} else {
@@ -238,6 +238,7 @@ $(document).ready(function() {
 		game.initVars();
 		game.world = new Map(game); //FIXME need to solve this
 		game.vp = new Viewport(game, game.canvasWidth, game.canvasHeight);
+		game.proto = new Protocol();
 		game.socket = new Socket(game);
 		game.fps = new Fps(game, 2000);
 		game.player = new Player(); //FIXME received server configs? (hardcoded stuff)
@@ -363,7 +364,7 @@ $(document).ready(function() {
 			if ((nowMove - game.player.lastMove) > allowSendEvery) { 
 				//game.debug('5. '+ (nowMove - game.player.lastMove));
 				
-				game.socket.emit('play', { id: game.player.id, dir: dir });
+				game.socket.emit(game.proto.MSG_PLAY, { id: game.player.id, dir: dir });
 				
 				game.player.lastMove = Date.now();
 			}
@@ -427,12 +428,12 @@ $(document).ready(function() {
 		game.chatMessage('* You have been disconnected from the server.');	
 	});
 	
-	game.socket.on('ping', function(data) {
-		game.socket.emit('pong', { time: Date.now() });
+	game.socket.on(game.proto.MSG_PING, function(data) {
+		game.socket.emit(game.proto.MSG_PONG, { time: Date.now() });
 		//game.debug('Ping? Pong!');
 	});
 	
-	game.socket.on('pingupdate', function(data) {
+	game.socket.on(game.proto.MSG_PINGUPDATE, function(data) {
 		game.players.forEach(function(p) {
 			if (p.id == data.id) {
 				p.ping = data.ping;
@@ -443,12 +444,13 @@ $(document).ready(function() {
 		});
 	});
 	
-	game.socket.on('info', function(data) {
-		game.debug(data.msg);
-		game.chatMessage('<strong># '+ data.msg +'</strong>');	
+	game.socket.on(game.proto.MSG_SERVERINFO, function(data) {
+		game.debug('Joined "'+ data.serverName +'" ('+ data.totPlayers +' players)');
+		game.chatMessage('<strong># Welcome to "'+ data.serverName +'" server!</strong>');
+		game.chatMessage('<strong># There are '+ data.totPlayers +' players online.</strong>');
 	});
 	
-	game.socket.on('config', function(data) {						
+	game.socket.on(game.proto.MSG_SERVERCONFIG, function(data) {						
 		game.serverConfig.maxPlayers = data.config.maxPlayers;
 		game.serverConfig.speed = data.config.speed;
 		game.serverConfig.spawnX = data.config.spawnX;
@@ -464,7 +466,7 @@ $(document).ready(function() {
 		game.check.hasConfig = true;	
 	});
 	
-	game.socket.on('play', function(data) {
+	game.socket.on(game.proto.MSG_PLAY, function(data) {
 		game.players.forEach(function(p) {
 			if (p.id == data.id) {
 				p.x = data.x;
@@ -478,7 +480,7 @@ $(document).ready(function() {
 		});
 	});
 	
-	game.socket.on('join', function(data) {						
+	game.socket.on(game.proto.MSG_JOIN, function(data) {						
 		game.player.id = data.player.id;
 		game.player.nick = data.player.nick;
 		game.player.x = data.player.x;
@@ -489,7 +491,7 @@ $(document).ready(function() {
 		game.debug('You have joined the server. ');
 	});
 	
-	game.socket.on('quit', function(data) {
+	game.socket.on(game.proto.MSG_QUIT, function(data) {
 		var quitter,
 			i = 0;
 	
@@ -506,7 +508,7 @@ $(document).ready(function() {
 		game.chatMessage('< '+ quitter.nick +' has left the server.');
 	});
 	
-	game.socket.on('nickRes', function(data) {		
+	game.socket.on(game.proto.MSG_NICKRESPONSE, function(data) {		
 		if (data.res) {
 			game.check.hasNick = true;
 			game.debug('Nick confirmed.');
@@ -516,7 +518,7 @@ $(document).ready(function() {
 		}
 	});
 	
-	game.socket.on('nickChange', function(data) {
+	game.socket.on(game.proto.MSG_NICKCHANGE, function(data) {
 		var oldNick = '';
 						
 		game.players.forEach(function(p) {
@@ -532,7 +534,7 @@ $(document).ready(function() {
 		game.chatMessage('* '+ oldNick +' changed nick to '+ data.nick +'.');	
 	});
 	
-	game.socket.on('newPlayer', function(data) {	
+	game.socket.on(game.proto.MSG_NEWPLAYER, function(data) {	
 		var newPlayer = new Player();
 		newPlayer.id = data.player.id;
 		newPlayer.nick = data.player.nick;
@@ -546,7 +548,7 @@ $(document).ready(function() {
 		$("#sfx-newPlayer").get(0).play();
 	});
 	
-	game.socket.on('list', function(data) {				
+	game.socket.on(game.proto.MSG_PLAYERLIST, function(data) {				
 		game.players = []; //prepare for new list
 		game.debug('Received initial player list.');
 
@@ -565,7 +567,7 @@ $(document).ready(function() {
 		game.check.hasPlayerList = true;		
 	});
 	
-	game.socket.on('chatMsg', function(data) {	
+	game.socket.on(game.proto.MSG_CHATMSG, function(data) {	
 		var sender;
 		
 		game.players.forEach(function(p) {
@@ -578,7 +580,7 @@ $(document).ready(function() {
 		game.chatMessage('<strong>'+ sender.nick +'</strong>: '+ data.msg);	
 	});
 	
-	game.socket.on('chatAction', function(data) {		
+	game.socket.on(game.proto.MSG_CHATACTION, function(data) {		
 		game.chatMessage('* <em>'+ data.msg +'</em>');	
 	});
 			

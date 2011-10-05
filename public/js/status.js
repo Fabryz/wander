@@ -1,5 +1,6 @@
 $(document).ready(function() {	
-	var socket = new Socket(null, 'status'),
+	var proto = new Protocol(),
+		socket = new Socket(null, 'status'),
 		interval;
 	
 	var statusSlots = $('#status-slots'),
@@ -18,7 +19,7 @@ $(document).ready(function() {
 		clearInterval(interval);
 	});
 	
-	socket.on('status', function(data) {
+	socket.on(proto.MSG_SERVERSTATUS, function(data) {
 		statusSlots.html(data.players.length);
 		statusLurkers.html(data.lurkers);
 
