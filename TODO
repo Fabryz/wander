@@ -1,15 +1,12 @@
 # dev2production todos: package.json version, analytics
 
-do debugcanvas only if visible
 avoid sending too many string stuff from server (like chatAction)
-Message protocol enumeration
-Message JSON package
-fix /status
+Message JSON package, p instead of player etc...
+phoboslab tips
+^keyb polling/events
 
 broadcast playdata only for viewable players in current client vp (check it on server)
-resize GUI
 rerender only tiles with players
-fix gameUI/GUI css
 keep a look on refreshGUI on gameloop
 add Help, Config, Server info icons on GUI
 open playerinfo/inventory with key
@@ -29,14 +26,10 @@ put tileToPixel, isplayerOnTile etc on a shared class
 
 clear/redraw single dirty tiles
 client prediction pdf
-jade footer layout for analytics -> push empty then gitignore
 ^ put version near title
 modify drawmap for canvas minimap
 
 try using socket.io acknowledgements
-make tileset class? <- preload images, add draw tile directly inside Tile class
-^ preload only NEEDED images
-^ then use tile.draw on drawMap
 know what audio is being played -> stop on disconnect
 
 express cache expiration for img/audio files -> check chrome inspector audits
@@ -47,7 +40,6 @@ audio volume, headphones/speakers
 walking on wood sound?
 special areas sound? inside a house
 try node-validator
-tweak message bandwidth (use 'p' instead of 'player' and EVENT_LOGIN constants instead of strings)
 
 make loading screen with progress bar
 create a decent audio class
@@ -80,27 +72,21 @@ try to integrate resizeCanvas and gameInit on Game class
 pad/phone support?
 stop passing game handle on every class
 
-don't render map outside viewport (+-range square)
 Make a simple map editor
 random map generation
 find an use for volatile on Socket.io
 
-fix efpies
 don't allow 2x clients of same player
 use a single spritemap instead of individual png image tiles?
 dirty tiles, create draw single tile function (see JSTE)
 
-find out why it doesn't start without firebug opened
 improve movement animation/refresh rate
-check debugcanvas data refresh
 add screenshot button
 
 fix false start attempt1
-add timestamp on server logs
 develop anon stat system (screen/canvas size, OS, browser used...)
 
 hash player ids to avoid client hacks
-fix joining problem (server started, browser opened, client not connected)
 keep player stuff for max TOT mins after disconnection, reload on reconnect -> need auth before this
 validate messages (check msg from client, p.id existing?...)
 check all comments for TODO and FIXME
@@ -114,5 +100,3 @@ player registration (via Twitter auth or use internal db)
 use NowJS / BiSON / Motion.js (client prediction)
 
 +browser compatibility Chrome, FF, IE... (add reset.css)
-check clear canvas on player
-dirty tiles to re-render
