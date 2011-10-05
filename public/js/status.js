@@ -1,22 +1,26 @@
 $(document).ready(function() {	
 	var proto = new Protocol(),
 		socket = new Socket(null, 'status'),
-		interval;
+		updateEvery = 5000,
+		timeout;
 	
 	var statusSlots = $('#status-slots'),
 		statusLurkers = $('#status-lurkers'),
 		statusPlayers = $('#status-list'),
 		statusMemUsed = $('#status-memUsed'),
 		statusUptime = $('#status-uptime');
-		    
+	
+	function updateStatus() {
+		socket.emit(proto.MSG_SERVERSTATUS);
+		timeout = setTimeout(updateStatus, updateEvery);
+	}	
+	
     socket.on('connect', function() {
-    	interval = setInterval(function() {
-			socket.emit('status');
-		}, 5000);
+    	updateStatus();
 	});
 			
 	socket.on('disconnect', function() {
-		clearInterval(interval);
+		clearTimeout(timeout);
 	});
 	
 	socket.on(proto.MSG_SERVERSTATUS, function(data) {
