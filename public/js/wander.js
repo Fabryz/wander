@@ -388,7 +388,10 @@ $(document).ready(function() {
 			game.world.drawAll();
 
 			refreshGUI();
-			game.debugStuff();
+			
+			if (game.debugCanvas.is(":visible")) {
+				game.debugStuff();
+			}
 			
 			game.fps.count++;
 			//game.tick_count++;
