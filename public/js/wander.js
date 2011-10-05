@@ -429,6 +429,7 @@ $(document).ready(function() {
 		playButton.addClass("disconnected");
 		game.debug('* Disconnected from the server.');
 		game.chatMessage('* You have been disconnected from the server.');	
+		$('#bgm-ambient1').get(0).pause();
 	});
 	
 	game.socket.on(game.proto.MSG_PING, function(data) {
