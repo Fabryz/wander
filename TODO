@@ -1,8 +1,13 @@
 # dev2production todos: package.json version, analytics
 
-Mess with JQuery UI, remove unused stuff to save space
+do debugcanvas only if visible
+avoid sending too many string stuff from server (like chatAction)
+Message protocol enumeration
+Message JSON package
+fix /status
+
+broadcast playdata only for viewable players in current client vp (check it on server)
 resize GUI
-make inventory stuff, draggable
 rerender only tiles with players
 fix gameUI/GUI css
 keep a look on refreshGUI on gameloop
