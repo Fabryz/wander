@@ -20,6 +20,8 @@ $(document).ready(function() {
 		keyS = 83,
 		keyA = 65,
 		keyD = 68,
+		keyC = 67,
+		keyI = 73,
 		keyBackslash = 220;
 		
 	var GUI = $("#GUI"),
@@ -138,6 +140,12 @@ $(document).ready(function() {
 					$("#debugLog").toggle();
 					game.debugCanvas.toggle();
 				}
+				if (keyCode == keyC) {
+					togglePlayerStatusWindow();
+				}
+				if (keyCode == keyI) {
+					toggleInventoryWindow();
+				}
 				if (keyCode == keyEnter) {  //on keyEnter if chatMsg has focus -> blur, if not -> give focus
 					if (game.check.isPlaying) {
 						var focused = $("#chatMsg:focus");
@@ -168,8 +176,7 @@ $(document).ready(function() {
 			
 			chatMsg.attr('disabled', false);
 			$('#bgm-ambient1').get(0).play(); //test
-			
-			//effe(); FIXME works better than fps.js
+
 			gameLoop();
 		} else {
 			attempt++;
@@ -233,6 +240,18 @@ $(document).ready(function() {
 		$("#playerInfo #pi-ping").html(game.player.ping +'ms');
 	}
 	
+	function togglePlayerStatusWindow() {
+		$("#playerInfo").toggle();
+			
+		if ($("#playerInfo").is(":visible")) {
+			updatePlayerInfo();				
+		}
+	}
+	
+	function toggleInventoryWindow() {
+		$("#inventory").toggle();
+	}
+	
 	function gameInit() {
 		game = new Game();
 		game.initVars();
@@ -286,15 +305,11 @@ $(document).ready(function() {
 		}
 		
 		cmdInfo.click(function() {
-			$("#playerInfo").toggle();
-			
-			if ($("#playerInfo").is(":visible")) {
-				updatePlayerInfo();				
-			}
+			togglePlayerStatusWindow();
 		});
 		
 		cmdInv.click(function() {
-			$("#inventory").toggle();
+			toggleInventoryWindow();
 		});
 		
 		game.debug('Game inited.');
