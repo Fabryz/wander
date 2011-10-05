@@ -201,6 +201,9 @@ p {
 	-webkit-border-top-left-radius: 10px;
 	-moz-border-radius-topleft: 10px;
 	border-top-left-radius: 10px;
+	-webkit-box-shadow: inset 0px 2px 0px 0px rgba(0, 16, 34, .4);
+	-moz-box-shadow: inset 0px 2px 0px 0px rgba(0, 16, 34, .4);
+	box-shadow: inset 0px -2px 0px 0px rgb(0, 16, 34, .4);
 }
 
 #chatLog ul {
