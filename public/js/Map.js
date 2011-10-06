@@ -153,6 +153,32 @@ Map.prototype.loadMap = function() {  //shared between client/server
 	return map;
 };
 
+Map.prototype.mapToVp = function(x, y) {
+	var coords = {};
+
+	coords.x = x - this.game.vp.x;
+	coords.y = y - this.game.vp.y;
+
+	//this.game.debug(x +':'+ y +' -> '+ coords.x +':'+ coords.y);
+
+	return coords;
+}
+
+Map.prototype.drawTileDebug = function(tile, x, y, debugX, debugY) {
+	this.game.ctx.save();					
+	this.game.ctx.fillStyle = 'red';
+
+	var walkable = tile.walkable;
+	this.game.ctx.fillText(x +':'+ y, debugX, debugY + 10);
+
+	if (!walkable) {
+		this.game.ctx.fillStyle = 'blue';
+		this.game.ctx.fillText(walkable, debugX, debugY + 25);
+	}
+
+	this.game.ctx.restore();
+};
+
 Map.prototype.clearTile = function(x, y) {
 	this.game.ctx.clearRect(x * this.game.serverConfig.tileWidth, y * this.game.serverConfig.tileHeight, this.game.serverConfig.tileWidth, this.game.serverConfig.tileHeight);
 };
@@ -160,21 +186,6 @@ Map.prototype.clearTile = function(x, y) {
 Map.prototype.drawTile = function(tileId, tileX, tileY, tileWidth, tileHeight) {	    		
 	try {
     	 this.game.ctx.drawImage(this.ts.images[tileId], tileX, tileY, tileWidth, tileHeight);
-
-		//> DEBUG
-		/*this.game.ctx.save();					
-		this.game.ctx.fillStyle = 'red';
-
-		var walkable = this.ts.tileset[tileId].walkable;
-		this.game.ctx.fillText(x +':'+ y, tileX, tileY + 10);
-
-		if (!walkable) {
-			this.game.ctx.fillStyle = 'blue';
-			this.game.ctx.fillText(walkable, tileX, tileY + 25);
-		}
-
-		this.game.ctx.restore();*/
-		//< DEBUG
     } catch(err) {
         this.game.debug('Error while drawing tile ['+ tileX +']['+ tileY +']: '+ err);
         console.log('Error while drawing tile ['+ tileX +']['+ tileY +']: '+ err);
@@ -191,8 +202,8 @@ Map.prototype.drawMap = function() {
 	    for(var y = 0; y < cols; y++) { //this.game.serverConfig.tileMapHeight
 	        for(var x = 0; x < rows; x++) { //this.game.serverConfig.tileMapWidth
 	        	var coords = this.mapToVp(0, 0),
-	        		drawX = coords.x + x * this.game.serverConfig.tileWidth,
-	        		drawY = coords.y + y * this.game.serverConfig.tileHeight,
+	        		drawX = debugX = coords.x + x * this.game.serverConfig.tileWidth,
+	        		drawY = debugY = coords.y + y * this.game.serverConfig.tileHeight,
 	        		isInside = this.game.vp.isInside(drawX, drawY),
 	        		width = this.game.serverConfig.tileWidth,
 					height = this.game.serverConfig.tileHeight,
@@ -205,7 +216,7 @@ Map.prototype.drawMap = function() {
 	        	if (tileId != 0) { //if tile not blank
 					if (isInside) {
 						var tile = this.ts.tileset[tileId];
-						
+
 						//render tiles with height > default tile height
 						if (typeof tile.extra !== 'undefined') { //TODO reassign also X vars //edit: what?
 							if (typeof tile.extra.multi !== 'undefined') {
@@ -217,6 +228,7 @@ Map.prototype.drawMap = function() {
 					    }
 
 					    this.drawTile(tileId, drawX, drawY, width, height);
+					    //this.drawTileDebug(tile, x, y, debugX, debugY); // draw x:y and !walkable
 			        }
 	            }
 	        }
@@ -224,36 +236,32 @@ Map.prototype.drawMap = function() {
 	    //FIXME test player below trees. This code structure is REALLY ugly.
 	    //BAWWWWWW DON'T LOOK HERE. This was on gameloop between world.drawAll and debugStuff
 		if (z == 1) { //render players above ground/floor obj (layer 0/1) but below trees? (layer1)
-			this.game.player.draw(this.game); //assume the local copy is more updated		
+			this.game.player.draw(this.game); //assume the local copy is more updated
+			
 			var length = this.game.players.length;
 			for(var i = 0; i < length; i++) {
 				if (this.game.players[i].id != this.game.player.id) {
-					this.game.players[i].draw(this.game); //FIXME seriously, stop passing the game handle
+					//render only if inside vp
+					if (this.game.vp.isInside(this.game.players[i].x, this.game.players[i].y)) {
+						this.game.players[i].draw(this.game);
+					}
 		    	}
 			}
     	} 
     	if (z == layers - 1) { //FIXME render nicks above everything
-			this.game.player.drawNick(this.game);	
+			this.game.player.drawNick(this.game);
+			
 			var length = this.game.players.length;
 			for(var i = 0; i < length; i++) {
 				if (this.game.players[i].id != this.game.player.id) {
-					this.game.players[i].drawNick(this.game);
+					if (this.game.vp.isInside(this.game.players[i].x, this.game.players[i].y)) {
+						this.game.players[i].drawNick(this.game);
+					}
 		    	}
 			}
     	}
     }
 };
-
-Map.prototype.mapToVp = function(x, y) {
-	var coords = {};
-
-	coords.x = x - this.game.vp.x;
-	coords.y = y - this.game.vp.y;
-
-	//this.game.debug(x +':'+ y +' -> '+ coords.x +':'+ coords.y);
-
-	return coords;
-}
 
 Map.prototype.drawMapBounds = function() {
 	this.game.ctx.strokeStyle = "#CCC";
