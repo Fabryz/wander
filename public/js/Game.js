@@ -85,8 +85,7 @@ Game.prototype.debugStuff = function() {
 	this.debugCtx.fillText('vp '+ this.vp.x +':'+ this.vp.y, 10, 37);
 	//this.debugCtx.fillText(this.tick_count, 200, 37);
 	
-	this.debugCtx.fillText(this.player.ping +'ms', 10, this.debugCanvasHeight - 10);
-	this.debugCtx.fillText(this.fps.lastFps +'fps', 100, this.debugCanvasHeight - 10);
+	this.debugCtx.fillText(this.fps.lastFps +'fps', 10, this.debugCanvasHeight - 10);
 };
 
 Game.prototype.initCheck = function() {
