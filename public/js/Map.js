@@ -228,7 +228,7 @@ Map.prototype.drawMap = function() {
 					    }
 
 					    this.drawTile(tileId, drawX, drawY, width, height);
-					    //this.drawTileDebug(tile, x, y, debugX, debugY); // draw x:y and !walkable
+					    this.drawTileDebug(tile, x, y, debugX, debugY); // draw x:y and !walkable
 			        }
 	            }
 	        }
@@ -279,6 +279,33 @@ Map.prototype.clearAll = function() {
 Map.prototype.drawAll = function() {
 	this.drawMapBounds();
 	this.drawMap();
+};
+
+// check in all z layers if there's a pickupable tile
+// return an array with position and tile info
+Map.prototype.checkForPickupable = function(x, y) {
+	var pk = [];
+
+	var layers = this.map.length;
+	for(var z = 0; z < layers; z++) {
+		var tile = this.ts.tileset[this.map[z][y][x]],
+			extra = tile.extra;
+
+		if ((typeof extra !== 'undefined') && (extra.pickupable == true)) {
+			pk.push({ x: x, y: y, tile: tile });
+		}
+	}
+	
+	return pk;
+}
+
+Map.prototype.isInside = function(x, y) {
+	if (((x >= 0) && (x < this.game.serverConfig.pixelMapWidth)) &&
+		((y >= 0) && (y < this.game.serverConfig.pixelMapHeight))) {
+		return true;
+	} else {
+		return false;
+	}
 };
 
 if (typeof exports !== 'undefined') exports.loadMap = Map.prototype.loadMap;
