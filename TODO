@@ -1,8 +1,17 @@
 # dev2production todos: package.json version, analytics
 
+player.coins, convert money tiles to coins when received
+emit MSG_UPDATE_TILE from server like for pickupall
+improve pickup_all bandwidth
+add drop/destroy
+on server pickup, check if there's really an object there
+updateinventory > insert images inside li, don't html ''
+realtime stuff with timeout on inventory, like playerinfo
+switch foreach to for in wander.js
 add pickupable items from different tiles to window 
 ^ or open only one window per tile?
-
+check server pong client.id
+check if player opens pickup window, someone else drop stuff there, player pickupall inconsistency
 lock pickupable resource
 pickup only selected items
 pickup only stuff on 1x tile outer range
