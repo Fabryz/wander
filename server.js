@@ -397,6 +397,22 @@ var game = io
 		sendGameData(client, data);
 	});
 	
+	client.on(proto.MSG_PICKUP_ALL, function(data) {	
+		var length = players.length;
+		for(var i = 0; i < length; i++) {
+			if (players[i].id == data.id) {
+				var itemsQty = data.items.length;
+				for(var y = 0; y < itemsQty; y++) {
+					//console.log(data.id +' picked up '+ data.items[y].tile.id);
+					players[i].inventory.push(data.items[y].tile.id);
+					map[data.items[y].z][data.items[y].y][data.items[y].x] = 0; // blank
+				}
+				game.emit(proto.MSG_PICKUP_ALL, { id: data.id, items: data.items });
+				break;
+			}
+		}
+	});
+	
 	client.on(proto.MSG_PONG, function(data) {		
 		pings[client.id] = { ping: (Date.now() - pings[client.id].time) };
 
