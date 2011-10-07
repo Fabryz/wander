@@ -35,24 +35,6 @@ $(document).ready(function() {
 		cmdInv = $("#cmd-inv");
 		
 	var json = JSON.stringify;
-			
-	/*function test_GUIclicks() {
-		canvas.click(function(e) { //testing GUI clicks
-			var canvasOffset = canvas.offset();
-			var canvasX = Math.floor(e.pageX - canvasOffset.left);
-			var canvasY = Math.floor(e.pageY - canvasOffset.top);
-			
-			game.debugCtx.fillText(canvasX +"x"+ canvasY, 400, 15);
-			
-			game.ctx.strokeStyle = "rgb(0, 0, 0)";
-			game.ctx.lineWidth = 3;
-			game.ctx.beginPath();
-			game.ctx.moveTo(game.player.x + game.player.halfWidth, game.player.y + game.player.halfHeight);
-			game.ctx.lineTo(canvasX, canvasY);
-			game.ctx.closePath();
-			game.ctx.stroke();
-		});
-	}*/
 	
 	function showPlayersList() {
 		var list = gamePlayersList.find("ul");
@@ -66,6 +48,44 @@ $(document).ready(function() {
 		list.append("<li>Total players: "+ game.players.length +"</li>");
 		//gamePlayersList.stop().fadeIn('fast');
 		gamePlayersList.show();
+	}
+	
+	function pixelToTileX(x) { //FIXME share code
+		return Math.floor(x / game.serverConfig.tileWidth);
+	}
+
+	function pixelToTileY(y) { //FIXME share code
+		return Math.floor(y / game.serverConfig.tileHeight);
+	}
+	
+	function canvasClick() { // FIXME testing GUI clicks
+		GUI.click(function(e) { 
+			var canvasOffset = game.canvas.offset(), //FIXME can even remove as it's at 0:0
+				canvasX = Math.floor(e.pageX - canvasOffset.left),
+				canvasY = Math.floor(e.pageY - canvasOffset.top),
+				clickMapX = (canvasX + game.vp.x),
+				clickMapY = (canvasY + game.vp.y),
+				coords = game.world.mapToVp(clickMapX, clickMapY),
+				isInside = game.world.isInside(clickMapX, clickMapY),
+				tileX = Math.floor(clickMapX / game.serverConfig.tileWidth),
+				tileY = Math.floor(clickMapY / game.serverConfig.tileWidth),
+				pks = [];
+				
+			//debug
+			console.log('page '+ clickMapX +':'+ clickMapY +' '+ isInside);		
+			game.ctx.beginPath();
+			game.ctx.arc(canvasX, canvasY, 15, 0, Math.PI * 2, true);
+			game.ctx.closePath();
+			game.ctx.fill();
+			
+			//debug
+			
+			if (isInside) {
+				pks = game.world.checkForPickupable(tileX, tileY);
+				console.log(tileX +':'+ tileY);
+				console.dir(pks);
+			}
+		});
 	}
 	
 	var attempt = 0,
@@ -181,6 +201,7 @@ $(document).ready(function() {
 			chatMsg.attr('disabled', false);
 			$('#bgm-ambient1').get(0).play(); //test
 
+			canvasClick();
 			gameLoop();
 		} else {
 			attempt++;
@@ -403,7 +424,7 @@ $(document).ready(function() {
 		if (game.check.isPlaying) {			
 			sendMovement();
 
-			game.vp.centerOn(game.player.x + 24, game.player.y + 24); //FIXME manually centering
+			game.vp.centerOn(game.player.x + (game.serverConfig.tileWidth / 2), game.player.y + (game.serverConfig.tileHeight / 2));
 			game.world.drawAll();
 
 			refreshGUI();
