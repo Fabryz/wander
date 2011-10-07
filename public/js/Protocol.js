@@ -22,7 +22,9 @@ var Protocol = function() {
 
 		MSG_SERVERCONFIG	: 14,
 		MSG_SERVERINFO		: 15,
-		MSG_SERVERSTATUS	: 16
+		MSG_SERVERSTATUS	: 16,
+		
+		MSG_PICKUP_ALL		: 17
 	};
 };
 
