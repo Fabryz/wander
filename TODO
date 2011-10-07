@@ -1,9 +1,24 @@
 # dev2production todos: package.json version, analytics
 
+add pickupable items from different tiles to window 
+^ or open only one window per tile?
+
+lock pickupable resource
+pickup only selected items
+pickup only stuff on 1x tile outer range
+close window/remove pickup items if player went far from it
+do stuff with cmd-pickup
+check server side if player is close to item and only THEN
+^ open pickup window
+test hurting tiles
+server queue for movements and healthcheck (lava tiles timeout...)
+
 avoid sending too many string stuff from server (like chatAction)
 Message JSON package, p instead of player etc...
 phoboslab tips
 ^keyb polling/events
+fix chatMsg focus/blur not so working
+fix chatLog scrollbars
 
 broadcast playdata only for viewable players in current client vp (check it on server)
 rerender only tiles with players
