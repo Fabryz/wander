@@ -122,6 +122,7 @@ $(document).ready(function() {
 							for(var i = 0; i < itemsQty; i++) {
 								$("#pickup #items").append('<li id="items-slot-'+ i +'" class="empty-slot"><img src="'+ game.world.ts.tilesFolder + tilePickupables[i].tile.src +'" title="'+ tilePickupables[i].tile.name  +'" alt="'+ tilePickupables[i].tile.name  +'" /></li>');
 							}
+							game.pickupables = tilePickupables;
 							$("#pickup").show(); // perf: show only if not :visible?
 						//}
 					}
@@ -319,13 +320,29 @@ $(document).ready(function() {
 		}
 	}
 	
+	function updateInventory() {
+		var length = game.player.inventory.length;
+		if (length > 0) {
+			$("#inventory #inv").html('');
+			
+			for(var i = 0; i < length; i++) {
+				$("#inventory #inv").append('<li id="inv-slot-'+ i +'" class="empty-slot"><img src="'+ game.world.ts.tilesFolder + game.world.ts.tileset[game.player.inventory[i]].src +'" title="'+ game.world.ts.tileset[game.player.inventory[i]].name  +'" alt="'+ game.world.ts.tileset[game.player.inventory[i]].name  +'" /></li>');
+			}
+		}
+	}
+	
 	function toggleInventoryWindow() {
 		$("#inventory").toggle();
+		
+		if ($("#inventory").is(":visible")) {
+			updateInventory();				
+		}
 	}
 	
 	function closePickupWindow() {
 		$("#pickup").hide();
 		$("#pickup #items").html('');
+		game.pickupables = [];
 	}
 	
 	function gameInit() {
@@ -391,8 +408,8 @@ $(document).ready(function() {
 		});
 		
 		$("#pickup #cmd-pickup").click(function() {
-			//TODO DO STUFF
-			
+			game.socket.emit(game.proto.MSG_PICKUP_ALL, { id: game.player.id, items: game.pickupables });
+		
 			closePickupWindow();
 		});
 		
@@ -585,6 +602,28 @@ $(document).ready(function() {
 				//game.debug(p.id +' moved to '+ p.x +':'+ p.y +' ('+ Math.floor(p.x / game.serverConfig.tileWidth) +':'+ Math.floor(p.y / game.serverConfig.tileHeight) +')');
 			}
 		});
+	});
+	
+	game.socket.on(game.proto.MSG_PICKUP_ALL, function(data) {
+		var length = game.players.length;
+		for(var i = 0; i < length; i++) {
+			if (game.players[i].id == data.id) {
+			
+				var itemsQty = data.items.length;
+				for(var y = 0; y < itemsQty; y++) {
+					game.world.updateMap(data.items[y].x, data.items[y].y, data.items[y].z);
+					game.players[i].inventory.push(data.items[y].tile.id);
+					
+					if (game.player.id == data.id) {
+						game.player.inventory.push(data.items[y].tile.id);
+					}
+				}
+				
+				updateInventory();
+
+				game.debug(game.players[i].nick +' picked up '+ itemsQty +' items');
+			}
+		}
 	});
 	
 	game.socket.on(game.proto.MSG_JOIN, function(data) {						
