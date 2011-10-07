@@ -3,6 +3,7 @@ var Game = function() {
 	this.check = this.initCheck();
 	this.player = {};
 	this.players = [];
+	this.pickupables = []; //FIXME add to a session or helper class?
 };
 
 Game.prototype.debug = function(msg) {
