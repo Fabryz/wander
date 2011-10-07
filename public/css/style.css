@@ -238,10 +238,16 @@ p {
 	z-index: 100;	
 }
 
-#GUI #bottomBar,
 #GUI #inventory,
-#GUI #playerInfo {
-	qwefloat: left; 
+#GUI #playerInfo,
+#GUI #pickup {
+	background: rgba(0, 0, 0, .8);
+	-webkit-border-radius: 10px;
+	-moz-border-radius: 10px;
+	border-radius: 10px;
+	-webkit-box-shadow: 0px 3px 0px 0px rgba(0, 16, 34, .4);
+	-moz-box-shadow: 0px 3px 0px 0px rgba(0, 16, 34, .4);
+	box-shadow: 0px 3px 0px 0px rgb(0, 16, 34, .4);
 }
 
 #GUI #bottomBar {
@@ -262,14 +268,6 @@ p {
 	position: absolute;
 	top : 20px;
 	right: 20px;
-	background: rgba(0, 0, 0, .8);
-	text-align: center;
-	-webkit-border-radius: 10px;
-	-moz-border-radius: 10px;
-	border-radius: 10px;
-	-webkit-box-shadow: 0px 3px 0px 0px rgba(0, 16, 34, .4);
-	-moz-box-shadow: 0px 3px 0px 0px rgba(0, 16, 34, .4);
-	box-shadow: 0px 3px 0px 0px rgb(0, 16, 34, .4);
 }
 
 #GUI #inventory #inv {
@@ -278,19 +276,60 @@ p {
 	list-style-type: none;
 }
 
-#GUI #inventory p {
-	margin-top: 20px;
-	margin-bottom: 10px;
-}
-
 #GUI #inventory #inv li {
 	width: 48px;
 	height: 48px;
 	float: left;
 }
 
-#GUI #inventory #inv .inv-empty {
+#GUI #inventory #inv .empty-slot {
 	background: url('../img/gui/inventory_slot_bg.png') 0 0 no-repeat;
+}
+
+#GUI #inventory p {
+	margin-top: 20px;
+	margin-bottom: 10px;
+}
+
+#GUI #pickup {
+	width: 235px;
+	position: absolute;
+	top : 20px;
+	right: 242px;
+}
+
+#GUI #pickup #items {
+	margin: 10px;
+	padding: 0;
+	list-style-type: none;
+	height: 212px;
+	overflow: auto;
+}
+
+#GUI #pickup #items li {
+	width: 48px;
+	height: 48px;
+	float: left;
+}
+
+#GUI #pickup #items .empty-slot {
+	background: url('../img/gui/inventory_slot_bg.png') 0 0 no-repeat;
+}
+
+#GUI #pickup p:hover {
+	cursor: pointer;
+	background: #F39814;
+}
+
+#GUI #pickup #cmd-pickup {
+	text-align: center;
+	margin-top: 20px;
+	margin-bottom: 10px;
+}
+
+#GUI #pickup #cmd-cancel {
+	text-align: center;
+	margin-bottom: 20px;
 }
 
 #GUI #commands {
@@ -334,13 +373,6 @@ p {
 	width: 200px;
 	top: 20px;
 	left: 20px;
-	background: rgba(0, 0, 0, .8);
-	-webkit-border-radius: 10px;
-	-moz-border-radius: 10px;
-	border-radius: 10px;
-	-webkit-box-shadow: 0px 3px 0px 0px rgba(0, 16, 34, .4);
-	-moz-box-shadow: 0px 3px 0px 0px rgba(0, 16, 34, .4);
-	box-shadow: 0px 3px 0px 0px rgb(0, 16, 34, .4);
 }
 
 #GUI #playerInfo dl {
