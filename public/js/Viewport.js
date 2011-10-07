@@ -15,11 +15,13 @@ Viewport.prototype.centerOn = function(x, y) {
 };
 
 //If is inside viewport + tilesize * range (safety render border)
-Viewport.prototype.isInside = function(x, y) {
-	var rangeTileWidth = this.game.serverConfig.tileWidth * this.rangeX,
-		rangeTileHeight = this.game.serverConfig.tileHeight * this.rangeY;
+Viewport.prototype.isInside = function(x, y, rX, rY) {
+	// these two are useful for canvasClick
+	var rangeX = (typeof rX === 'undefined' ? this.rangeX : rX),
+		rangeY = (typeof rY === 'undefined' ? this.rangeY : rY),
+		rangeTileWidth = this.game.serverConfig.tileWidth * rangeX,
+		rangeTileHeight = this.game.serverConfig.tileHeight * rangeY;
 
-	//FIXME if (((x >= 0) && (x < this.width)) && ((y >= 0) && (y < this.height))) {
 	if (((x >= -rangeTileWidth) && (x < this.width + rangeTileWidth)) &&
 		((y >= -rangeTileHeight) && (y < this.height + rangeTileHeight))) {
 		return true;
