@@ -58,6 +58,35 @@ $(document).ready(function() {
 		return Math.floor(y / game.serverConfig.tileHeight);
 	}
 	
+	// pixel source xy, pixel dest xy, tile range
+	function isCloseTo(x1, y1, x2, y2, range) {
+		var tileX1 = pixelToTileX(x1),
+			tileY1 = pixelToTileY(y1),
+			tileX2 = pixelToTileX(x2),
+			tileY2 = pixelToTileY(y2);
+			
+		if ((Math.abs(tileX1 - tileX2) <= range) &&
+			(Math.abs(tileY1 - tileY2) <= range)) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	/*function isAlreadyPicked(x, y) {
+		var length = game.totalPickupables.length, //max 9 with isClose range 1
+			items;
+
+		for(var i = 0; i < length; i++) {
+			item = game.totalPickupables[i];
+			if ((item.x == x) && (item.y == y)) {
+				return true;
+			}
+		}
+
+		return false;
+	}*/
+	
 	function canvasClick() { // FIXME testing GUI clicks
 		GUI.click(function(e) { 
 			var canvasOffset = game.canvas.offset(), //FIXME can even remove as it's at 0:0
@@ -69,21 +98,38 @@ $(document).ready(function() {
 				isInside = game.world.isInside(clickMapX, clickMapY),
 				tileX = Math.floor(clickMapX / game.serverConfig.tileWidth),
 				tileY = Math.floor(clickMapY / game.serverConfig.tileWidth),
-				pks = [];
+				tilePickupables = [],
+				itemsQty = 0;
 				
-			//debug
+			/*//debug
 			console.log('page '+ clickMapX +':'+ clickMapY +' '+ isInside);		
 			game.ctx.beginPath();
 			game.ctx.arc(canvasX, canvasY, 15, 0, Math.PI * 2, true);
 			game.ctx.closePath();
 			game.ctx.fill();
-			
-			//debug
+			//debug*/
 			
 			if (isInside) {
-				pks = game.world.checkForPickupable(tileX, tileY);
-				console.log(tileX +':'+ tileY);
-				console.dir(pks);
+				tilePickupables = game.world.checkForPickupable(tileX, tileY);
+				itemsQty = tilePickupables.length;
+					
+				if (isCloseTo(game.player.x, game.player.y, clickMapX, clickMapY, 1)) {
+					//console.log(tileX +':'+ tileY +' itemsQty '+ itemsQty);				
+					
+					if (itemsQty > 0) {
+						//if (!isAlreadyPicked(tileX, tileY)) {
+							closePickupWindow();
+							for(var i = 0; i < itemsQty; i++) {
+								$("#pickup #items").append('<li id="items-slot-'+ i +'" class="empty-slot"><img src="'+ game.world.ts.tilesFolder + tilePickupables[i].tile.src +'" title="'+ tilePickupables[i].tile.name  +'" alt="'+ tilePickupables[i].tile.name  +'" /></li>');
+							}
+							$("#pickup").show(); // perf: show only if not :visible?
+						//}
+					}
+				} else {
+					if (itemsQty > 0) {
+						game.chatMessage('* <em>That item is too far to reach.</em>');
+					}	
+				}
 			}
 		});
 	}
@@ -277,6 +323,11 @@ $(document).ready(function() {
 		$("#inventory").toggle();
 	}
 	
+	function closePickupWindow() {
+		$("#pickup").hide();
+		$("#pickup #items").html('');
+	}
+	
 	function gameInit() {
 		game = new Game();
 		game.initVars();
@@ -313,12 +364,14 @@ $(document).ready(function() {
 		
 		$("#inventory").hide();
 		$("#playerInfo").hide();
+		$("#pickup").hide();
 		$("#bottomBar").hide();
 		chatMsg.hide();
 		chatLog.hide();
 		
 		$("#inventory").draggable({ handle: "h3", containment: "#GUI", scroll: false, stack: "#GUI div" });
 		$("#playerInfo").draggable({ handle: "h3", containment: "#GUI", scroll: false, stack: "#GUI div" });
+		$("#pickup").draggable({ handle: "h3", containment: "#GUI", scroll: false, stack: "#GUI div" });
 		/*$("#commands").selectable({
 			selected: function(event, ui) {
 				$(ui.selected).siblings().removeClass("ui-selected");
@@ -326,7 +379,7 @@ $(document).ready(function() {
 		});*/
 		
 		for(var i = 0; i < 16; i++) { //TODO grab max inventory slots from server?
-			$("#inventory #inv").append('<li id="inv-slot-'+ i +'" class="inv-empty"></li>');
+			$("#inventory #inv").append('<li id="inv-slot-'+ i +'" class="empty-slot"></li>');
 		}
 		
 		cmdInfo.click(function() {
@@ -335,6 +388,16 @@ $(document).ready(function() {
 		
 		cmdInv.click(function() {
 			toggleInventoryWindow();
+		});
+		
+		$("#pickup #cmd-pickup").click(function() {
+			//TODO DO STUFF
+			
+			closePickupWindow();
+		});
+		
+		$("#pickup #cmd-cancel").click(function() {
+			closePickupWindow();
 		});
 		
 		game.debug('Game inited.');
