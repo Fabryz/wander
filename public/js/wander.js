@@ -148,7 +148,8 @@ $(document).ready(function() {
 			$("#bottomBar").fadeIn('slow');
 			chatMsg.fadeIn('slow');
 			chatLog.fadeIn('slow');
-							
+			chatMsg.attr('disabled', false);
+			
 			$(window).keydown(function(e) { //keypress? FIXME switch?
 				//e.preventDefault();
 				
@@ -219,33 +220,30 @@ $(document).ready(function() {
 				}
 				if (keyCode == keyEnter) {  //on keyEnter if chatMsg has focus -> blur, if not -> give focus
 					if (game.check.isPlaying) {
-						var focused = $("#chatMsg:focus");
-						if (focused != null && focused.length > 0) {
-							chatMsg.blur();
-						} else {
+						if (!game.player.isChatting) {
 							chatMsg.focus();
+						} else {
+							chatMsg.blur();
 						}
 					}
 				}
 			});
 			
-			chatMsg.bind('keypress', function(e) {//FIXME test
-										if (e.keyCode == keyEnter) {
-										
-											var msg = chatMsg.val();
-											if (msg != '') {
-												chatMsg.val('');
-												game.socket.emit(game.proto.MSG_CHATMSG, { id: game.player.id, msg: msg });
-											}
-										}
-									});
+			chatMsg.bind('keyup', function(e) {
+				if (e.keyCode == keyEnter) {
+					var msg = chatMsg.val();
+					if (msg != '') { //FIXME val.length != 0 ?
+						chatMsg.val('');
+						game.socket.emit(game.proto.MSG_CHATMSG, { id: game.player.id, msg: msg });
+					}
+				}
+			});
 			
 			nowMove = (new Date()).getTime();
 			
 			game.fps.init('fps');
 			//game.initTick();
 			
-			chatMsg.attr('disabled', false);
 			$('#bgm-ambient1').get(0).play(); //test
 
 			canvasClick();
@@ -286,18 +284,21 @@ $(document).ready(function() {
 		game.debug('Clicked Play');
 
 		if (game.check.isConnected) {
-			if (playerNick.val() != '') { //TODO do other checks (server auth on nick)
+			if ((playerNick.val() != '') &&
+				(playerNick.val() !== 'null')) { //TODO do other checks (server auth on nick)
 				game.player.nick = playerNick.val();
-			}
-			game.debug('Player name set: '+ game.player.nick);
+				
+				game.debug('Player name set: '+ game.player.nick);
 
-			gameIntro.fadeOut();
+				gameIntro.fadeOut();
+				playerNick.unbind('keyup');
 	
-			if (!game.check.hasNick) { //TODO: keep gameUI form open till nick is ok
-				game.debug('Sending nickname');
-				game.socket.emit(game.proto.MSG_NICKSET, { id: game.player.id, nick: game.player.nick });
+				if (!game.check.hasNick) { //TODO: keep gameUI form open till nick is ok
+					game.debug('Sending nickname');
+					game.socket.emit(game.proto.MSG_NICKSET, { id: game.player.id, nick: game.player.nick });
+				}
+				startGame(); //start the game only if connected
 			}
-			startGame(); //start the game only if connected
 		} else {
 			game.debug('You cannot play until you are connected to the server.');
 			//FIXME set a timer to autorestart?
@@ -359,17 +360,12 @@ $(document).ready(function() {
 		resizeCanvas();
 		
 		playButton.bind('click', sendNickname);
-		playerNick.bind('keypress', function(e) {
+		playerNick.bind('keyup', function(e) {
 			if (e.keyCode == keyEnter) {
 				sendNickname();
 			}
 		});
-		playerNick.focus(function() {
-			if (this.value == this.defaultValue) {
-				this.select();
-			}
-		});	
-		playerNick.focus();
+		
 		chatMsg.attr('disabled', true);
 		
 		chatMsg.focus(function() {
@@ -378,13 +374,6 @@ $(document).ready(function() {
 		chatMsg.blur(function() {
 			game.player.isChatting = false;
 		});	
-		
-		$("#inventory").hide();
-		$("#playerInfo").hide();
-		$("#pickup").hide();
-		$("#bottomBar").hide();
-		chatMsg.hide();
-		chatLog.hide();
 		
 		$("#inventory").draggable({ handle: "h3", containment: "#GUI", scroll: false, stack: "#GUI div" });
 		$("#playerInfo").draggable({ handle: "h3", containment: "#GUI", scroll: false, stack: "#GUI div" });
@@ -417,7 +406,14 @@ $(document).ready(function() {
 			closePickupWindow();
 		});
 		
+		$("#GUI #disconnected").click(function() {
+			location.reload(true);
+		});
+		
 		game.debug('Game inited.');
+		
+		gameIntro.fadeIn('slow');
+		playerNick.focus();
 	}
 	
 	/*
@@ -593,9 +589,18 @@ $(document).ready(function() {
 		game.check.isConnected = false;
 		game.check.isPlaying = false;
 		game.check.hasQuitted = true;
+		
 		playButton.addClass("disconnected");
 		game.debug('* Disconnected from the server.');
-		game.chatMessage('* You have been disconnected from the server.');	
+		game.chatMessage('* You have been disconnected from the server.');
+		
+		gameIntro.hide();
+		playerNick.unbind('keyup');
+		$("#bottomBar").fadeOut('slow');
+		chatMsg.fadeOut('slow');
+		chatLog.fadeOut('slow');
+		$('#GUI #disconnected').fadeIn('slow');
+		
 		$('#bgm-ambient1').get(0).pause();
 	});
 	
