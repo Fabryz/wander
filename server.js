@@ -479,20 +479,19 @@ var game = io
 	});
 
 	client.on('disconnect', function() {
-		var quitter;
+		var quitter = '';
 		
 		var length = players.length;
 		for(var i = 0; i < length; i++) {
 			if (players[i].id == client.id) {
-				quitter = new Player(players[i].id);
-				quitter = players[i];
+				quitter = players[i].nick;
 				players.splice(i, 1);
 				break;
 			}
 		}
 		client.broadcast.emit(proto.MSG_QUIT, { id: client.id });
 		totPlayers--;
-		console.log('- Player '+ quitter.nick +' ('+ client.id +') disconnected, total players: '+ totPlayers);
+		console.log('- Player '+ quitter +' ('+ client.id +') disconnected, total players: '+ totPlayers);
 	});
 });
 
