@@ -35,8 +35,8 @@ var serverConfig = {
 	speed: 48, //FIXME test 16
 	spawnX: 4,	
 	spawnY: 3,
-	tileMapWidth: map[0].length,
-	tileMapHeight: map[0][0].length,
+	tileMapWidth: map[0][0].length,
+	tileMapHeight: map[0].length,
 	tileWidth: 48,
 	tileHeight: 48
 };
