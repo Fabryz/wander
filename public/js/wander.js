@@ -624,6 +624,7 @@ $(document).ready(function() {
 		game.debug('Joined "'+ data.serverName +'" ('+ data.totPlayers +' players)');
 		game.chatMessage('<strong># Welcome to "'+ data.serverName +'" server!</strong>');
 		game.chatMessage('<strong># There are '+ data.totPlayers +' players online.</strong>');
+		game.chatMessage('<strong># Use "/help" to see the available chat commands.</strong>');
 	});
 	
 	game.socket.on(game.proto.MSG_SERVERCONFIG, function(data) {						
