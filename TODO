@@ -1,9 +1,13 @@
 # dev2production todos: package.json version, analytics
 
-chat if losing connection
+! don't store the whole map clientside, only vp + range
+animations http://io-2011-html5-games-hr.appspot.com/#65
+
+chat channels
+chat pm
+chat if losing connection > need a timeout every pong
 use bind click on toggleWindows...
 playerinfo and inventory scrollbars
-say about /help on infoconnect
 put chatLog and chatMsg inside GUI, edit their resize stuff
 improve CSS structure and jquery handles
 
@@ -11,7 +15,7 @@ test requestAnimationFrame
 ^ http://blog.joelambert.co.uk/2011/06/01/a-better-settimeoutsetinterval/
 
 ! store player vp, send only what he can see
-MAJOR BUG (major testing feature) new players see default non updated map
+MAJOR BUG (NOPE, major debug feature) new players see default non updated map
 
 player.coins, convert money tiles to coins when received
 emit MSG_UPDATE_TILE from server like for pickupall
@@ -33,6 +37,7 @@ do stuff with cmd-pickup
 check server side if player is close to item and only THEN
 ^ open pickup window
 test hurting tiles
+add objects that can change player speed
 server queue for movements and healthcheck (lava tiles timeout...)
 
 avoid sending too many string stuff from server (like chatAction)
