@@ -1,5 +1,10 @@
 # dev2production todos: package.json version, analytics
 
+test requestAnimationFrame
+^ http://blog.joelambert.co.uk/2011/06/01/a-better-settimeoutsetinterval/
+! store player vp, send only what he can see
+MAJOR BUG new players see default non updated map
+
 player.coins, convert money tiles to coins when received
 emit MSG_UPDATE_TILE from server like for pickupall
 improve pickup_all bandwidth
