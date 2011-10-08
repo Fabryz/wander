@@ -1,9 +1,17 @@
 # dev2production todos: package.json version, analytics
 
+chat if losing connection
+use bind click on toggleWindows...
+playerinfo and inventory scrollbars
+say about /help on infoconnect
+put chatLog and chatMsg inside GUI, edit their resize stuff
+improve CSS structure and jquery handles
+
 test requestAnimationFrame
 ^ http://blog.joelambert.co.uk/2011/06/01/a-better-settimeoutsetinterval/
+
 ! store player vp, send only what he can see
-MAJOR BUG new players see default non updated map
+MAJOR BUG (major testing feature) new players see default non updated map
 
 player.coins, convert money tiles to coins when received
 emit MSG_UPDATE_TILE from server like for pickupall
@@ -72,18 +80,13 @@ try node-validator
 
 make loading screen with progress bar
 create a decent audio class
-fix enter not-so-working on focus/blur
-move viewport 1 tile down so player is centered vertically
-fence full -> offset on Tile class, render from tileY - (tileHeight - 48) 
 don't force collision map on layer 1 -> create collision map (ground tile could be not walkable)
 tranform forEach in for
-sound on player join?
 chat channels, global, local (in a X range)
 try to remove the map matrix from Map.js
 do something with mapLoader on root
 Map2VP on viewport
 disconnect/standby client after X pings with no answer
-interval or timeout on fps
 
 improve server players data structure to avoid foreach and use players[id]
 server time (day/night swap?)
