@@ -86,48 +86,49 @@ p {
 }
 
 #gameIntro,
-#gamePlayersList {
+#gamePlayersList,
+#GUI #disconnected {
 	position: relative;
-	background: rgba(0, 0, 0, .8);
 	margin: 0 auto;
 	text-align: center;
-	-webkit-border-radius: 10px;
-	-moz-border-radius: 10px;
-	border-radius: 10px;
-	-webkit-box-shadow: 0px 3px 0px 0px rgba(0, 16, 34, .4);
-	-moz-box-shadow: 0px 3px 0px 0px rgba(0, 16, 34, .4);
-	box-shadow: 0px 3px 0px 0px rgb(0, 16, 34, .4);
 }
 
 #gameIntro {
 	width: 500px;
 	margin-top: 100px;
-	padding: 40px 0;
+	padding: 30px 0 20px 0;
 }
 
 #gameIntro input[type="text"] {
 	font-size: 1.8em;
 	margin-top: 10px;
+	border: 2px solid #CCC;
+	padding: 5px 10px 5px 10px;
 }
 
-#gameIntro a.button {
+#GUI a.button {
 	background: #2488F5;
 	-webkit-border-radius: 5px;
 	-moz-border-radius: 5px;
 	border-radius: 5px;
 	display: block;
 	font-size: 3em;
-	margin: 0 auto;
-	margin-top: 30px;
+	text-align: center;
+	margin: 30px 30px 10px 30px;
 	padding: 10px;
-	width: 70%;
 	text-decoration: none;
+	-webkit-box-shadow: 0px 3px 0px 0px rgba(36, 136, 245, .4);
+	-moz-box-shadow: 0px 3px 0px 0px rgba(36, 136, 245, .4);
+	box-shadow: 0px 3px 0px 0px rgba(36, 136, 245, .4);
 }
 
-#gameIntro a.button:hover {
+#GUI a.button:hover {
 	background: #F7F7F7;
 	color: #333;
 	text-decoration: none;
+	-webkit-box-shadow: 0px 3px 0px 0px rgba(247, 247, 247, .4);
+	-moz-box-shadow: 0px 3px 0px 0px rgba(247, 247, 247, .4);
+	box-shadow: 0px 3px 0px 0px rgba(247, 247, 247, .4);
 }
 
 #gameIntro a.disconnected {
@@ -238,9 +239,24 @@ p {
 	z-index: 100;	
 }
 
+#GUI div,
+#chatLog,
+#chatMsg {
+	display: none;
+}
+
+#GUI #disconnected {
+	width: 500px;
+	margin-top: 100px;
+	padding: 30px 0;
+}
+
+#GUI #gameIntro,
+#GUI #gamePlayersList,
 #GUI #inventory,
 #GUI #playerInfo,
-#GUI #pickup {
+#GUI #pickup,
+#GUI #disconnected {
 	background: rgba(0, 0, 0, .8);
 	-webkit-border-radius: 10px;
 	-moz-border-radius: 10px;
