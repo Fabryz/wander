@@ -287,7 +287,7 @@ $(document).ready(function() {
 		if (game.check.isConnected) {
 			if ((playerNick.val() != '') &&
 				(playerNick.val() !== 'null')) { //TODO do other checks (server auth on nick)
-				game.player.nick = playerNick.val();
+				game.player.nick = playerNick.val().replace(/\s+/gi,''); //remove all spaces
 				
 				game.debug('Player name set: '+ game.player.nick);
 
