@@ -40,12 +40,13 @@ $(document).ready(function() {
 		var list = gamePlayersList.find("ul");
 	
 		list.html("");
-		game.players.forEach(function(p) {
-			list.append("<li>"+ p +"</li>");
-		});
+		var length = game.players.length;
+		for(var i = 0; i < length; i++) {
+			list.append("<li>"+ game.players[i] +"</li>");
+		}
 		
 		list.append("<li>&nbsp;</li>");
-		list.append("<li>Total players: "+ game.players.length +"</li>");
+		list.append("<li>Total players: "+ length +"</li>");
 		//gamePlayersList.stop().fadeIn('fast');
 		gamePlayersList.show();
 	}
@@ -610,14 +611,15 @@ $(document).ready(function() {
 	});
 	
 	game.socket.on(game.proto.MSG_PINGUPDATE, function(data) {
-		game.players.forEach(function(p) {
-			if (p.id == data.id) {
-				p.ping = data.ping;
+		var length = game.players.length;
+		for(var i = 0; i < length; i++) {
+			if (game.players[i].id == data.id) {
+				game.players[i].ping = data.ping;
 				if (game.player.id == data.id) {
 					game.player.ping = data.ping;
 				}
 			}
-		});
+		}
 	});
 	
 	game.socket.on(game.proto.MSG_SERVERINFO, function(data) {
@@ -644,17 +646,18 @@ $(document).ready(function() {
 	});
 	
 	game.socket.on(game.proto.MSG_PLAY, function(data) {
-		game.players.forEach(function(p) {
-			if (p.id == data.id) {
-				p.x = data.x;
-				p.y = data.y;
+		var length = game.players.length;
+		for(var i = 0; i < length; i++) {
+			if (game.players[i].id == data.id) {
+				game.players[i].x = data.x;
+				game.players[i].y = data.y;
 				if (game.player.id == data.id) {
 					game.player.x = data.x;
 					game.player.y = data.y;
 				}
-				//game.debug(p.id +' moved to '+ p.x +':'+ p.y +' ('+ Math.floor(p.x / game.serverConfig.tileWidth) +':'+ Math.floor(p.y / game.serverConfig.tileHeight) +')');
+				//game.debug(game.players[i].id +' moved to '+ game.players[i].x +':'+ game.players[i].y +' ('+ Math.floor(game.players[i].x / game.serverConfig.tileWidth) +':'+ Math.floor(game.players[i].y / game.serverConfig.tileHeight) +')');
 			}
-		});
+		}
 	});
 	
 	game.socket.on(game.proto.MSG_PICKUP_ALL, function(data) {
@@ -691,20 +694,19 @@ $(document).ready(function() {
 	});
 	
 	game.socket.on(game.proto.MSG_QUIT, function(data) {
-		var quitter,
-			i = 0;
-	
-		game.players.forEach(function(p) {
-			if (p.id == data.id) {
-				quitter = new Player();
-				quitter = p;
+		var quitter = '';
+
+		var length = game.players.length;
+		for(var i = 0; i < length; i++) {
+			if (game.players[i].id == data.id) {
+				quitter = game.players[i].nick;
 				game.players.splice(i, 1);
+				break;
 			}
-			i++;
-		});
+		}
 		
-		game.debug('Player quitted: '+ quitter.nick +' (id '+ quitter.id +')');
-		game.chatMessage('< '+ quitter.nick +' has left the server.');
+		game.debug('Player quitted: '+ quitter +' (id '+ data.id +')');
+		game.chatMessage('< '+ quitter +' has left the server.');
 	});
 	
 	game.socket.on(game.proto.MSG_NICKRESPONSE, function(data) {		
@@ -720,15 +722,17 @@ $(document).ready(function() {
 	game.socket.on(game.proto.MSG_NICKCHANGE, function(data) {
 		var oldNick = '';
 						
-		game.players.forEach(function(p) {
-			if (p.id == data.id) {
-				oldNick = p.nick;
-				p.nick = data.nick;
+		var length = game.players.length;
+		for(var i = 0; i < length; i++) {
+			if (game.players[i].id == data.id) {
+				oldNick = game.players[i].nick;
+				game.players[i].nick = data.nick;
 				if (game.player.id == data.id) {
 					game.player.nick = data.nick;
 				}
+				break;
 			}
-		});
+		}
 		game.debug(oldNick +' changed nick to '+ data.nick);
 		game.chatMessage('* '+ oldNick +' changed nick to '+ data.nick +'.');	
 	});
@@ -751,32 +755,34 @@ $(document).ready(function() {
 		game.players = []; //prepare for new list
 		game.debug('Received initial player list.');
 
-		data.list.forEach(function(p) {			
+		var length = data.list.length;
+		for(var i = 0; i < length; i++) {		
 			var tmpPlayer = new Player();
-			tmpPlayer.id = p.id;
-			tmpPlayer.nick = p.nick;
-			tmpPlayer.x = p.x;
-			tmpPlayer.y = p.y;
-			tmpPlayer.ping = p.ping;
+			tmpPlayer.id = data.list[i].id;
+			tmpPlayer.nick = data.list[i].nick;
+			tmpPlayer.x = data.list[i].x;
+			tmpPlayer.y = data.list[i].y;
+			tmpPlayer.ping = data.list[i].ping;
 			
 			game.players.push(tmpPlayer);
-		});
+		}
 
-		game.debug('Player list received: '+ data.list.length +' players.');
+		game.debug('Player list received: '+ length +' players.');
 		game.check.hasPlayerList = true;		
 	});
 	
 	game.socket.on(game.proto.MSG_CHATMSG, function(data) {	
-		var sender;
+		var sender = '';
 		
-		game.players.forEach(function(p) {
-			if (p.id == data.id) {
-				sender = new Player();
-				sender = p;
+		var length = game.players.length;
+		for(var i = 0; i < length; i++) {
+			if (game.players[i].id == data.id) {
+				sender = game.players[i].nick;
+				break;
 			}
-		});
+		}
 				
-		game.chatMessage('<strong>'+ sender.nick +'</strong>: '+ data.msg);	
+		game.chatMessage('<strong>'+ sender +'</strong>: '+ data.msg);	
 	});
 	
 	game.socket.on(game.proto.MSG_CHATACTION, function(data) {		
