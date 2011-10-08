@@ -145,6 +145,25 @@ Map.prototype.loadMap = function() {  //shared between client/server
 			 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 			 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 			 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]];
+	
+	/*
+	//debug: generate x * y grass map with z layers
+	var map = [];	
+	for(var z = 0; z < 4; z++) {
+	 	var layers = [];
+	    for(var y = 0; y < 10; y++) {
+	    	var rows = [];
+	        for(var x = 0; x < 50; x++) {
+	        	if (z == 0) {
+	        		rows[x] = 16;
+	        	} else {
+	        		rows[x] = 0;
+	        	}
+	        }
+	        layers[y] = rows;
+		}
+		map[z] = layers;
+	}*/
 
 	if (this.game) {
 		this.game.debug('Map "'+ this.name +'" loaded.');
@@ -228,8 +247,10 @@ Map.prototype.drawMap = function() {
 					    }
 
 					    this.drawTile(tileId, drawX, drawY, width, height);
-					    //this.drawTileDebug(tile, x, y, debugX, debugY); // DEBUG draw x:y and !walkable
-			        }
+					   // this.drawTileDebug(tile, x, y, debugX, debugY); // DEBUG draw x:y and !walkable
+			        } /*else {
+			        	this.updateMap(x, y, 0, 4); //debug: mark not rendered tiles
+			        }*/
 	            }
 	        }
 	    }
