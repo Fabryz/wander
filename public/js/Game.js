@@ -30,7 +30,7 @@ Game.prototype.initVars = function() {
 	this.canvasWidth = this.canvas.width();
 	this.canvasHeight = this.canvas.height();
 	
-	this.desiredFPS = 30; //FIXME
+	this.desiredFPS = 60;
 		
 	this.canvas.after('<canvas id="debugCanvas" width="500" height="70"></canvas>');
 	this.debugCanvas = $("#debugCanvas");
