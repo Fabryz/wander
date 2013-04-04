@@ -8,7 +8,7 @@
   "subdomain": "wander",
   "author" : "Fabrizio Codello",
   "engines" : {
-    "node" : "0.6.x"
+    "node" : "0.8.x"
   },
   "dependencies" : {
     "express" : "2.5.6",
