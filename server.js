@@ -1,9 +1,12 @@
 var http = require('http'),
-    sys  = require('sys'),
     fs   = require('fs'),
     url  = require('url'),
-    util = require('util'),
-    express = require('express'),
+	util = require('util'),
+	path = require('path'),
+    favicon = require('serve-favicon'),
+	express = require('express'),
+	server = require('http').createServer(express);
+    morgan = require('morgan'),
     Player = require('./public/js/Player.js').Player,
     loadMap = require('./public/js/Map.js').loadMap,
     Tileset = require('./public/js/Tileset.js').loadTileset,
@@ -74,11 +77,11 @@ function getMemUsed() {
 	return memUsed +'MB';
 }
 
-var app = express.createServer();
+var app = express();
 
-app.use(express.logger(':remote-addr - :method :url HTTP/:http-version :status :res[content-length] - :response-time ms'));
+app.use(morgan(':remote-addr - :method :url HTTP/:http-version :status :res[content-length] - :response-time ms'));
 app.use(express.static(__dirname + '/public'));
-app.use(express.favicon());
+app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')))
 
 app.set('view engine', 'jade');
 app.set('view options', { layout: false });
@@ -107,8 +110,8 @@ app.get('/status', function(req, res) {
 
 app.listen(serverInfo.port);
 
-serverInfo.ip = app.address().address;
-serverInfo.port = app.address().port; //actual server port
+serverInfo.ip = serverInfo.ip;
+serverInfo.port = serverInfo.port; //actual server port
 
 console.log('Server started at '+ serverInfo.ip +':'+ serverInfo.port +' with Node '+ process.version +', platform '+ process.platform +'.');
 
@@ -323,26 +326,25 @@ function isUniqueNick(id, nick) { //TODO reuse on login
 	return true;
 }
 
-var io = require('socket.io').listen(app),
+var io = require('socket.io')(),
 	players = [],
 	totPlayers = 0,
 	statusLurkers = 0,
 	json = JSON.stringify,
 	pings = [];
 	
-io.configure(function(){ 
-	io.enable('browser client minification');
-	//io.enable('browser client etag'); 
-	io.set('log level', 1); 
-	io.set('transports', [ 
-			'websocket',
-			'flashsocket',
-			'htmlfile',
-			'xhr-polling',
-			'jsonp-polling'
-	]);
-}); 
-
+// io.configure(function(){ 
+// 	io.enable('browser client minification');
+// 	//io.enable('browser client etag'); 
+// 	io.set('log level', 1); 
+// 	io.set('transports', [ 
+// 			'websocket',
+// 			'flashsocket',
+// 			'htmlfile',
+// 			'xhr-polling',
+// 			'jsonp-polling'
+// 	]);
+// }); 
 
 var game = io
 	.of('/game')

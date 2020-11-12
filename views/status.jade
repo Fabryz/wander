@@ -1,15 +1,17 @@
-!!! 5
+doctype html
 html
 	head
 		title="Server status - Wander game"
 		meta(http-equiv='Content-type', content='text/html; charset=UTF-8')
-		link(type='text/css', rel='stylesheet', href='./css/style.css', media='screen')	
+
+		style
+			include./css/style.css
 		
-		script(type='text/javascript', src='./js/jquery-1.6.4.min.js')
-		script(type='text/javascript', src='./socket.io/socket.io.js')
-		script(type='text/javascript', src='./js/Protocol.js')
-		script(type='text/javascript', src='./js/Socket.js')
-		script(type='text/javascript', src='./js/status.js')
+		script(src='./js/jquery-1.6.4.min.js')
+		script(src='./socket.io/socket.io.js')
+		script(src='./js/Protocol.js')
+		script(src='./js/Socket.js')
+		script(src='./js/status.js')
 	body
 		#wrapper-status
 			h1 Server status
@@ -35,9 +37,9 @@ html
 			#status-players
 				h2 Players
 				p
-					span#status-slots#{players.length}
+					span#status-slots #{players.length}
 					/#{maxPlayers} +
-					span#status-lurkers#{lurkers}
+					span#status-lurkers #{lurkers}
 					|  lurking this page
 				- if (players.length > 0)
 					ol#status-list
@@ -47,5 +49,5 @@ html
 			.clear
 			p#footer &copy;2011 Fabrizio Codello - Follow me on 
 				a(href='http://twitter.com/#!/fabryz', title='My Twitter page') Twitter
-				!
+
 		include includes/analytics
