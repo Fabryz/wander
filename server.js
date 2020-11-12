@@ -25,7 +25,7 @@ var serverInfo = {
 	name: "Illusory One",
 	desc: "Test server #001",
 	ip: "localhost",
-	port: 8080,
+	port: process.env.PORT,
 	url: "http://www.serverURL.com",
 	admin: "Fabryz",
 	email: "admin@server.com", //TODO: obfuscate?
