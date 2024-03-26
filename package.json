@@ -11,7 +11,7 @@
     "node": "v14.15.x"
   },
   "dependencies": {
-    "express": "^4.17.1",
+    "express": "^4.19.2",
     "jade": "^1.11.0",
     "morgan": "^1.10.0",
     "serve-favicon": "^2.5.0",
